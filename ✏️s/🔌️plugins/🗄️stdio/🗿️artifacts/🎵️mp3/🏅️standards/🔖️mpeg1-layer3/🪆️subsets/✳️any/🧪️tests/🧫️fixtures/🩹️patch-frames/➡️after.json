@@ -1,0 +1,60 @@
+{
+  "schema": "stdio.mp3",
+  "id3v2": {
+    "frames": [
+      {
+        "id": "TIT2",
+        "content": {
+          "kind": "text",
+          "values": [
+            "Café"
+          ]
+        }
+      },
+      {
+        "id": "XABC",
+        "content": {
+          "kind": "opaque",
+          "bytes": [
+            0,
+            255,
+            3
+          ]
+        }
+      }
+    ]
+  },
+  "frames": [
+    {
+      "header": {
+        "mpegVersionId": 3,
+        "layer": 1,
+        "protectionBit": true,
+        "bitrateIndex": 9,
+        "sampleRateIndex": 0,
+        "padding": false,
+        "privateBit": false,
+        "channelMode": 3,
+        "modeExtension": 0,
+        "copyright": false,
+        "original": true,
+        "emphasis": 0
+      },
+      "payload": [
+        2,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "id3v1": {
+    "title": "Café",
+    "artist": "Semio",
+    "album": "Album",
+    "year": "2026",
+    "comment": "Comment",
+    "track": 7,
+    "genre": 13
+  }
+}

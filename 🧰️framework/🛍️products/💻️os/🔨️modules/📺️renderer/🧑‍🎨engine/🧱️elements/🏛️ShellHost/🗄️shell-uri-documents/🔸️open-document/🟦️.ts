@@ -5,6 +5,7 @@ import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
 import { type DocumentScope } from "@semio-tech/framework/document/scope";
 import { encodeDocumentArchiveBytes, type DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
 import { type BackboneWorkerRequest, encodeBackboneWorkerRequest, type PersistenceBinding, documentRuntimeKeyV1 } from "@semio-tech/framework/backbone";
+import { readOwnedDocumentArchiveV1 } from "./🔏️archive-owner/🟦️.ts";
 import { SpaceDirectoryHistoryV1 } from "../../📇️space-directory/🟦️.ts";
 import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget, type DocumentOpeningReference } from "../../🧭️opening/🟦️.ts";
 import { documentOpeningDeadlineMs } from "@semio-tech/framework/browser-bundle/child/schema";
@@ -45,9 +46,8 @@ export function useOpenDocument({ resolveSyncTargetSession, loadedPlugins, ensur
       const persistToFolder = resolvedBindings.some((binding) => binding.kind === "folder");
       const persistence = new FolderArchivePersistenceV1(async () => {
         if (!persistToFolder || openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
-        if (!plugin.readAppDocumentArchive) throw new Error("document-backbone.archive-reader-unavailable");
-        const archive = await plugin.readAppDocumentArchive(targetSession.instanceId);
-        if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
+        const archive = await readOwnedDocumentArchiveV1(plugin, entry, runtimeKey, openDocumentSessionsRef.current);
+        if (archive === null) return;
         const archiveBytes = encodeDocumentArchiveBytes(archive);
         worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: { kind: "localDocumentArchive", archive: Array.from(archiveBytes) } }) });
       });

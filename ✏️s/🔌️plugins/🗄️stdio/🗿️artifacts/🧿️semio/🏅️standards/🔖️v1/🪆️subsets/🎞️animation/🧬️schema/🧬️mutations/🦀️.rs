@@ -61,7 +61,7 @@ pub enum SemioAnimationMutation {
     SetKeyframeValue(set_keyframe_value::SetKeyframeValue),
 }
 
-/// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.animation`, in enum
+/// 🏷️ The declared kebab-case mutation vocabulary of `stdio.semio.animation`, in enum
 /// declaration order — what the `🎞️mutate-semio-animation` case's completeness gate counts against
 /// and what `../../🔮️oracles/🔣️.json`'s catalog repeats. Unlike its audio/video siblings
 /// this subset's wire keywords are the two-letter `TEXT_KEYWORDS` heads (`IT`, `KV`, …), so the two

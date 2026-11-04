@@ -16,7 +16,8 @@ pub enum SemioError {
     InvalidPreamble(String),
     InvalidBinaryHeader(String),
     UnknownEnvelope(String),
-    AmbiguousEnvelope,
+    DuplicateEnvelope(String),
+    RegistryUnavailable,
     DecodingControl(ValueError),
 }
 
@@ -26,7 +27,8 @@ impl std::fmt::Display for SemioError {
             Self::InvalidPreamble(detail) => write!(formatter, "invalid semio preamble: {detail}"),
             Self::InvalidBinaryHeader(detail) => write!(formatter, "invalid binary semio header: {detail}"),
             Self::UnknownEnvelope(detail) => write!(formatter, "unknown semio envelope: {detail}"),
-            Self::AmbiguousEnvelope => formatter.write_str("ambiguous semio envelope match"),
+            Self::DuplicateEnvelope(detail) => write!(formatter, "semio envelope already registered: {detail}"),
+            Self::RegistryUnavailable => formatter.write_str("semio registry lock was poisoned by a failed registration"),
             Self::DecodingControl(detail) => write!(formatter,"{detail}"),
         }
     }
@@ -40,7 +42,7 @@ impl SemioError {
         match self {
             Self::DecodingControl(error) => error,
             error @ Self::UnknownEnvelope(_) => ValueError::new(ValueRefusalKind::UnsupportedOwner, error.to_string()),
-            error @ (Self::InvalidPreamble(_) | Self::InvalidBinaryHeader(_) | Self::AmbiguousEnvelope) => ValueError::new(ValueRefusalKind::InvalidValue, error.to_string()),
+            error @ (Self::InvalidPreamble(_) | Self::InvalidBinaryHeader(_) | Self::DuplicateEnvelope(_) | Self::RegistryUnavailable) => ValueError::new(ValueRefusalKind::InvalidValue, error.to_string()),
         }
     }
 }
@@ -123,7 +125,7 @@ impl SemioEnvelope {
 
     /// 📖️ Parses `plugin.artifact` from a document type id.
     pub fn from_envelope_id(envelope_id: &str, component: Component, version: u16) -> SemioResult<Self> {
-        let (plugin, artifact) = envelope_id.split_once('.').ok_or_else(|| SemioError::InvalidPreamble(format!("envelope id must be plugin.artifact, got {envelope_id}")))?;
+        let (plugin, artifact) = envelope_id.rsplit_once('.').ok_or_else(|| SemioError::InvalidPreamble(format!("envelope id must be plugin.artifact, got {envelope_id}")))?;
         Ok(Self { plugin: plugin.to_string(), artifact: artifact.to_string(), component, version })
     }
 }
@@ -230,13 +232,7 @@ fn parse_binary_token(token: &str) -> SemioResult<SemioEnvelope> {
 //#region 🔖️Text
 /// 📜️ Prepends the mandatory preamble to DSL/op/cmd body text.
 pub fn wrap_text(envelope: &SemioEnvelope, body: &str) -> String {
-    let mut body_trimmed = body.trim_start_matches('\u{feff}');
-    if body_trimmed.starts_with("semio ") {
-        if let Ok((_, rest)) = split_text_preamble(body_trimmed) {
-            body_trimmed = rest;
-        }
-    }
-    format!("{}\n{}", envelope.preamble_line(), body_trimmed.trim_start())
+    format!("{}\n{}", envelope.preamble_line(), body)
 }
 
 /// 🛫️ Emits canonical declared Text and its exact body under cumulative ownership admission.
@@ -329,11 +325,13 @@ impl semio_framework_value::retirement::RetireOwned for RetainedTextEnvelope {
 
 /// 📖️ Parses a text `.semio` file into envelope and body (without preamble line).
 pub fn split_text_preamble(text: &str) -> SemioResult<(SemioEnvelope, &str)> {
-    let mut lines = text.lines();
-    let first = lines.next().ok_or_else(|| SemioError::InvalidPreamble("empty file".into()))?.trim();
-    let envelope = parse_preamble_line(first)?;
-    let rest = text[first.len()..].trim_start_matches(['\r', '\n']);
-    Ok((envelope, rest))
+    let text = text.strip_prefix('\u{feff}').unwrap_or(text);
+    if text.is_empty() {
+        return Err(SemioError::InvalidPreamble("empty file".into()));
+    }
+    let line_end = text.find('\n').unwrap_or(text.len());
+    let envelope = parse_preamble_line(text[..line_end].trim_end_matches('\r'))?;
+    Ok((envelope, text.get(line_end + 1..).unwrap_or("")))
 }
 
 /// 🛂️ Borrows canonical text after exact owner, component and version admission.
@@ -384,52 +382,75 @@ pub fn semio_filename(document_id: &str, envelope_id: &str, component: Component
     format!("{document_id}.{envelope_id}.{}.semio", component.as_str())
 }
 
-/// 📖️ Infers envelope from a decorative filename (fallback only — content wins in `sniff`).
-pub fn envelope_from_filename(name: &str) -> Option<SemioEnvelope> {
-    let name = name.strip_suffix(".semio")?;
-    let component = name.rsplit_once('.').and_then(|(_, c)| Component::parse(c))?;
-    let rest = name.strip_suffix(&format!(".{}", component.as_str()))?;
-    let (_doc, envelope_id) = rest.rsplit_once('.')?;
-    let version = 1u16;
-    SemioEnvelope::from_envelope_id(envelope_id, component, version).ok()
-}
 //#endregion 🔖️Paths
 
 //#region 🔖️Registry
-/// 🗂️ Handler keyed by full envelope identity.
-pub type SemioHandler = fn(&[u8]) -> Result<(), String>;
+/// 🗂️ One registered format: a unique registration token and the verifier of its bodies. The token, not a function address, decides whether a second registration is the same owner.
+pub struct SemioFormat {
+    pub token: &'static str,
+    pub verify: fn(&[u8]) -> Result<(), String>,
+}
+
+/// 🗂️ A registered format as the registry hands it out.
+pub type SemioHandler = &'static SemioFormat;
+
+type RegistryKey = (String, Component, u16);
 
 struct RegistryState {
-    by_key: HashMap<String, SemioHandler>,
+    by_key: HashMap<RegistryKey, SemioHandler>,
 }
 
-fn registry_state() -> &'static Mutex<RegistryState> {
+fn registry_state() -> SemioResult<std::sync::MutexGuard<'static, RegistryState>> {
     static STATE: OnceLock<Mutex<RegistryState>> = OnceLock::new();
-    STATE.get_or_init(|| Mutex::new(RegistryState { by_key: HashMap::new() }))
+    STATE.get_or_init(|| Mutex::new(RegistryState { by_key: HashMap::new() })).lock().map_err(|_| SemioError::RegistryUnavailable)
 }
 
-fn registry_key(envelope: &SemioEnvelope) -> String {
-    format!("{}.{}.{}", envelope.plugin, envelope.artifact, envelope.component.as_str())
+fn registry_key(envelope: &SemioEnvelope) -> RegistryKey {
+    (envelope.envelope_id(), envelope.component, envelope.version)
 }
 
-/// 📝 Registers a verify/parse handler for one envelope.
-pub fn register_format(envelope: SemioEnvelope, handler: SemioHandler) {
+fn describe_key(key: &RegistryKey) -> String {
+    format!("{}.{} v{}", key.0, key.1.as_str(), key.2)
+}
+
+/// 📝 Registers a format for one envelope identity and version; registering the same token again is a no-op, a different token for the same identity is refused.
+pub fn register_format(envelope: SemioEnvelope, handler: SemioHandler) -> SemioResult<()> {
     let key = registry_key(&envelope);
-    registry_state().lock().expect("semio registry").by_key.insert(key, handler);
+    let mut state = registry_state()?;
+    if let Some(existing) = state.by_key.get(&key) {
+        return if existing.token == handler.token { Ok(()) } else { Err(SemioError::DuplicateEnvelope(format!("{} (registered by {}, refused for {})", describe_key(&key), existing.token, handler.token))) };
+    }
+    state.by_key.insert(key, handler);
+    Ok(())
 }
 
 /// 🔎 Resolves a handler from sniffed content.
 pub fn resolve(bytes: &[u8]) -> SemioResult<SemioHandler> {
+    dispatch(bytes).map(|(_, handler)| handler)
+}
+
+/// 🚏️ The natural file extension every semio subset editor shares.
+pub const NATURAL_FILE_EXTENSION: &str = ".semio";
+
+/// 🧭️ The natural-file dispatcher: sniffs the versioned envelope of one `.semio` file and returns it with the handler registered for exactly that identity and version.
+pub fn dispatch(bytes: &[u8]) -> SemioResult<(SemioEnvelope, SemioHandler)> {
     let envelope = sniff(bytes)?;
     let key = registry_key(&envelope);
-    let state = registry_state().lock().expect("semio registry");
-    state.by_key.get(&key).copied().ok_or(SemioError::UnknownEnvelope(key))
+    let handler = registry_state()?.by_key.get(&key).copied().ok_or_else(|| SemioError::UnknownEnvelope(describe_key(&key)))?;
+    Ok((envelope, handler))
+}
+
+/// 📋️ Every registered envelope key in byte order, so a caller can prove which subsets a dispatcher reaches.
+pub fn registered_envelope_keys() -> SemioResult<Vec<String>> {
+    let mut keys: Vec<String> = registry_state()?.by_key.keys().map(describe_key).collect();
+    keys.sort();
+    Ok(keys)
 }
 
 /// ✅ Runs the registered handler for these bytes.
 pub fn verify(bytes: &[u8]) -> SemioResult<()> {
     let handler = resolve(bytes)?;
-    handler(bytes).map_err(SemioError::InvalidPreamble)
+    (handler.verify)(bytes).map_err(SemioError::InvalidPreamble)
 }
 //#endregion 🔖️Registry
 

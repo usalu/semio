@@ -39,7 +39,7 @@ export type CanonicalBootstrapFolderMirrorControlV1 = { readonly epoch: number; 
 function canonicalBootstrapFolderMirrorDbPath(uri: string): string {
   const folder = uri.slice("folder://".length);
   if (backboneKindFromUri(uri) !== "folder" || !isAbsolute(folder)) throw canonicalBootstrapMirrorError("invalid");
-  return join(folder, ".semio", "documents.db");
+  return join(folder, ".semio", "canonical-bootstrap.db");
 }
 
 function validateCanonicalBootstrapDocumentId(documentId: string): void {

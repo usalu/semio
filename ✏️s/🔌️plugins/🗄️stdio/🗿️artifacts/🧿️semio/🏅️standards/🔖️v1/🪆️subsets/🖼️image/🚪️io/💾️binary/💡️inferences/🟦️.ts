@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `s.stdio.semio.image.inference`. */
+/** 💾️ Binary representation for `stdio.semio.image.inference`. */
 export type SemioImageInferenceBinary = Uint8Array;

@@ -43,11 +43,11 @@
     {"id": "F2", "memberId": "missing", "detailCategory": 112000000.0, "stressRange": 30000000.0, "cycles": 1.0e7}
   ],
   "reliabilityAnalyses": [
-    {"id": "R", "resistanceDistribution": "lognormal", "resistanceMean": 500000.5, "resistanceSd": 50000.25, "actionDistribution": "normal", "actionMean": 200000.0, "actionSd": 40000.0}
+    {"id": "R", "resistanceDistribution": "lognormal", "resistanceMean": 500000.5, "resistanceSd": 50000.25, "actionDistribution": "normal", "actionMean": 200000.0, "actionSd": 40000.0, "secondActionDistribution": "normal", "secondActionMean": 0.0, "secondActionSd": 0.0, "memberId": ""}
   ],
   "testSeries": [
-    {"id": "T", "quantity": "yield strength 世界", "distribution": "lognormal", "sampleSize": 6, "mean": 355.5, "stdDev": 17.75, "variationKnown": 0.0, "conversionFactor": 0.9, "required": 300.0, "pairs": "", "theoryVariation": 0.0},
-    {"id": "T", "quantity": "", "distribution": "normal", "sampleSize": 4294967295, "mean": -1.5, "stdDev": 2.5, "variationKnown": 0.125, "conversionFactor": 1.0, "required": -3.75, "pairs": "", "theoryVariation": 0.0}
+    {"id": "T", "quantity": "yield strength 世界", "distribution": "lognormal", "sampleSize": 6, "mean": 355.5, "stdDev": 17.75, "variationKnown": 0.0, "conversionFactor": 0.9, "required": 300.0, "pairs": "", "theoryVariation": 0.0, "theoryMean": 0.0},
+    {"id": "T", "quantity": "", "distribution": "normal", "sampleSize": 4294967295, "mean": -1.5, "stdDev": 2.5, "variationKnown": 0.125, "conversionFactor": 1.0, "required": -3.75, "pairs": "", "theoryVariation": 0.0, "theoryMean": 0.0}
   ],
   "placements": [],
   "cases": [],

@@ -1,4 +1,5 @@
 /** 🟠️ The workbench left tabs phase of useDocumentTransferAndTabs. */
+import { DefaultAppToggle } from "../../🌟️default-app-toggle/🟦️.tsx";
 import { useCallback, useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { type AppRole, FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_ID } from "@semio-tech/framework";
 import { type PanelTabNode, singleTreeLeaf, staticTreePanelDefinition } from "@semio-tech/ui-react";
@@ -26,17 +27,14 @@ export function useWorkbenchLeftTabsState({ session, focusedApp, focusedPanelBod
         label: entry.current ? `${entry.pluginLabel} ✓` : entry.pluginLabel,
         onClick: entry.current ? undefined : () => void openArtifactWithAppRef(entry.app, session.app.dialect, role),
         control: (
-          <button
-            type="button"
-            aria-pressed={entry.isDefault}
-            onClick={(event) => {
-              event.stopPropagation();
+          <DefaultAppToggle
+            isDefault={entry.isDefault}
+            label={setAsDefaultText(uiLocale)}
+            onToggle={() => {
               if (entry.isDefault) dispatchClearDefaultApp(session.app.dialect, role);
               else dispatchSetDefaultApp(session.app.dialect, role, entry.app);
             }}
-          >
-            {entry.isDefault ? "★" : "☆"} {setAsDefaultText(uiLocale)}
-          </button>
+          />
         ),
       })),
     });

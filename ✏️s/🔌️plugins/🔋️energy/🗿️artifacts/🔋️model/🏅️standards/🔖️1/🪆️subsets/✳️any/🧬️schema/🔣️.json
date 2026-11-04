@@ -23,12 +23,12 @@
     "structure": {
       "type": "object",
       "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio.value"
+      "x-semio-child-kind": "stdio.semio.value"
     },
     "zones": {
       "type": "object",
       "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio.table"
+      "x-semio-child-kind": "stdio.semio.table"
     },
     "referencedModel": {
       "x-semio-state": "artifact",

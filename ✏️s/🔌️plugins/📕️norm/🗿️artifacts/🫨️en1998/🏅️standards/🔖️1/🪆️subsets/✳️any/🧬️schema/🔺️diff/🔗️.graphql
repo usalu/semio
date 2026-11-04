@@ -314,6 +314,7 @@ type En1998AssessmentPatch {
   shearCrackingBeforeYield: Float
   shearForceDemandN: Float
   intermediateSteelAreaM2: JSON
+  analysisMethod: JSON
 }
 type En1998SiloDelta {
   removed: [En1998SiloRemoval!]!

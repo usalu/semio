@@ -58,7 +58,7 @@ fn isolated_compile_worker_entry() {
 #[test]
 fn a_hub_commit_is_acknowledged_only_by_a_live_status_reported_after_its_relay() {
     let head = semio_framework_os_kernel::os_directory::EditedArtifactFrontierV1 { document_id: "doc".to_string(), head_edit_ordinal: 1, head_edit_id: "edit".to_string(), last_commit_seq: 1, chain_sha256: "0".repeat(64) };
-    let live = |pending: usize, acknowledged: bool| store::sync::ArtifactSyncStatus { persisted: true, pending_mutations: pending, remote: store::sync::RemoteState::Live { peer_count: 1 }, acknowledged_head: acknowledged.then(|| head.clone()) };
+    let live = |pending: usize, acknowledged: bool| store::sync::ArtifactSyncStatus { persisted: true, pending_mutations: pending, remote: store::sync::RemoteState::Live { peer_count: 1 }, acknowledged_head: acknowledged.then(|| head.clone()), write_failure: None };
     let relay = HubRelay::default();
     relay.record(Some(live(0, true)), None);
     let since = relay.version();
@@ -66,7 +66,7 @@ fn a_hub_commit_is_acknowledged_only_by_a_live_status_reported_after_its_relay()
     assert!(!stale.acknowledged, "an acknowledgement from before the relay does not cover it: {stale:?}");
     relay.record(Some(live(1, false)), None);
     assert!(!relay.await_acknowledged(since, 20).acknowledged, "a pending mutation is not acknowledged");
-    relay.record(Some(store::sync::ArtifactSyncStatus { persisted: true, pending_mutations: 1, remote: store::sync::RemoteState::Backoff { retry_in_ms: 4_000 }, acknowledged_head: None }), Some("document.link.expired: the link to the hub expired".to_string()));
+    relay.record(Some(store::sync::ArtifactSyncStatus { persisted: true, pending_mutations: 1, remote: store::sync::RemoteState::Backoff { retry_in_ms: 4_000 }, acknowledged_head: None, write_failure: None }), Some("document.link.expired: the link to the hub expired".to_string()));
     let backoff = relay.await_acknowledged(since, 20);
     assert!(!backoff.acknowledged && backoff.detail.contains("backoff") && backoff.detail.contains("document.link.expired"), "{backoff:?}");
     let waiter = std::thread::scope(|scope| {

@@ -1,0 +1,155 @@
+{
+  "description": "Drawing scene-graph pointer gestures and the mutation kind each resolves to. Layer 0 root is a group holding [text, path, group[text]]. `refused` names a snapshot-edit fault code.",
+  "cases": [
+    {
+      "op": "insert",
+      "path": "/layers/0/root/children/1",
+      "expect": "create-node",
+      "treeAfter": "[t,t,p,[t]]"
+    },
+    {
+      "op": "insert",
+      "path": "/layers/0/root/children/-",
+      "expect": "create-node",
+      "treeAfter": "[t,p,[t],t]"
+    },
+    {
+      "op": "insert",
+      "path": "/layers/0/root/children/2/children/-",
+      "expect": "create-node",
+      "treeAfter": "[t,p,[t,t]]"
+    },
+    {
+      "op": "insert",
+      "path": "/layers/0/root/children/9",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    },
+    {
+      "op": "insert",
+      "path": "/layers/0/root/children/0/children/-",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    },
+    {
+      "op": "remove",
+      "path": "/layers/0/root/children/1",
+      "expect": "delete-node",
+      "treeAfter": "[t,[t]]"
+    },
+    {
+      "op": "remove",
+      "path": "/layers/0/root/children/2/children/0",
+      "expect": "delete-node",
+      "treeAfter": "[t,p,[]]"
+    },
+    {
+      "op": "remove",
+      "path": "/layers/0/root",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    },
+    {
+      "op": "remove",
+      "path": "/layers/0/root/children/7",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    },
+    {
+      "op": "set-at",
+      "path": "/layers/0/root/children/0/at",
+      "expect": "move-node",
+      "treeAfter": "[t,p,[t]]"
+    },
+    {
+      "op": "set-segments",
+      "path": "/layers/0/root/children/1/segments",
+      "expect": "replace-path",
+      "treeAfter": "[t,p,[t]]"
+    },
+    {
+      "op": "set-at",
+      "path": "/layers/0/root/children/1/at",
+      "expect": "none",
+      "treeAfter": null
+    },
+    {
+      "op": "insert",
+      "path": "/layers/0/root/children/3",
+      "expect": "create-node",
+      "treeAfter": "[t,p,[t],t]"
+    },
+    {
+      "op": "insert",
+      "path": "/layers/0/root/children",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    },
+    {
+      "op": "insert",
+      "path": "/layers/0/root/children/01",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    },
+    {
+      "op": "insert",
+      "path": "/layers/0/root/children/+1",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    },
+    {
+      "op": "insert",
+      "path": "/layers/0/root/children/~",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    },
+    {
+      "op": "insert",
+      "path": "/layers/0/root/children/~0",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    },
+    {
+      "op": "insert",
+      "path": "/layers/0/root/children/~1",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    },
+    {
+      "op": "remove",
+      "path": "/layers/0/root/",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    },
+    {
+      "op": "remove",
+      "path": "/layers/9/root",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    },
+    {
+      "op": "remove",
+      "path": "/layers/0/root/children",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    },
+    {
+      "op": "remove",
+      "path": "/layers/0/root/children/01",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    },
+    {
+      "op": "remove",
+      "path": "/layers/0/root/children/+1",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    },
+    {
+      "op": "remove",
+      "path": "/layers/0/root/children/~",
+      "refused": "snapshot-edit.unsupported-path",
+      "treeAfter": null
+    }
+  ]
+}

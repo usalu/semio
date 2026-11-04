@@ -322,7 +322,7 @@ const KINDS: &[&str] = &[
 /// 👁️ The six scenarios whose committed vector pins a REJECTION rather than an effect, so
 /// `before` and `after` are the same document and the observability law cannot hold.
 /// `knowledge` and `benchmarks` are the only two of this subset's 66 registers that are composed
-/// `s.stdio.semio.table` CHILD handles: their rows live in a working-scene cache that a fresh
+/// `stdio.semio.table` CHILD handles: their rows live in a working-scene cache that a fresh
 /// process has never populated, so every id is absent and the only reachable branch is
 /// `mutation.target-missing`. Naming them here is a claim the reader can check against the vectors;
 /// the feature description states the same, and their `mutate` scenarios still assert the declared

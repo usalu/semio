@@ -71,11 +71,59 @@ mod tests {
 
         let source_document = serde_json::json!({ "value": "RAW-FILE-CONTENT-not-a-pack" });
         let outcome =
-            registry_export_media(TEST_KIND, "stdio.__w1b_export_bug_proof_fmt", &source_document, &semio_framework_async::CancelToken::root_now()).expect("io-mechanism export path must find the registered route, not fall through to the composer-registry/handler-map paths").expect("export must succeed");
+            registry_export_media(TEST_KIND, "stdio.__w1b_export_bug_proof_fmt", &source_document, "Plan: A/B?", &semio_framework_async::CancelToken::root_now()).expect("io-mechanism export path must find the registered route, not fall through to the composer-registry/handler-map paths").expect("export must succeed");
 
         let bytes = base64_codec::base64_standard_decode(&outcome.data).expect("OsMediaExportResult base64-encodes binary payloads");
         assert_eq!(bytes, b"RAW-FILE-CONTENT-not-a-pack".to_vec(), "exported bytes must be exactly the raw content the io-mechanism route produced, byte for byte");
+        assert_eq!(outcome.file_name, "Plan: A/B?.w1bproof", "the route names the file after the stem it is given");
         assert!(!bytes.starts_with(&PACK_MAGIC), "exported bytes must NOT carry the SemioEnvelope pack magic header -- this is the exact `registry_export_media` bug (design.md, `📌️important.md`) this ticket exists to remove");
+    }
+
+    #[test]
+    fn export_file_stems_come_from_the_document_name_and_are_safe_on_every_platform() {
+        let cases = [
+            ("Plan: A/B?", "2d.note", "Plan_ A_B_"),
+            ("  Ground floor.  ", "2d.note", "Ground floor"),
+            ("CON", "2d.note", "_CON"),
+            ("lpt1.final", "2d.note", "_lpt1.final"),
+            ("Grundriss Erdgeschoss", "2d.note", "Grundriss Erdgeschoss"),
+            ("\u{1F3E0} Haus", "2d.note", "\u{1F3E0} Haus"),
+            ("", "2d.note", "2d.note"),
+            ("...", "2d.note", "2d.note"),
+            ("", "", "document"),
+            ("tab\tname\n", "x", "tab_name_"),
+        ];
+        for (name, fallback, expected) in cases {
+            assert_eq!(sanitize_export_file_stem(name, fallback), expected, "{name:?}");
+        }
+        let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️export-file-stems/🔣️.json")).unwrap();
+        for row in fixture["stems"].as_array().unwrap() {
+            let stem = sanitize_export_file_stem(row["name"].as_str().unwrap(), row["fallback"].as_str().unwrap());
+            assert_eq!(stem, row["stem"].as_str().unwrap(), "{row}");
+            assert!(std::path::Path::new(&format!("{stem}.svg")).file_name().is_some_and(|name| name.to_str() == Some(&format!("{stem}.svg"))), "{stem:?} is exactly one path component");
+            let device = stem.split('.').next().unwrap().to_ascii_uppercase();
+            assert!(!fixture["reservedDeviceNames"].as_array().unwrap().iter().any(|reserved| reserved.as_str() == Some(device.as_str())), "{stem:?} is not a Windows device name from the independent table");
+            assert!(!stem.chars().any(|character| character.is_control() || "<>:\"/\\|?*".contains(character)) && !stem.ends_with(['.', ' ']));
+        }
+        assert_eq!(sanitize_export_file_stem(&"x".repeat(400), "k").len(), 100);
+        let wide = sanitize_export_file_stem(&"\u{1F3E0}".repeat(100), "k");
+        assert!(wide.len() <= 100 && wide.chars().all(|character| character == '\u{1F3E0}') && wide.chars().count() == 25, "the cap counts bytes at a character boundary");
+        resolve_kernel_future(semio_framework_os_kernel::io::register_format_descriptors([semio_framework_os_kernel::io::FormatDescriptor {
+            kind_id: "stdio.__w1b_export_bug_proof_fmt".to_string(),
+            short_id: "w1bproof".to_string(),
+            aliases: Vec::new(),
+            mimes: vec!["application/octet-stream".to_string()],
+            extensions: vec![".w1bproof".to_string()],
+            name: "W1b Proof Format".to_string(),
+            full_name: "W1b Export Bug Proof Format".to_string(),
+            neutral: false,
+            dir_name: "w1bproof".to_string(),
+            is_binary: true,
+        }]))
+        .ok();
+        let renamed = |file_name: &str| name_export_after_document(OsMediaExportResult { data: String::new(), mime_type: "application/octet-stream".into(), file_name: file_name.into(), encoding: None }, "stdio.__w1b_export_bug_proof_fmt", "Plan").file_name;
+        assert_eq!(renamed("2d.note.w1bproof"), "Plan.w1bproof");
+        assert_eq!(renamed("2d.note.other"), "2d.note.other");
     }
 
     #[test]

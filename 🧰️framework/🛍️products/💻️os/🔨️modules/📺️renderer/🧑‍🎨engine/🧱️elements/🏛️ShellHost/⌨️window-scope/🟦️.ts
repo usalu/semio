@@ -12,6 +12,8 @@
  * Ticket 26/09/09/PROCEDURAL-3D-END-TO-END. */
 // #endregion 🧲️Header
 
+import { localizedLabelTextV1 } from "../📣️replay-refusal/🟦️.ts";
+
 //#region 🪟️DockSeed
 /** 🪟️ One tab stack of a seeded mode layout, in layout order: the window instance ids it holds and
  * the one its tab bar shows. Deliberately a projection and not the renderer's `WindowLayoutNode`, so
@@ -137,6 +139,6 @@ export const KEYBINDING_UNOWNED_CODE = "shell.window-scope.unowned-chord";
 /** 🚦️ `⌘⇧G · Add Generation — not available in this mode`, in the reader's language. `label` is the
  * verb's already-localized label; `chord` is the chord as the app declared it. */
 export function keybindingUnownedTextV1(locale: string, chord: string, label: string): string {
-  return `${chord} · ${label} — ${locale === "de" ? KEYBINDING_UNOWNED_LABEL.de : KEYBINDING_UNOWNED_LABEL.en}`;
+  return `${chord} · ${label} — ${localizedLabelTextV1(KEYBINDING_UNOWNED_LABEL, locale)}`;
 }
 //#endregion 🗣️UnownedHint

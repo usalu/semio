@@ -26,6 +26,8 @@ fn variants(base: &Mp3Snapshot) -> Vec<Mp3Mutation> {
         Mp3Mutation::SetFrames(set_frames::SetFrames { frames: vec![frame(), frame(), frame()] }),
         Mp3Mutation::SetId3v1(set_id3v1::SetId3v1 { id3v1: Some(Id3v1Tag::default()) }),
         Mp3Mutation::SetId3v1(set_id3v1::SetId3v1 { id3v1: None }),
+        Mp3Mutation::PatchFrames(patch_frames::PatchFrames { index: 0, remove_count: 1, frames: vec![frame(), frame()] }),
+        Mp3Mutation::SetId3Frame(set_id3_frame::SetId3Frame { frame: Id3Frame { id: "TIT2".into(), content: crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Id3Content::Text { values: vec!["one frame".into()] } } }),
     ]
 }
 
@@ -41,7 +43,7 @@ fn kinds_matches_every_variant_and_the_catalog() {
     let from_variants: std::collections::BTreeSet<&str> = variants(&base_snapshot()).iter().map(Mp3Mutation::kind).collect();
     let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
     assert_eq!(from_variants, from_kinds, "KINDS must equal every Mp3Mutation variant's kind()");
-    assert_eq!(KINDS.len(), 5, "KINDS must list exactly the declared 5 kinds");
+    assert_eq!(KINDS.len(), 6, "KINDS must list exactly the declared 6 kinds");
     let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle catalog manifest must declare kind {kind:?}");
@@ -113,4 +115,52 @@ async fn mp3_mutation_inverse_sum_law_holds_for_every_leaf() {
             protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, base).await;
         }
     }
+}
+
+/// ✂️ A cut at frame boundaries removes exactly the addressed whole frames, is one exactly reversible edit and refuses a range outside the lane.
+#[semio_framework_async_macros::async_test]
+async fn patch_frames_cuts_whole_frames_reversibly_and_refuses_ranges_outside_the_lane() {
+    let numbered = |value: u8| Mp3Frame { payload: vec![value], ..frame() };
+    let base = Mp3Snapshot { frames: (0..5).map(numbered).collect(), ..Mp3Snapshot::default() };
+    let cut = Mp3Mutation::PatchFrames(patch_frames::PatchFrames { index: 1, remove_count: 3, frames: vec![] });
+    let mut edited = base.clone();
+    apply_mutation(&mut edited, &cut);
+    assert_eq!(edited.frames, vec![numbered(0), numbered(4)]);
+    for inverse in cut.inverse(&base).expect("valid cut inverse").into_iter().rev() {
+        apply_mutation(&mut edited, &inverse);
+    }
+    assert_eq!(edited, base);
+    let outside = Mp3Mutation::PatchFrames(patch_frames::PatchFrames { index: 4, remove_count: 2, frames: vec![] });
+    assert!(outside.inverse(&base).expect("refusal has no inverse").is_empty());
+    let mut untouched = base.clone();
+    apply_mutation(&mut untouched, &outside);
+    assert_eq!(untouched, base);
+}
+
+/// 🏷️ One-frame ID3 edits replace in place, append when the id is new, remove only what exists, and undo exactly.
+#[semio_framework_async_macros::async_test]
+async fn id3_frame_edits_replace_append_remove_and_undo_exactly() {
+    use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Id3Content;
+    let text = |id: &str, value: &str| Id3Frame { id: id.into(), content: Id3Content::Text { values: vec![value.into()] } };
+    let base = Mp3Snapshot { id3v2: Some(Id3v2Tag { frames: vec![text("TIT2", "a"), text("TPE1", "b")] }), ..base_snapshot() };
+    let replace = Mp3Mutation::SetId3Frame(set_id3_frame::SetId3Frame { frame: text("TIT2", "z") });
+    let append = Mp3Mutation::SetId3Frame(set_id3_frame::SetId3Frame { frame: text("TALB", "c") });
+    let remove = Mp3Mutation::RemoveId3Frame(remove_id3_frame::RemoveId3Frame { id: "TPE1".into() });
+    let missing = Mp3Mutation::RemoveId3Frame(remove_id3_frame::RemoveId3Frame { id: "TCON".into() });
+    for (mutation, expected) in [(&replace, vec![text("TIT2", "z"), text("TPE1", "b")]), (&append, vec![text("TIT2", "a"), text("TPE1", "b"), text("TALB", "c")]), (&remove, vec![text("TIT2", "a")])] {
+        let mut edited = base.clone();
+        apply_mutation(&mut edited, mutation);
+        assert_eq!(edited.id3v2.as_ref().expect("tag").frames, expected, "{mutation:?}");
+        for inverse in mutation.inverse(&base).expect("valid inverse").into_iter().rev() {
+            apply_mutation(&mut edited, &inverse);
+        }
+        assert_eq!(edited, base, "{mutation:?}");
+    }
+    let mut untouched = base.clone();
+    apply_mutation(&mut untouched, &missing);
+    assert_eq!(untouched, base);
+    assert!(missing.inverse(&base).expect("refusal has no inverse").is_empty());
+    let mut created = base_snapshot();
+    apply_mutation(&mut created, &append);
+    assert_eq!(created.id3v2.expect("created tag").frames, vec![text("TALB", "c")]);
 }

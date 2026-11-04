@@ -1,4 +1,6 @@
 /** 🔶️ The catalog phase of useArtifactOpening. */
+import { childElementId } from "@semio-tech/ui-react";
+import { focusWhenMountedV1 } from "../../../🎯️focus-return/🟦️.ts";
 import { type DocumentOpeningReceiptV1 } from "../../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { useCallback, useMemo, useState } from "../../../⚛️react-port/🟦️.ts";
 import { type AppRef, type AppRole, AppRouter, type AppRouterManifest, type ArtifactDialect, artifactKindActivationOwner, dialectCoordinate, parseDialectCoordinate, parseSurfaceAppId, EMPTY_OPENING_PREFERENCES, foldOpeningPreferences, type OpeningConfigMutation, type OpeningPreferences, type ConflictResolution, type MergePolicy } from "@semio-tech/framework";
@@ -13,14 +15,13 @@ import { canonicalSurfaceId } from "../../🔐️identity-binding/🟦️.ts";
 import { withLocalizedWindowKindLabels } from "../../🧱️built-node-stores/🟦️.ts";
 import type { ShellCoreAfterDirectoryLaneAndLayout } from "../../📐️layout-hotkeys/🟦️.ts";
 import type { PreparedArtifactOpeningTarget } from "../../🔒️identity-document-ports/🧰️identity-port-types/🟦️.ts";
-import type { PendingAppChannelMethods } from "../🟢️shared/🟦️.ts";
 
 /** 🔷 Builds catalog, shellState, dispatch, loadedPlugins of useArtifactOpening. */
 export function useCatalogState({ core }: { readonly core: ShellCoreAfterDirectoryLaneAndLayout }) {
   const {
     catalog, shellState, dispatch, loadedPlugins, session, localPrograms, uiLocale, uiTerminology, selectedConflictId,
     extraWindowCounterRef, extraWindowInstancesRef, applyRemoteMergeRef, showTransientNoticeRef,
-    retireDocumentAttachment, openArtifactWithAppRefRef, resolveArtifactOpeningRelayRef,
+    retireDocumentAttachment, openResolvedArtifactRef, resolveArtifactOpeningRelayRef,
     resolveArtifactOpeningWithActivationRef, openReadySpaceArtifactCreationRef, spaceArtifactCreationOwnersRef,
     setSpaceArtifactCreationUi, cancelSpaceArtifactCreationsForRuntime, openDocumentSessionsRef, captureDialogOrigin,
     captureEffectOwner, isCurrentEffectOwner, loadedPluginsRef, pluginSupervisorByIdRef, registry, hubPluginSource,
@@ -122,40 +123,38 @@ export function useCatalogState({ core }: { readonly core: ShellCoreAfterDirecto
   }, [catalog, installPlugin, installHubDocumentProgram, openingPreferences, hubPluginSource]);
   resolveArtifactOpeningWithActivationRef.current = installActivationOwnerAndResolve;
 
-  
-  const pendingAppChannelFor = useCallback(
-    (pluginId: string): PendingAppChannelMethods | undefined => loadedPlugins.find((entry) => entry.handle.pluginId === pluginId)?.handle as PendingAppChannelMethods | undefined,
-    [loadedPlugins],
-  );
-
   /** ⚖️ Finds a loaded plugin's real `PluginWasmHandle` by pluginId, for the merge-policy/conflict
-   * pass-throughs below — unlike {@link pendingAppChannelFor}'s ad hoc cast, `setMergePolicy`/
+   * pass-throughs below — `setMergePolicy`/
    * `resolveConflict`/`readConflicts` are genuine, always-present `PluginWasmHandle` members now
    * (`adaptPluginHandle`, `PluginRuntime/🟦️.tsx`), so no feature-detection is needed. */
   const pluginHandleFor = useCallback((pluginId: string): PluginWasmHandle | undefined => loadedPlugins.find((entry) => entry.handle.pluginId === pluginId)?.handle, [loadedPlugins]);
 
+  /** 📌️ The shell's own event-sourced `OpeningPreferences` fold is the ONE authoritative pin store: the opening resolver reads it first, and the session guest receives the same mutation over `AppCommand` as a notification, whose refusal is logged, never swallowed. */
+  const notifySessionPin = useCallback(
+    (send: (plugin: PluginWasmHandle, instanceId: number) => Promise<void> | undefined) => {
+      if (!session) return;
+      const plugin = pluginHandleFor(session.pluginId);
+      if (!plugin) return;
+      void send(plugin, session.instanceId)?.catch((commandError) => console.warn("[os-shell] opening preference notification refused", commandError));
+    },
+    [pluginHandleFor, session],
+  );
   const dispatchSetDefaultApp = useCallback(
     (dialect: ArtifactDialect, role: AppRole, program: AppRef) => {
       const app: AppRef = { ...program, pluginId: parseHubProgramIdV1(program.pluginId)?.pluginId ?? program.pluginId };
       const mutation: OpeningConfigMutation = { mutation: "setDefaultApp", dialect, role, app };
       setOpeningPreferences((current) => foldOpeningPreferences([mutation], current));
-      const roleNum = role === "editor" ? 1 : 0;
-      void pendingAppChannelFor(program.pluginId)
-        ?.setDefaultApp?.(dialect.artifactKind, dialect.standard, dialect.subset, roleNum, app.pluginId, app.appId)
-        ?.catch((commandError) => undefined);
+      notifySessionPin((plugin, instanceId) => plugin.setDefaultApp(instanceId, dialect.artifactKind, dialect.standard, dialect.subset, role === "editor" ? 1 : 0, app.pluginId, app.appId));
     },
-    [pendingAppChannelFor],
+    [notifySessionPin],
   );
   const dispatchClearDefaultApp = useCallback(
     (dialect: ArtifactDialect, role: AppRole) => {
       const mutation: OpeningConfigMutation = { mutation: "clearDefaultApp", dialect, role };
       setOpeningPreferences((current) => foldOpeningPreferences([mutation], current));
-      const roleNum = role === "editor" ? 1 : 0;
-      void pendingAppChannelFor(session?.pluginId ?? "")
-        ?.clearDefaultApp?.(dialect.artifactKind, dialect.standard, dialect.subset, roleNum)
-        ?.catch((commandError) => undefined);
+      notifySessionPin((plugin, instanceId) => plugin.clearDefaultApp(instanceId, dialect.artifactKind, dialect.standard, dialect.subset, role === "editor" ? 1 : 0));
     },
-    [pendingAppChannelFor, session?.pluginId],
+    [notifySessionPin],
   );
 
   /** 💾️ Persists `os.config.merge-policy` through the `🛡️change-merge-policy` config triad's own
@@ -206,11 +205,9 @@ export function useCatalogState({ core }: { readonly core: ShellCoreAfterDirecto
     dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
     dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
     dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
-    try {
-      void (target.plugin as PendingAppChannelMethods).openArtifact?.(canonicalSurfaceId(dialect, role), role === "editor" ? 1 : 0, nextSession.pluginId, nextSession.app.id)
-        ?.catch((commandError) => undefined);
-    } catch (commandError) {
-    }
+    const openedWindowId = seededActiveWindowId(seeded.modeLayout);
+    if (openedWindowId !== null) focusWhenMountedV1(document, childElementId("framework.window", openedWindowId));
+    void Promise.resolve().then(() => target.plugin.openArtifact(nextSession.instanceId, canonicalSurfaceId(dialect, role), role === "editor" ? 1 : 0, nextSession.pluginId, nextSession.app.id)).catch((commandError) => console.warn("[os-shell] opening notification refused", commandError));
   }, [uiLocale, uiTerminology]);
-  return { shellStateRef, captureEffectOwner, captureDialogOrigin, isCurrentEffectOwner, loadedPluginsRef, installPlugin, publishPreparedArtifactOpening, loadedPlugins, openArtifactWithAppRefRef, spaceArtifactCreationOwnersRef, openDocumentSessionsRef, setSpaceArtifactCreationUi, resolveArtifactOpeningWithActivationRef, openDocument, closeDocument, retireDocumentAttachment, openReadySpaceArtifactCreationRef, appRouter, knownDialects, pinnedAppFor, pluginLabelById, uiLocale, dispatchSetDefaultApp, dispatchClearDefaultApp, shellState, selectedConflictId, dispatch, dispatchResolveConflict, session, pluginSupervisorByIdRef, showTransientNoticeRef, applyRemoteMergeRef, routerFaultByPluginId, dispatchSetMergePolicy };
+  return { shellStateRef, captureEffectOwner, captureDialogOrigin, isCurrentEffectOwner, loadedPluginsRef, installPlugin, publishPreparedArtifactOpening, loadedPlugins, openResolvedArtifactRef, spaceArtifactCreationOwnersRef, openDocumentSessionsRef, setSpaceArtifactCreationUi, resolveArtifactOpeningWithActivationRef, openDocument, closeDocument, retireDocumentAttachment, openReadySpaceArtifactCreationRef, appRouter, knownDialects, pinnedAppFor, pluginLabelById, uiLocale, dispatchSetDefaultApp, dispatchClearDefaultApp, shellState, selectedConflictId, dispatch, dispatchResolveConflict, session, pluginSupervisorByIdRef, showTransientNoticeRef, applyRemoteMergeRef, routerFaultByPluginId, dispatchSetMergePolicy };
 }

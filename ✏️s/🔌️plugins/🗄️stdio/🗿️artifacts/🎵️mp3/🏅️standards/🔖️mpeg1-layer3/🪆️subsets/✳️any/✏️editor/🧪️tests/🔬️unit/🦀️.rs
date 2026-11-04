@@ -152,3 +152,20 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_block() {
     assert!(unchanged.artifact_mutations.is_empty(), "an edit that changes nothing publishes nothing");
     assert_eq!(emit(editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).err().expect("no kind").code.0, "snapshot-edit.unsupported-path");
 }
+
+#[semio_framework_async_macros::async_test]
+async fn cut_frames_plans_one_patch_for_the_whole_frame_range_and_refuses_everything_else() {
+    use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation;
+    let snapshot = crate::standards::mpeg1_layer3::subsets::any::io::decode_mp3(include_bytes!("../../../🧪️tests/🧫️fixtures/🔊️.mp3")).expect("real MP3 fixture decodes");
+    let frames = snapshot.frames.len();
+    match cut_frames_mutation(&snapshot, " 10 - 110 ").expect("an in-range cut plans") {
+        Mp3Mutation::PatchFrames(patch) => assert_eq!((patch.index, patch.remove_count, patch.frames.len()), (10, 100, 0)),
+        other => panic!("a cut must plan exactly one frame patch, not {other:?}"),
+    }
+    for refused in ["5-5", "9-3", "x", "4", &format!("0-{}", frames + 1)] {
+        assert_eq!(cut_frames_mutation(&snapshot, refused).expect_err("an invalid range is refused").code.0, "stdio.mp3.frame-range", "{refused}");
+    }
+    let action = cut_frames_action();
+    assert_eq!(action.id, CUT_FRAMES_ACTION_ID);
+    assert!(action.in_palette, "the cut must be reachable from the command palette");
+}

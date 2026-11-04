@@ -155,9 +155,13 @@ impl ArtifactOwnedToolJobFactory for SemioDrawingEditorExampleFactory {
     type Owner = EditorApp<SemioDrawingEditor>;
     const TOOL_IDS: &'static [&'static str] = SEMIO_DRAWING_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_DRAWING_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_semio_base::semio_natural_file!(SemioDrawingSnapshot, "stdio.semio.drawing");
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_DRAWING_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 pub use semio_s_artifact_stdio_semio_drawing_inferences::editor::edit_rules;
+#[path = "🌳️node-edits/🦀️.rs"]
+pub mod node_edits;
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
@@ -258,6 +262,9 @@ impl editing::SnapshotEditingEditor for SemioDrawingEditor {
     }
     fn snapshot_edit_rules() -> &'static editing::EditRules {
         &edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        node_edits::special(event, snapshot)
     }
 }
 

@@ -56,7 +56,7 @@
             },
             {
               "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/child/schema.json",
-              "x-semio-child-kind": "s.stdio.semio.mesh"
+              "x-semio-child-kind": "stdio.semio.mesh"
             }
           ]
         },

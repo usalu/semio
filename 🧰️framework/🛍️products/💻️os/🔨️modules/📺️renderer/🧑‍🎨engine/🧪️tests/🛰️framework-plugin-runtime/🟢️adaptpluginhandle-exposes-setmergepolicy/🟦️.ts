@@ -49,6 +49,33 @@ export function registerAdaptpluginhandleExposesSetmergepolicyResolveconflictTes
     await handle.readConflicts(instanceId);
     expect(sentCommands[2]).toEqual({ readConflicts: { seq: 3 } });
   });
+  it("adaptPluginHandle exposes openArtifact/setDefaultApp/clearDefaultApp and sends the real AppCommand wire frames, so a pin reaches the instance instead of an inert optional call", async () => {
+    const { encodeAppFrame, decodeAppCommand } = await import("@semio-tech/framework-os");
+    const sentCommands: unknown[] = [];
+    const fakeHandle = {
+      manifest: { pluginId: "mock-pins", label: "Mock Pins", version: "0", apps: [], programs: [], examples: [] } as unknown as import("@semio-tech/framework").PluginManifest,
+      createApp: async () => 5,
+      destroyApp: async () => {},
+      takeSegmentedDownloadChunk: async () => undefined,
+      ...exchangeStyleChannel((_instanceId, frames) => {
+        const [command] = frames.map(decodeAppCommand);
+        sentCommands.push(command);
+        const seq = (Object.values(command as object)[0] as { seq: number }).seq;
+        return [encodeAppFrame({ Done: { in_reply_to: seq } })];
+      }),
+      dispose: () => {},
+    };
+    const handle = await adaptPluginHandle("mock-pins", { handle: fakeHandle, release: () => {} } as unknown as Parameters<typeof adaptPluginHandle>[1]);
+    const instanceId = await handle.createApp("main");
+    await handle.openArtifact(instanceId, "s.stdio.png@1.2/*#viewer", 0);
+    await handle.setDefaultApp(instanceId, "s.stdio.png", "1.2", "*", 1, "stdio-image", "s.stdio.png@1.2/*#editor");
+    await handle.clearDefaultApp(instanceId, "s.stdio.png", "1.2", "*", 1);
+    expect(sentCommands).toEqual([
+      { openArtifact: { seq: 1, artifact_ref: "s.stdio.png@1.2/*#viewer", role: 0, plugin_id: "", app_id: "" } },
+      { setDefaultApp: { seq: 2, artifact_kind: "s.stdio.png", standard: "1.2", subset: "*", role: 1, plugin_id: "stdio-image", app_id: "s.stdio.png@1.2/*#editor" } },
+      { clearDefaultApp: { seq: 3, artifact_kind: "s.stdio.png", standard: "1.2", subset: "*", role: 1 } },
+    ]);
+  });
   it("adaptPluginHandle.applyMutations decodes an unsolicited MergeReport/Conflicts reply and it reaches ShellState — ticket 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS lane L1 gap 1: a peer's ApplyEnvelopes ingest batches MergeReport/Conflicts frames alongside it (contract freeze §C6/§C9 'pushed unsolicited after every ingest'), but `applyMutations` used to only look for an Error frame and silently drop everything else — this asserts the guest's real roster survives the decode AND that dispatching it through `shellReducer`'s SET_CONFLICTS (what ShellHost's `applyRemoteMerge` does) lands a remote-origin quarantined conflict in both `selectOpenConflicts` and `selectQuarantinedConflicts`, exactly the panel/badge lane K2 wired", async () => {
     const { encodeAppFrame, decodeAppCommand, encodePackValue, encodeMutationEnvelopesPack } = await import("@semio-tech/framework-os");
     const remoteConflict = {

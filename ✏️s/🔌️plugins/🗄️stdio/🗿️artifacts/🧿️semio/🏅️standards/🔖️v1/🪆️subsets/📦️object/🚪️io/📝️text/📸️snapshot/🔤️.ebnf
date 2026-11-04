@@ -1,7 +1,7 @@
 (* ISO/IEC 14977 EBNF mirror (descriptive, not test-parsed — the real recognizer is
    ../📖️.grammar.semio) for s.stdio.semio.object's DSL text representation. *)
 document       = artifact mark, schema line, transform line, brep line, mesh line, properties line ;
-artifact mark  = "s.stdio.semio.object" ;
+artifact mark  = "stdio.semio.object" ;
 schema line    = "schema", "=", hex ;
 transform line = "transform", "=", "[", number, { ",", number }, "]" ;
 brep line      = "brep", "=", child ;

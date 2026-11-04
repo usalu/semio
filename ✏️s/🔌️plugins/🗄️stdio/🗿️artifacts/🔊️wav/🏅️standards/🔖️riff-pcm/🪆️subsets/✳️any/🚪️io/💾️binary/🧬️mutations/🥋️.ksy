@@ -1,8 +1,13 @@
 meta:
   id: wav_mutations
-  endian: le
+  imports:
+    - vlq_base128_le
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  A binary mutation op: format octet, variant tag (varint; 1 setFmt, 2 setData, 3 setOtherChunks, 4 patchData, 5 setPadBytes), then the variant's wire value.
 seq:
-  - id: magic
-    contents: "stdio.wav.mutations"
+  - id: format
+    type: u1
+  - id: tag
+    type: vlq_base128_le
+  - id: payload
+    size-eos: true

@@ -1,0 +1,2108 @@
+{
+  "schema": "semio.stdio.fixture-manifest/v1",
+  "owner": "T19 haiku-registration (manifest), consumer T06 sonnet-validation",
+  "repoRoot": "/home/deck/semio",
+  "artifactCount": 38,
+  "lacking": {
+    "validFixture": [
+      "idml"
+    ],
+    "surface": [
+      "idf",
+      "idml"
+    ]
+  },
+  "artifacts": [
+    {
+      "artifact": "avi",
+      "artifactKind": "s.stdio.avi",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi",
+      "mimes": [
+        "video/x-msvideo"
+      ],
+      "extensions": [
+        ".avi"
+      ],
+      "nativeCodecId": "s.stdio.avi.standard.1-0.codec.native-document.v1",
+      "nativeExtension": "semio",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.avi/1.0/hdrl",
+          "standard": "1.0",
+          "subset": "hdrl",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl"
+        },
+        {
+          "coordinate": "s.stdio.avi/1.0/movi",
+          "standard": "1.0",
+          "subset": "movi",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎞️movi"
+        },
+        {
+          "coordinate": "s.stdio.avi/1.0/idx1",
+          "standard": "1.0",
+          "subset": "idx1",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/📇️idx1"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.avi@1.0/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.avi@1.0/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧪️tests/🧫️fixtures/🎬️.avi",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎞️movi/🧪️tests/🧫️fixtures/🎬️.avi",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/📇️idx1/🧪️tests/🧫️fixtures/🎬️.avi"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧪️tests/🧫️fixtures/✂️truncated/🎬️-truncated.avi",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧪️tests/🧫️fixtures/🪄️wrong-magic/🎬️-invalid-magic.avi"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧪️tests/🧫️fixtures/🎬️.avi"
+    },
+    {
+      "artifact": "bcf",
+      "artifactKind": "s.stdio.bcf",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf",
+      "mimes": [
+        "application/vnd.bcf+xml"
+      ],
+      "extensions": [
+        ".bcf"
+      ],
+      "nativeCodecId": "s.stdio.bcf.standard.2-1.codec.native-document.v1",
+      "nativeExtension": "semio",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.bcf/2.1/viewpoint",
+          "standard": "2.1",
+          "subset": "viewpoint",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/👁️viewpoint"
+        },
+        {
+          "coordinate": "s.stdio.bcf/2.1/snapshot",
+          "standard": "2.1",
+          "subset": "snapshot",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/📸️snapshot"
+        },
+        {
+          "coordinate": "s.stdio.bcf/2.1/markup",
+          "standard": "2.1",
+          "subset": "markup",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.bcf@2.1/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.bcf@2.1/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/✏️set-comment-applied/➡️after.bcf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/🔢️set-version-applied/➡️after.bcf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/📌️insert-topic-applied/➡️after.bcf"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.bcf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/🪄️wrong-magic/➡️after-invalid-magic.bcf"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🧫️fixtures/✏️set-comment-applied/➡️after.bcf"
+    },
+    {
+      "artifact": "binary",
+      "artifactKind": "s.stdio.binary",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary",
+      "mimes": [
+        "application/octet-stream"
+      ],
+      "extensions": [
+        ".bin"
+      ],
+      "nativeCodecId": null,
+      "nativeExtension": null,
+      "dialects": [
+        {
+          "coordinate": "s.stdio.binary/raw/any",
+          "standard": "raw",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.binary@raw/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.binary@raw/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/💾️.bin"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/💾️-truncated.bin",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/💾️-invalid-magic.bin"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/💾️.bin"
+    },
+    {
+      "artifact": "bmp",
+      "artifactKind": "s.stdio.bmp",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp",
+      "mimes": [
+        "image/bmp"
+      ],
+      "extensions": [
+        ".bmp"
+      ],
+      "nativeCodecId": null,
+      "nativeExtension": null,
+      "dialects": [
+        {
+          "coordinate": "s.stdio.bmp/v3/any",
+          "standard": "v3",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.bmp@v3/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.bmp@v3/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📐️change-header-fields/➡️after.bmp",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔲️replace-pixel-data-applied/➡️after.bmp",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📤️remove-palette-entry-applied/➡️after.bmp"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/reject-dib-108.bmp",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/reject-dib-12.bmp",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/reject-dib-124.bmp"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true
+    },
+    {
+      "artifact": "csv",
+      "artifactKind": "s.stdio.csv",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv",
+      "mimes": [
+        "text/csv"
+      ],
+      "extensions": [
+        ".csv"
+      ],
+      "nativeCodecId": "s.stdio.csv.standard.rfc4180.codec.native-document.v1",
+      "nativeExtension": "csv",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.csv/rfc4180/any",
+          "standard": "rfc4180",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.csv@rfc4180/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.csv@rfc4180/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧪️reuse-marketplaces/📊️.csv",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/📊️.csv"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/📊️-truncated.csv"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧪️reuse-marketplaces/📊️.csv"
+    },
+    {
+      "artifact": "deflate",
+      "artifactKind": "s.stdio.deflate",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate",
+      "mimes": [
+        "application/zlib"
+      ],
+      "extensions": [
+        ".zz"
+      ],
+      "nativeCodecId": "s.stdio.deflate.standard.rfc1950.codec.native-document.v1",
+      "nativeExtension": "zz",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.deflate/rfc1950/any",
+          "standard": "rfc1950",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.deflate@rfc1950/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.deflate@rfc1950/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗜️readme-level9.zz",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🗜️.zz"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🗜️readme-level9-truncated.zz",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🗜️readme-level9-invalid-magic.zz"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗜️readme-level9.zz"
+    },
+    {
+      "artifact": "docx",
+      "artifactKind": "s.stdio.docx",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx",
+      "mimes": [
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ],
+      "extensions": [
+        ".docx"
+      ],
+      "nativeCodecId": "s.stdio.docx.standard.ecma-376.codec.native-document.v1",
+      "nativeExtension": "docx",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.docx/ecma-376/strict",
+          "standard": "ecma-376",
+          "subset": "strict",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict"
+        },
+        {
+          "coordinate": "s.stdio.docx/ecma-376/transitional",
+          "standard": "ecma-376",
+          "subset": "transitional",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional"
+        },
+        {
+          "coordinate": "s.stdio.docx/ecma-376/base",
+          "standard": "ecma-376",
+          "subset": "base",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.docx@ecma-376/*#editor",
+        "s.stdio.docx@ecma-376/strict#editor",
+        "s.stdio.docx@ecma-376/transitional#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.docx@ecma-376/*#viewer",
+        "s.stdio.docx@ecma-376/strict#viewer",
+        "s.stdio.docx@ecma-376/transitional#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📜️example-readme.docx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/🧪️tests/🧫️fixtures/📜️example-readme.docx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/🧪️tests/🧫️fixtures/📜️example-readme.docx"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✂️truncated/📜️example-readme-truncated.docx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🪄️wrong-magic/📜️example-readme-invalid-magic.docx"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📜️example-readme.docx"
+    },
+    {
+      "artifact": "dwg",
+      "artifactKind": "s.stdio.dwg",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg",
+      "mimes": [
+        "image/vnd.dwg"
+      ],
+      "extensions": [
+        ".dwg"
+      ],
+      "nativeCodecId": "s.stdio.dwg.standard.ac1024.codec.native-document.v1",
+      "nativeExtension": "dwg",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.dwg/ac1018/any",
+          "standard": "ac1018",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any"
+        },
+        {
+          "coordinate": "s.stdio.dwg/ac1024/any",
+          "standard": "ac1024",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.dwg@ac1018/*#editor",
+        "s.stdio.dwg@ac1024/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.dwg@ac1018/*#viewer",
+        "s.stdio.dwg@ac1024/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🖊️.dwg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🖼️assets/🏛️architectural/🏛️architectural.dwg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🖼️assets/🏛️architectural/🏛️architectural.dwg"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🖊️-truncated.dwg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🖊️-invalid-magic.dwg"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🖊️.dwg"
+    },
+    {
+      "artifact": "dxf",
+      "artifactKind": "s.stdio.dxf",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf",
+      "mimes": [
+        "image/vnd.dxf"
+      ],
+      "extensions": [
+        ".dxf"
+      ],
+      "nativeCodecId": "s.stdio.dxf.standard.r12.codec.native-document.v1",
+      "nativeExtension": "dxf",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.dxf/r12/tables",
+          "standard": "r12",
+          "subset": "tables",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables"
+        },
+        {
+          "coordinate": "s.stdio.dxf/r12/header",
+          "standard": "r12",
+          "subset": "header",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header"
+        },
+        {
+          "coordinate": "s.stdio.dxf/r12/entities",
+          "standard": "r12",
+          "subset": "entities",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/🧩️entities"
+        },
+        {
+          "coordinate": "s.stdio.dxf/r12/blocks",
+          "standard": "r12",
+          "subset": "blocks",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/🧱️blocks"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.dxf@r12/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.dxf@r12/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables/🧪️tests/🧫️fixtures/🎚️set-layer-applied/➡️after.dxf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables/🧪️tests/🧫️fixtures/🖌️set-style-applied/➡️after.dxf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧪️tests/🧫️fixtures/⏸️no-mutation-no-op/➡️after.dxf"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.dxf"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables/🧪️tests/🧫️fixtures/🎚️set-layer-applied/➡️after.dxf"
+    },
+    {
+      "artifact": "epw",
+      "artifactKind": "s.stdio.epw",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw",
+      "mimes": [],
+      "extensions": [
+        ".epw"
+      ],
+      "nativeCodecId": null,
+      "nativeExtension": null,
+      "dialects": [
+        {
+          "coordinate": "s.stdio.epw/energyplus/any",
+          "standard": "energyplus",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.epw@energyplus/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.epw@energyplus/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🖼️assets/🎬️demo/🧪️example/🌦️.epw"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🌦️-truncated.epw"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🖼️assets/🎬️demo/🧪️example/🌦️.epw"
+    },
+    {
+      "artifact": "gif",
+      "artifactKind": "s.stdio.gif",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif",
+      "mimes": [
+        "image/gif"
+      ],
+      "extensions": [
+        ".gif"
+      ],
+      "nativeCodecId": null,
+      "nativeExtension": null,
+      "dialects": [
+        {
+          "coordinate": "s.stdio.gif/87a/any",
+          "standard": "87a",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any"
+        },
+        {
+          "coordinate": "s.stdio.gif/89a/graphic-control",
+          "standard": "89a",
+          "subset": "graphic-control",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🎛️graphic-control"
+        },
+        {
+          "coordinate": "s.stdio.gif/89a/comment",
+          "standard": "89a",
+          "subset": "comment",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/💬️comment"
+        },
+        {
+          "coordinate": "s.stdio.gif/89a/application",
+          "standard": "89a",
+          "subset": "application",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧩️application"
+        },
+        {
+          "coordinate": "s.stdio.gif/89a/base",
+          "standard": "89a",
+          "subset": "base",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base"
+        },
+        {
+          "coordinate": "s.stdio.gif/sqlite/null",
+          "standard": "sqlite",
+          "subset": null,
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🪶️sqlite"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.gif@87a/*#editor",
+        "s.stdio.gif@89a/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.gif@87a/*#viewer",
+        "s.stdio.gif@89a/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💃️dancing-87a/🖼️.gif",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔀️move-image/➡️after.gif",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏸️no-mutation/➡️after.gif"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🖼️-truncated.gif",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🖼️-invalid-magic.gif"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💃️dancing-87a/🖼️.gif"
+    },
+    {
+      "artifact": "gltf",
+      "artifactKind": "s.stdio.gltf",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf",
+      "mimes": [
+        "model/gltf+json",
+        "model/gltf-binary"
+      ],
+      "extensions": [
+        ".glb",
+        ".gltf"
+      ],
+      "nativeCodecId": "s.stdio.gltf.standard.2-0.codec.native-document.v1",
+      "nativeExtension": "gltf",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.gltf/2.0/any",
+          "standard": "2.0",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any"
+        },
+        {
+          "coordinate": "s.stdio.gltf/2.0/animation",
+          "standard": "2.0",
+          "subset": "animation",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎞️animation"
+        },
+        {
+          "coordinate": "s.stdio.gltf/2.0/camera",
+          "standard": "2.0",
+          "subset": "camera",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎥️camera"
+        },
+        {
+          "coordinate": "s.stdio.gltf/2.0/scene",
+          "standard": "2.0",
+          "subset": "scene",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎬️scene"
+        },
+        {
+          "coordinate": "s.stdio.gltf/2.0/material",
+          "standard": "2.0",
+          "subset": "material",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/💎️material"
+        },
+        {
+          "coordinate": "s.stdio.gltf/2.0/buffer",
+          "standard": "2.0",
+          "subset": "buffer",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/💿️buffer"
+        },
+        {
+          "coordinate": "s.stdio.gltf/2.0/mesh",
+          "standard": "2.0",
+          "subset": "mesh",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🕸️mesh"
+        },
+        {
+          "coordinate": "s.stdio.gltf/2.0/skin",
+          "standard": "2.0",
+          "subset": "skin",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🦴️skin"
+        },
+        {
+          "coordinate": "s.stdio.gltf/2.0/asset",
+          "standard": "2.0",
+          "subset": "asset",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🪪️asset"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.gltf@2.0/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.gltf@2.0/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🚚️move/➡️after.gltf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎬️scene/🧪️tests/🧫️fixtures/🌳️node/🚚️move/➡️after.gltf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎬️scene/🧪️tests/🧫️fixtures/🎬️scene/🚚️move/➡️after.gltf"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.gltf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🪄️wrong-magic/➡️after-invalid-magic.gltf"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🕸️mesh/🧪️tests/🧫️fixtures/🕸️mesh/🚚️move/➡️after.gltf"
+    },
+    {
+      "artifact": "html",
+      "artifactKind": "s.stdio.html",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html",
+      "mimes": [
+        "text/html"
+      ],
+      "extensions": [
+        ".html"
+      ],
+      "nativeCodecId": "s.stdio.html.standard.5.codec.native-document.v1",
+      "nativeExtension": "html",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.html/5/any",
+          "standard": "5",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.html@5/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.html@5/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏚️zukunft-bau-entwerfen-mit-bestand/🌐️.html",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✍️set-text-applied/📸️snapshot/➡️after/🌐️.html",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✍️set-text-applied/📸️snapshot/⬅️before/🌐️.html"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🌐️-truncated.html"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏚️zukunft-bau-entwerfen-mit-bestand/🌐️.html"
+    },
+    {
+      "artifact": "idf",
+      "artifactKind": "s.stdio.idf",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/⚡️idf",
+      "mimes": [],
+      "extensions": [
+        ".idf"
+      ],
+      "nativeCodecId": null,
+      "nativeExtension": null,
+      "dialects": [
+        {
+          "coordinate": "s.stdio.idf/25.2/null",
+          "standard": "s.stdio.idf.standard.25.2",
+          "subset": null,
+          "folder": null
+        }
+      ],
+      "editorAppIds": [],
+      "viewerAppIds": [],
+      "validSamples": [
+        "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/⚡️idf/🧪️tests/1ZoneUncontrolled.idf"
+      ],
+      "validSampleSource": "repo-external",
+      "invalidFixtureStatus": "absent",
+      "invalidSamples": [],
+      "hasValidFixture": true,
+      "hasSurface": false
+    },
+    {
+      "artifact": "idml",
+      "artifactKind": "s.stdio.idml",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml",
+      "mimes": [
+        "application/vnd.adobe.indesign-idml-package"
+      ],
+      "extensions": [
+        ".idml"
+      ],
+      "nativeCodecId": "s.stdio.idml.standard.8-0.codec.native-document.v1",
+      "nativeExtension": "idml",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.idml/8-0/null",
+          "standard": "s.stdio.idml.standard.8-0",
+          "subset": null,
+          "folder": null
+        }
+      ],
+      "editorAppIds": [],
+      "viewerAppIds": [],
+      "validSamples": [],
+      "validSampleSource": "none",
+      "invalidFixtureStatus": "absent",
+      "invalidSamples": [],
+      "hasValidFixture": false,
+      "hasSurface": false
+    },
+    {
+      "artifact": "ifc",
+      "artifactKind": "s.stdio.ifc",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc",
+      "mimes": [
+        "application/x-ifc"
+      ],
+      "extensions": [
+        ".ifc"
+      ],
+      "nativeCodecId": null,
+      "nativeExtension": null,
+      "dialects": [
+        {
+          "coordinate": "s.stdio.ifc/4/any",
+          "standard": "4",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any"
+        },
+        {
+          "coordinate": "s.stdio.ifc/2x3/cobie",
+          "standard": "2x3",
+          "subset": "cobie",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie"
+        },
+        {
+          "coordinate": "s.stdio.ifc/2x3/cv20",
+          "standard": "2x3",
+          "subset": "cv20",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20"
+        },
+        {
+          "coordinate": "s.stdio.ifc/2x3/sav",
+          "standard": "2x3",
+          "subset": "sav",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav"
+        },
+        {
+          "coordinate": "s.stdio.ifc/2x3/base",
+          "standard": "2x3",
+          "subset": "base",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base"
+        },
+        {
+          "coordinate": "s.stdio.ifc/4x3/any",
+          "standard": "4x3",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.ifc@2x3/*#editor",
+        "s.stdio.ifc@2x3/cobie#editor",
+        "s.stdio.ifc@2x3/cv20#editor",
+        "s.stdio.ifc@2x3/sav#editor",
+        "s.stdio.ifc@4/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.ifc@2x3/*#viewer",
+        "s.stdio.ifc@2x3/cobie#viewer",
+        "s.stdio.ifc@2x3/cv20#viewer",
+        "s.stdio.ifc@2x3/sav#viewer",
+        "s.stdio.ifc@4/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📐️geometry/complex-item.ifc",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🧪️tests/🧫️fixtures/🚪️set-space-applied/➡️after.ifc",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📋️set-header-applied/➡️after.ifc"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/🧫️fixtures/✂️truncated/complex-item-truncated.ifc"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📐️geometry/complex-item.ifc"
+    },
+    {
+      "artifact": "jpg",
+      "artifactKind": "s.stdio.jpg",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg",
+      "mimes": [
+        "image/jpeg"
+      ],
+      "extensions": [
+        ".jpeg",
+        ".jpg"
+      ],
+      "nativeCodecId": "s.stdio.jpg.standard.jfif-1-01.codec.native-document.v1",
+      "nativeExtension": "jpg",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.jpg/jfif-1.01/baseline",
+          "standard": "jfif-1.01",
+          "subset": "baseline",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline"
+        },
+        {
+          "coordinate": "s.stdio.jpg/jfif-1.01/document",
+          "standard": "jfif-1.01",
+          "subset": "document",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.jpg@jfif-1.01/*#editor",
+        "s.stdio.jpg@jfif-1.01/baseline#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.jpg@jfif-1.01/*#viewer",
+        "s.stdio.jpg@jfif-1.01/baseline#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🔎️change-jfif-header/➡️after.jpg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🖼️replace-image-applied/➡️after.jpg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🔲️replace-pixels-applied/➡️after.jpg"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.jpg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🪄️wrong-magic/➡️after-invalid-magic.jpg"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🔎️change-jfif-header/➡️after.jpg"
+    },
+    {
+      "artifact": "json",
+      "artifactKind": "s.stdio.json",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json",
+      "mimes": [
+        "application/json"
+      ],
+      "extensions": [
+        ".json"
+      ],
+      "nativeCodecId": "s.stdio.json.standard.rfc8259.codec.native-document.v1",
+      "nativeExtension": "json",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.json/rfc8259/geojson",
+          "standard": "rfc8259",
+          "subset": "geojson",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🌍️geojson"
+        },
+        {
+          "coordinate": "s.stdio.json/rfc8259/i-json",
+          "standard": "rfc8259",
+          "subset": "i-json",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json"
+        },
+        {
+          "coordinate": "s.stdio.json/rfc8259/base",
+          "standard": "rfc8259",
+          "subset": "base",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.json@rfc8259/*#editor",
+        "s.stdio.json@rfc8259/i-json#editor",
+        "stdio.json.editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.json@rfc8259/*#viewer",
+        "s.stdio.json@rfc8259/i-json#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✏️set-member/➡️after.json",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🔢️set-scalar/➡️after.json",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧪️tests/🧫️fixtures/🔤️set-string/➡️after.json"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/⚠️malformed.json"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true
+    },
+    {
+      "artifact": "las",
+      "artifactKind": "s.stdio.las",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las",
+      "mimes": [
+        "application/vnd.las"
+      ],
+      "extensions": [
+        ".las"
+      ],
+      "nativeCodecId": "s.stdio.las.standard.1-0.codec.native-document.v1",
+      "nativeExtension": "las",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.las/1.0/header",
+          "standard": "1.0",
+          "subset": "header",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header"
+        },
+        {
+          "coordinate": "s.stdio.las/1.0/points",
+          "standard": "1.0",
+          "subset": "points",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📍️points"
+        },
+        {
+          "coordinate": "s.stdio.las/1.0/vlr",
+          "standard": "1.0",
+          "subset": "vlr",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📼️vlr"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.las@1.0/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.las@1.0/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📼️vlr/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.las",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.las",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📍️points/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.las"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📼️vlr/🧪️tests/🧫️fixtures/✂️truncated/🧊️-truncated.las",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📼️vlr/🧪️tests/🧫️fixtures/🪄️wrong-magic/🧊️-invalid-magic.las"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📼️vlr/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.las"
+    },
+    {
+      "artifact": "md",
+      "artifactKind": "s.stdio.md",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md",
+      "mimes": [
+        "text/markdown"
+      ],
+      "extensions": [
+        ".markdown",
+        ".md"
+      ],
+      "nativeCodecId": "s.stdio.md.standard.commonmark.codec.native-document.v1",
+      "nativeExtension": "md",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.md/commonmark/any",
+          "standard": "commonmark",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.md@commonmark/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.md@commonmark/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📖️readme.md",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/📝️.md",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/✏️editor/🎚️config/📌️.empty.md"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/📖️readme-truncated.md"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📖️readme.md"
+    },
+    {
+      "artifact": "mp3",
+      "artifactKind": "s.stdio.mp3",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3",
+      "mimes": [
+        "audio/mpeg"
+      ],
+      "extensions": [
+        ".mp3"
+      ],
+      "nativeCodecId": "s.stdio.mp3.standard.mpeg1-layer3.codec.native-document.v1",
+      "nativeExtension": "semio",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.mp3/mpeg1-layer3/any",
+          "standard": "mpeg1-layer3",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.mp3@mpeg1-layer3/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.mp3@mpeg1-layer3/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔊️.mp3",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🔊️.mp3"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🔊️-truncated.mp3",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🔊️-invalid-magic.mp3"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔊️.mp3"
+    },
+    {
+      "artifact": "mp4",
+      "artifactKind": "s.stdio.mp4",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4",
+      "mimes": [
+        "video/mp4"
+      ],
+      "extensions": [
+        ".mp4"
+      ],
+      "nativeCodecId": "s.stdio.mp4.standard.isobmff.codec.native-document.v1",
+      "nativeExtension": "semio",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.mp4/isobmff/any",
+          "standard": "isobmff",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.mp4@isobmff/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.mp4@isobmff/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️.mp4",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎬️.mp4"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🎬️-truncated.mp4",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🎬️-invalid-magic.mp4"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️.mp4"
+    },
+    {
+      "artifact": "obj",
+      "artifactKind": "s.stdio.obj",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj",
+      "mimes": [
+        "model/obj"
+      ],
+      "extensions": [
+        ".obj"
+      ],
+      "nativeCodecId": "s.stdio.obj.standard.3-0.codec.native-document.v1",
+      "nativeExtension": "obj",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.obj/3.0/material",
+          "standard": "3.0",
+          "subset": "material",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material"
+        },
+        {
+          "coordinate": "s.stdio.obj/3.0/geometry",
+          "standard": "3.0",
+          "subset": "geometry",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.obj@3.0/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.obj@3.0/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.obj",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.obj",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material/🧪️tests/🧫️fixtures/🎨️set-mtllib/➡️after.obj"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material/🧪️tests/🧫️fixtures/✂️truncated/🧊️-truncated.obj"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material/🧪️tests/🧫️fixtures/🧪️pattern-sphere/🧊️.obj"
+    },
+    {
+      "artifact": "pdf",
+      "artifactKind": "s.stdio.pdf",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf",
+      "mimes": [
+        "application/pdf"
+      ],
+      "extensions": [
+        ".pdf"
+      ],
+      "nativeCodecId": "s.stdio.pdf.standard.1-4.codec.native-document.v1",
+      "nativeExtension": "pdf",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.pdf/1.4/x",
+          "standard": "1.4",
+          "subset": "x",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x"
+        },
+        {
+          "coordinate": "s.stdio.pdf/1.4/a",
+          "standard": "1.4",
+          "subset": "a",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a"
+        },
+        {
+          "coordinate": "s.stdio.pdf/1.4/base",
+          "standard": "1.4",
+          "subset": "base",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base"
+        },
+        {
+          "coordinate": "s.stdio.pdf/1.7/ua",
+          "standard": "1.7",
+          "subset": "ua",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua"
+        },
+        {
+          "coordinate": "s.stdio.pdf/1.7/h",
+          "standard": "1.7",
+          "subset": "h",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h"
+        },
+        {
+          "coordinate": "s.stdio.pdf/1.7/e",
+          "standard": "1.7",
+          "subset": "e",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e"
+        },
+        {
+          "coordinate": "s.stdio.pdf/1.7/packages",
+          "standard": "1.7",
+          "subset": "packages",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📦️packages"
+        },
+        {
+          "coordinate": "s.stdio.pdf/1.7/x",
+          "standard": "1.7",
+          "subset": "x",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x"
+        },
+        {
+          "coordinate": "s.stdio.pdf/1.7/a",
+          "standard": "1.7",
+          "subset": "a",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a"
+        },
+        {
+          "coordinate": "s.stdio.pdf/1.7/base",
+          "standard": "1.7",
+          "subset": "base",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base"
+        },
+        {
+          "coordinate": "s.stdio.pdf/1.7/vt",
+          "standard": "1.7",
+          "subset": "vt",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt"
+        },
+        {
+          "coordinate": "s.stdio.pdf/packages/null",
+          "standard": "packages",
+          "subset": null,
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/📦️packages"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.pdf@1.4/*#editor",
+        "s.stdio.pdf@1.4/a#editor",
+        "s.stdio.pdf@1.4/x#editor",
+        "s.stdio.pdf@1.7/*#editor",
+        "s.stdio.pdf@1.7/a#editor",
+        "s.stdio.pdf@1.7/e#editor",
+        "s.stdio.pdf@1.7/h#editor",
+        "s.stdio.pdf@1.7/ua#editor",
+        "s.stdio.pdf@1.7/vt#editor",
+        "s.stdio.pdf@1.7/x#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.pdf@1.4/*#viewer",
+        "s.stdio.pdf@1.4/a#viewer",
+        "s.stdio.pdf@1.4/x#viewer",
+        "s.stdio.pdf@1.7/*#viewer",
+        "s.stdio.pdf@1.7/a#viewer",
+        "s.stdio.pdf@1.7/e#viewer",
+        "s.stdio.pdf@1.7/h#viewer",
+        "s.stdio.pdf@1.7/ua#viewer",
+        "s.stdio.pdf@1.7/vt#viewer",
+        "s.stdio.pdf@1.7/x#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🧪️tests/🧫️fixtures/🗣️set-lang/➡️after.pdf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/ℹ️set-info/➡️after.pdf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📄️set-form/➡️after.pdf"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.pdf",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🧪️tests/🧫️fixtures/🪄️wrong-magic/➡️after-invalid-magic.pdf"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🧪️tests/🧫️fixtures/🗣️set-lang/➡️after.pdf"
+    },
+    {
+      "artifact": "ply",
+      "artifactKind": "s.stdio.ply",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply",
+      "mimes": [
+        "model/ply"
+      ],
+      "extensions": [
+        ".ply"
+      ],
+      "nativeCodecId": "s.stdio.ply.standard.1-0.codec.native-document.v1",
+      "nativeExtension": "ply",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.ply/1.0/any",
+          "standard": "1.0",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.ply@1.0/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.ply@1.0/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🌐️pattern-sphere/🧊️.ply",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧊️.ply"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🧊️-truncated.ply"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🌐️pattern-sphere/🧊️.ply"
+    },
+    {
+      "artifact": "png",
+      "artifactKind": "s.stdio.png",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png",
+      "mimes": [
+        "image/png"
+      ],
+      "extensions": [
+        ".png"
+      ],
+      "nativeCodecId": "s.stdio.png.standard.1-2.codec.native-document.v1",
+      "nativeExtension": "png",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.png/1.2/any",
+          "standard": "1.2",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.png@1.2/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.png@1.2/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-adam7.png",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🟥️rgba8-swatch/🖼️.png",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📅️change-timestamp/➡️after.png"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/🧫️fixtures/✂️truncated/rgba8-adam7-truncated.png",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/🧫️fixtures/🪄️wrong-magic/rgba8-adam7-invalid-magic.png"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-adam7.png"
+    },
+    {
+      "artifact": "pptx",
+      "artifactKind": "s.stdio.pptx",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx",
+      "mimes": [
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      ],
+      "extensions": [
+        ".pptx"
+      ],
+      "nativeCodecId": "s.stdio.pptx.standard.ecma-376.codec.native-document.v1",
+      "nativeExtension": "pptx",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.pptx/ecma-376/transitional",
+          "standard": "ecma-376",
+          "subset": "transitional",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional"
+        },
+        {
+          "coordinate": "s.stdio.pptx/ecma-376/strict",
+          "standard": "ecma-376",
+          "subset": "strict",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict"
+        },
+        {
+          "coordinate": "s.stdio.pptx/ecma-376/base",
+          "standard": "ecma-376",
+          "subset": "base",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.pptx@ecma-376/*#editor",
+        "s.stdio.pptx@ecma-376/strict#editor",
+        "s.stdio.pptx@ecma-376/transitional#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.pptx@ecma-376/*#viewer",
+        "s.stdio.pptx@ecma-376/strict#viewer",
+        "s.stdio.pptx@ecma-376/transitional#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📽️.pptx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧪️tests/🧫️fixtures/📽️.pptx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🧪️tests/🧫️fixtures/📽️.pptx"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✂️truncated/📽️-truncated.pptx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🪄️wrong-magic/📽️-invalid-magic.pptx"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📽️.pptx"
+    },
+    {
+      "artifact": "semio",
+      "artifactKind": "s.stdio.semio",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+      "mimes": [
+        "application/vnd.semio"
+      ],
+      "extensions": [
+        ".semio"
+      ],
+      "nativeCodecId": null,
+      "nativeExtension": null,
+      "dialects": [
+        {
+          "coordinate": "s.stdio.semio/v1/base",
+          "standard": "v1",
+          "subset": "base",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/flow",
+          "standard": "v1",
+          "subset": "flow",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/animation",
+          "standard": "v1",
+          "subset": "animation",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/video",
+          "standard": "v1",
+          "subset": "video",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/model",
+          "standard": "v1",
+          "subset": "model",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/table",
+          "standard": "v1",
+          "subset": "table",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/cad",
+          "standard": "v1",
+          "subset": "cad",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/document",
+          "standard": "v1",
+          "subset": "document",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/object",
+          "standard": "v1",
+          "subset": "object",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/presentation",
+          "standard": "v1",
+          "subset": "presentation",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/audio",
+          "standard": "v1",
+          "subset": "audio",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/value",
+          "standard": "v1",
+          "subset": "value",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/text",
+          "standard": "v1",
+          "subset": "text",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/mesh",
+          "standard": "v1",
+          "subset": "mesh",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/graph",
+          "standard": "v1",
+          "subset": "graph",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/drawing",
+          "standard": "v1",
+          "subset": "drawing",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/image",
+          "standard": "v1",
+          "subset": "image",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/brep",
+          "standard": "v1",
+          "subset": "brep",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep"
+        },
+        {
+          "coordinate": "s.stdio.semio/v1/kit",
+          "standard": "v1",
+          "subset": "kit",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.semio@v1/*#editor",
+        "s.stdio.semio@v1/animation#editor",
+        "s.stdio.semio@v1/audio#editor",
+        "s.stdio.semio@v1/brep#editor",
+        "s.stdio.semio@v1/cad#editor",
+        "s.stdio.semio@v1/document#editor",
+        "s.stdio.semio@v1/drawing#editor",
+        "s.stdio.semio@v1/flow#editor",
+        "s.stdio.semio@v1/graph#editor",
+        "s.stdio.semio@v1/image#editor",
+        "s.stdio.semio@v1/kit#editor",
+        "s.stdio.semio@v1/mesh#editor",
+        "s.stdio.semio@v1/model#editor",
+        "s.stdio.semio@v1/object#editor",
+        "s.stdio.semio@v1/presentation#editor",
+        "s.stdio.semio@v1/table#editor",
+        "s.stdio.semio@v1/text#editor",
+        "s.stdio.semio@v1/value#editor",
+        "s.stdio.semio@v1/video#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.semio@v1/*#viewer",
+        "s.stdio.semio@v1/animation#viewer",
+        "s.stdio.semio@v1/audio#viewer",
+        "s.stdio.semio@v1/brep#viewer",
+        "s.stdio.semio@v1/cad#viewer",
+        "s.stdio.semio@v1/document#viewer",
+        "s.stdio.semio@v1/drawing#viewer",
+        "s.stdio.semio@v1/flow#viewer",
+        "s.stdio.semio@v1/graph#viewer",
+        "s.stdio.semio@v1/image#viewer",
+        "s.stdio.semio@v1/kit#viewer",
+        "s.stdio.semio@v1/mesh#viewer",
+        "s.stdio.semio@v1/model#viewer",
+        "s.stdio.semio@v1/object#viewer",
+        "s.stdio.semio@v1/presentation#viewer",
+        "s.stdio.semio@v1/table#viewer",
+        "s.stdio.semio@v1/text#viewer",
+        "s.stdio.semio@v1/value#viewer",
+        "s.stdio.semio@v1/video#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧪️tests/🧫️fixtures/🧰️mutate-semio-kit/🎒️.pack.semio",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧪️tests/🧫️fixtures/🔺️mutate-semio-mesh/🗣️.dsl.semio",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧪️tests/🧫️fixtures/🔤️mutate-semio-text/🎒️.pack.semio"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧪️tests/🧫️fixtures/✂️truncated/🎒️.pack-truncated.semio"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧪️tests/🧫️fixtures/🧰️mutate-semio-kit/🎒️.pack.semio"
+    },
+    {
+      "artifact": "step",
+      "artifactKind": "s.stdio.step",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step",
+      "mimes": [
+        "model/step"
+      ],
+      "extensions": [
+        ".step",
+        ".stp"
+      ],
+      "nativeCodecId": "s.stdio.step.standard.ap214.codec.native-document.v1",
+      "nativeExtension": "step",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.step/ap214/cc1",
+          "standard": "ap214",
+          "subset": "cc1",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1"
+        },
+        {
+          "coordinate": "s.stdio.step/ap214/cc2",
+          "standard": "ap214",
+          "subset": "cc2",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2"
+        },
+        {
+          "coordinate": "s.stdio.step/ap214/cc3",
+          "standard": "ap214",
+          "subset": "cc3",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3"
+        },
+        {
+          "coordinate": "s.stdio.step/ap214/cc4",
+          "standard": "ap214",
+          "subset": "cc4",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4"
+        },
+        {
+          "coordinate": "s.stdio.step/ap214/cc5",
+          "standard": "ap214",
+          "subset": "cc5",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5"
+        },
+        {
+          "coordinate": "s.stdio.step/ap214/cc6",
+          "standard": "ap214",
+          "subset": "cc6",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6"
+        },
+        {
+          "coordinate": "s.stdio.step/ap214/base",
+          "standard": "ap214",
+          "subset": "base",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.step@ap214/*#editor",
+        "s.stdio.step@ap214/cc1#editor",
+        "s.stdio.step@ap214/cc2#editor",
+        "s.stdio.step@ap214/cc3#editor",
+        "s.stdio.step@ap214/cc4#editor",
+        "s.stdio.step@ap214/cc5#editor",
+        "s.stdio.step@ap214/cc6#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.step@ap214/*#viewer",
+        "s.stdio.step@ap214/cc1#viewer",
+        "s.stdio.step@ap214/cc2#viewer",
+        "s.stdio.step@ap214/cc3#viewer",
+        "s.stdio.step@ap214/cc4#viewer",
+        "s.stdio.step@ap214/cc5#viewer",
+        "s.stdio.step@ap214/cc6#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/✅️cut-valid-no-op/🎯️expected.step",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/🪃️cut-skewed-bore/🎯️expected.step",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📛️set-file-name-applied/➡️after.stp"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/✂️truncated/🎯️expected-truncated.step"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/✅️cut-valid-no-op/🎯️expected.step"
+    },
+    {
+      "artifact": "stl",
+      "artifactKind": "s.stdio.stl",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl",
+      "mimes": [
+        "model/stl"
+      ],
+      "extensions": [
+        ".stl"
+      ],
+      "nativeCodecId": "s.stdio.stl.standard.ascii.codec.native-document.v1",
+      "nativeExtension": "stl",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.stl/ascii/any",
+          "standard": "ascii",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.stl@ascii/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.stl@ascii/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏛️hexagonal-cut-concrete-forest-left/🧊️.stl",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧊️.stl"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🧊️-truncated.stl",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🧊️-invalid-magic.stl"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏛️hexagonal-cut-concrete-forest-left/🧊️.stl"
+    },
+    {
+      "artifact": "svg",
+      "artifactKind": "s.stdio.svg",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg",
+      "mimes": [
+        "image/svg+xml"
+      ],
+      "extensions": [
+        ".svg"
+      ],
+      "nativeCodecId": "s.stdio.svg.standard.1-1.codec.native-document.v1",
+      "nativeExtension": "svg",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.svg/1.1/tiny",
+          "standard": "1.1",
+          "subset": "tiny",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny"
+        },
+        {
+          "coordinate": "s.stdio.svg/1.1/basic",
+          "standard": "1.1",
+          "subset": "basic",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic"
+        },
+        {
+          "coordinate": "s.stdio.svg/1.1/base",
+          "standard": "1.1",
+          "subset": "base",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.svg@1.1/*#editor",
+        "s.stdio.svg@1.1/basic#editor",
+        "s.stdio.svg@1.1/tiny#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.svg@1.1/*#viewer",
+        "s.stdio.svg@1.1/basic#viewer",
+        "s.stdio.svg@1.1/tiny#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧪️tests/🧫️fixtures/🐁️mouse.svg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧪️tests/🧫️fixtures/🔳️qr-code.svg",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🔳️qr-code.svg"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧪️tests/🧫️fixtures/✂️truncated/🐁️mouse-truncated.svg"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧪️tests/🧫️fixtures/🐁️mouse.svg"
+    },
+    {
+      "artifact": "tiff",
+      "artifactKind": "s.stdio.tiff",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff",
+      "mimes": [
+        "image/tiff"
+      ],
+      "extensions": [
+        ".tif",
+        ".tiff"
+      ],
+      "nativeCodecId": "s.stdio.tiff.standard.6-0.codec.native-document.v1",
+      "nativeExtension": "tiff",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.tiff/6.0/baseline",
+          "standard": "6.0",
+          "subset": "baseline",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline"
+        },
+        {
+          "coordinate": "s.stdio.tiff/6.0/document",
+          "standard": "6.0",
+          "subset": "document",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.tiff@6.0/*#editor",
+        "s.stdio.tiff@6.0/baseline#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.tiff@6.0/*#viewer",
+        "s.stdio.tiff@6.0/baseline#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🧭️change-byte-order/➡️after.tif",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/📤️remove-ifd-applied/➡️after.tiff",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/📥️insert-ifd-applied/➡️after.tiff"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/✂️truncated/➡️after-truncated.tif",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🪄️wrong-magic/➡️after-invalid-magic.tif"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🧫️fixtures/🧭️change-byte-order/➡️after.tif"
+    },
+    {
+      "artifact": "tsv",
+      "artifactKind": "s.stdio.tsv",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv",
+      "mimes": [
+        "text/tab-separated-values"
+      ],
+      "extensions": [
+        ".tsv"
+      ],
+      "nativeCodecId": "s.stdio.tsv.standard.iana.codec.native-document.v1",
+      "nativeExtension": "tsv",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.tsv/iana/any",
+          "standard": "iana",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.tsv@iana/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.tsv@iana/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/♻️reuse-marketplaces.tsv",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/📊️.tsv"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/♻️reuse-marketplaces-truncated.tsv"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/♻️reuse-marketplaces.tsv"
+    },
+    {
+      "artifact": "txt",
+      "artifactKind": "s.stdio.txt",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt",
+      "mimes": [
+        "text/plain"
+      ],
+      "extensions": [
+        ".txt"
+      ],
+      "nativeCodecId": "s.stdio.txt.standard.utf-8.codec.native-document.v1",
+      "nativeExtension": "txt",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.txt/utf-8/any",
+          "standard": "utf-8",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.txt@utf-8/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.txt@utf-8/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔤️.txt",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🔤️.txt"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🔤️-truncated.txt"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔤️.txt"
+    },
+    {
+      "artifact": "wav",
+      "artifactKind": "s.stdio.wav",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav",
+      "mimes": [
+        "audio/wav"
+      ],
+      "extensions": [
+        ".wav"
+      ],
+      "nativeCodecId": null,
+      "nativeExtension": null,
+      "dialects": [
+        {
+          "coordinate": "s.stdio.wav/riff-pcm/any",
+          "standard": "riff-pcm",
+          "subset": "any",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.wav@riff-pcm/*#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.wav@riff-pcm/*#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎙️bauen-mit-bestand-ausschnitt/🔊️.wav",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎧️example/🔊️.wav"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✂️truncated/🔊️-truncated.wav",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪄️wrong-magic/🔊️-invalid-magic.wav"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎙️bauen-mit-bestand-ausschnitt/🔊️.wav"
+    },
+    {
+      "artifact": "xlsx",
+      "artifactKind": "s.stdio.xlsx",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx",
+      "mimes": [
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ],
+      "extensions": [
+        ".xlsx"
+      ],
+      "nativeCodecId": "s.stdio.xlsx.standard.ecma-376.codec.native-document.v1",
+      "nativeExtension": "xlsx",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.xlsx/ecma-376/transitional",
+          "standard": "ecma-376",
+          "subset": "transitional",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional"
+        },
+        {
+          "coordinate": "s.stdio.xlsx/ecma-376/strict",
+          "standard": "ecma-376",
+          "subset": "strict",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict"
+        },
+        {
+          "coordinate": "s.stdio.xlsx/ecma-376/base",
+          "standard": "ecma-376",
+          "subset": "base",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.xlsx@ecma-376/*#editor",
+        "s.stdio.xlsx@ecma-376/strict#editor",
+        "s.stdio.xlsx@ecma-376/transitional#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.xlsx@ecma-376/*#viewer",
+        "s.stdio.xlsx@ecma-376/strict#viewer",
+        "s.stdio.xlsx@ecma-376/transitional#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📕️reuse-marketplaces.xlsx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧪️tests/🧫️fixtures/📕️reuse-marketplaces.xlsx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✍️set-cell-applied/➡️after.xlsx"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✂️truncated/📕️reuse-marketplaces-truncated.xlsx",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🪄️wrong-magic/📕️reuse-marketplaces-invalid-magic.xlsx"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📕️reuse-marketplaces.xlsx"
+    },
+    {
+      "artifact": "xml",
+      "artifactKind": "s.stdio.xml",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml",
+      "mimes": [
+        "application/xml"
+      ],
+      "extensions": [
+        ".xml"
+      ],
+      "nativeCodecId": "s.stdio.xml.standard.1-0.codec.native-document.v1",
+      "nativeExtension": "xml",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.xml/1.0/valid",
+          "standard": "1.0",
+          "subset": "valid",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid"
+        },
+        {
+          "coordinate": "s.stdio.xml/1.0/base",
+          "standard": "1.0",
+          "subset": "base",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.xml@1.0/*#editor",
+        "s.stdio.xml@1.0/valid#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.xml@1.0/*#viewer",
+        "s.stdio.xml@1.0/valid#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🏷️.xml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧪️tests/🧫️fixtures/🍎️macos-uttype-plist/🏷️.xml",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✍️set-text-applied/➡️after.xml"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✂️truncated/🏷️-truncated.xml"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🏷️.xml"
+    },
+    {
+      "artifact": "zip",
+      "artifactKind": "s.stdio.zip",
+      "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip",
+      "mimes": [
+        "application/zip"
+      ],
+      "extensions": [
+        ".zip"
+      ],
+      "nativeCodecId": "s.stdio.zip.standard.2-0.codec.native-document.v1",
+      "nativeExtension": "zip",
+      "dialects": [
+        {
+          "coordinate": "s.stdio.zip/2.0/iso21320",
+          "standard": "2.0",
+          "subset": "iso21320",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320"
+        },
+        {
+          "coordinate": "s.stdio.zip/2.0/base",
+          "standard": "2.0",
+          "subset": "base",
+          "folder": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base"
+        }
+      ],
+      "editorAppIds": [
+        "s.stdio.zip@2.0/*#editor",
+        "s.stdio.zip@2.0/iso21320#editor"
+      ],
+      "viewerAppIds": [
+        "s.stdio.zip@2.0/*#viewer",
+        "s.stdio.zip@2.0/iso21320#viewer"
+      ],
+      "validSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🗜️.zip",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🧪️tests/🧫️fixtures/🗜️.zip",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/➕️add-entry-applied/➡️after.zip"
+      ],
+      "validSampleSource": "artifact",
+      "invalidFixtureStatus": "present",
+      "invalidSamples": [
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✂️truncated/🗜️-truncated.zip",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🪄️wrong-magic/🗜️-invalid-magic.zip"
+      ],
+      "hasValidFixture": true,
+      "hasSurface": true,
+      "invalidFixtureOrigin": "generated-by-build-invalid-fixtures.py from ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🗜️.zip"
+    }
+  ],
+  "invalidFixtureSummary": {
+    "generatedArtifacts": 34,
+    "generatedFiles": 54,
+    "artifactsStillWithoutInvalid": [
+      "idf",
+      "idml"
+    ],
+    "layout": "truncated: <fixtures>/✂️truncated/<stem>-truncated<ext>; wrong magic: <fixtures>/🪄️wrong-magic/<stem>-invalid-magic<ext>; ifc truncated under 🏗️ifc/🧪️tests/🧫️fixtures/✂️truncated (outside the 2x3 walker root)"
+  }
+}

@@ -571,7 +571,7 @@ pub enum NoteBlockNode {
         locked: bool,
         /// ✏️ Composed content — ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`note→C:text`):
         /// replaces the former inline `paragraphs: Vec<NoteTextParagraph>` (which duplicated stdio's
-        /// `s.stdio.semio.text` run/mark shape) with a content-addressed handle onto that composed
+        /// `stdio.semio.text` run/mark shape) with a content-addressed handle onto that composed
         /// subset. See this file's `🔖️TextBridge`/`🔖️TextChildren` regions for the
         /// converter and durable child-record accessor.
         content: NoteTextChild,

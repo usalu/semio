@@ -224,6 +224,12 @@ pub fn semio_wgpu_set_agent_bridge_config(url: String, admission_proof: String) 
     shell::PENDING_AGENT_BRIDGE_CONFIG.with(|slot| *slot.borrow_mut() = Some(config));
     shell::debug_log(&format!("[TRACE] wgpu-shell agent bridge config armed={armed}"));
 }
+/// 🎞️ wasm media action hook: the page hands over one `{windowId, controllerId, action, args}` (the trim "Cut selection"); the shell runs it through its UI action path on its next turn, so the response commits through the normal ingest.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = semioWgpuDispatchMediaAction)]
+pub fn semio_wgpu_dispatch_media_action(action_json: String) -> Result<(), JsValue> {
+    shell::push_media_action(&action_json).map_err(JsValue::from_str)
+}
 //#endregion 🏠️ShellHostHooks
 
 #[cfg(not(target_arch = "wasm32"))]

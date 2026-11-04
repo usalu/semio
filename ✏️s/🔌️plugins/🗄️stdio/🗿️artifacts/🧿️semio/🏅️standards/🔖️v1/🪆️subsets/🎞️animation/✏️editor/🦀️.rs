@@ -45,7 +45,7 @@ use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Dialect
 pub const SEMIO_ANIMATION_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };
-pub const SEMIO_ANIMATION_DOCUMENT_SCHEMA: &str = "s.stdio.semio.animation";
+pub const SEMIO_ANIMATION_DOCUMENT_SCHEMA: &str = "stdio.semio.animation";
 //#endregion 🔖️Dialect
 
 //#region 🔖️Command
@@ -155,6 +155,8 @@ impl ArtifactOwnedToolJobFactory for SemioAnimationEditorExampleFactory {
     type Owner = EditorApp<SemioAnimationEditor>;
     const TOOL_IDS: &'static [&'static str] = SEMIO_ANIMATION_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_ANIMATION_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_semio_base::semio_natural_file!(SemioAnimationSnapshot, "stdio.semio.animation");
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_ANIMATION_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 pub use semio_s_artifact_stdio_semio_animation_examples::editor::edit_rules;
@@ -187,7 +189,7 @@ impl ArtifactEditor for SemioAnimationEditor {
         owner: EditorApp<SemioAnimationEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/✏️editor/🦀️.rs",
         controller: "s.stdio.semio@v1/animation#editor",
-        artifact_schema: "s.stdio.semio.animation",
+        artifact_schema: "stdio.semio.animation",
         factory: "SemioAnimationEditorExampleFactory",
         factory_type: SemioAnimationEditorExampleFactory,
         contract: ToolExecutionContract::bounded_first_step(SEMIO_ANIMATION_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500),

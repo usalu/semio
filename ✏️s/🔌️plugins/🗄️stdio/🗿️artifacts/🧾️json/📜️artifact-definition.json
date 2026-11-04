@@ -2,7 +2,7 @@
   "definition_version": 1,
   "id": "s.stdio.json",
   "artifact": "json",
-  "directory": "🔣️json",
+  "directory": "🧾️json",
   "dependencies": [
     "s.stdio.txt"
   ],
@@ -69,7 +69,58 @@
       }
     }
   ],
-  "mutations": [],
+  "mutations": [
+    {
+      "id": "s.stdio.json.mutation.set-member.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.json.mutation.remove-member.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.json.mutation.set-scalar.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.json.mutation.insert-array-element.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.json.mutation.remove-array-element.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.json.mutation.set-top-level.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.json.mutation.upsert-member.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.json.mutation.rename-member.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.json.mutation.set-safe-number.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.json.mutation.set-string.v1",
+      "status": "implemented",
+      "executable_registration": false
+    }
+  ],
   "inferences": [],
   "resources": [
     {
@@ -280,7 +331,18 @@
     "lossless": "unimplemented",
     "canonical": "unimplemented",
     "validators": [],
-    "mutations": [],
+    "mutations": [
+      "s.stdio.json.mutation.set-member.v1",
+      "s.stdio.json.mutation.remove-member.v1",
+      "s.stdio.json.mutation.set-scalar.v1",
+      "s.stdio.json.mutation.insert-array-element.v1",
+      "s.stdio.json.mutation.remove-array-element.v1",
+      "s.stdio.json.mutation.set-top-level.v1",
+      "s.stdio.json.mutation.upsert-member.v1",
+      "s.stdio.json.mutation.rename-member.v1",
+      "s.stdio.json.mutation.set-safe-number.v1",
+      "s.stdio.json.mutation.set-string.v1"
+    ],
     "inferences": [],
     "fixtures": []
   }

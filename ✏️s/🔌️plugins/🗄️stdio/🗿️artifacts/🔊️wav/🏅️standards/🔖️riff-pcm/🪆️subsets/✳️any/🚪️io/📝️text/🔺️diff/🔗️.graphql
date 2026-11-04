@@ -1,9 +1,4 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_wav_diffEntry {
-  key: String!
-  value: String!
-}
+# The facet carries the one-line diff as one UTF-8 string.
 type Semio_wav_diff {
-  schema: String! @state(class: ARTIFACT)
-  entries: [Semio_wav_diffEntry!]! @state(class: ARTIFACT)
+  line: String!
 }

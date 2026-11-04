@@ -112,7 +112,7 @@ async fn home_declares_create_space_action() {
 
 #[semio_framework_async_macros::async_test]
 async fn space_document_persists_through_backbone_port() {
-    let port = Arc::new(OsBackbonePorts::Store(store::os_store::backbone::BackbonePorts::LocalStorage(LocalStorageBackbonePort::default())));
+    let port = Arc::new(OsBackbonePorts::store(store::os_store::backbone::BackbonePorts::LocalStorage(LocalStorageBackbonePort::default())));
     let projection = empty_space_snapshot("Persist Test", SpaceKind::Atelier, SpaceVisibility::Private);
     let demo: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, "persist-test", "Persist Test", projection);
     let _ = seed_os_space_catalog_if_empty(demo, &port).expect("seed");

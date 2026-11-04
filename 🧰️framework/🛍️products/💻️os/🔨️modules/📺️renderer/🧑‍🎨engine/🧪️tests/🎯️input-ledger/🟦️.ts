@@ -39,6 +39,7 @@ import {
   INPUT_REFUSAL_RETRYABLE_V1,
   createHubIdentitySettleV1,
   inputAwaitsHubIdentityV1,
+  INPUT_IDENTITY_SETTLE_LABEL_V1,
   inputIdentitySettleNoticeTextV1,
   type GestureSendV1,
   type InputOutcomeV1,
@@ -400,11 +401,23 @@ describe("refusal surfacing", () => {
     }
   });
 
-  it("inputRefusalNoticeTextV1 answers de for locale \"de\" and en for anything else", () => {
-    expect(inputRefusalNoticeTextV1("queue-full", "de")).toBe(INPUT_REFUSAL_LABELS_V1["queue-full"].de);
-    for (const locale of ["en", "fr", "", "DE"]) {
-      expect(inputRefusalNoticeTextV1("queue-full", locale)).toBe(INPUT_REFUSAL_LABELS_V1["queue-full"].en);
+  it("inputRefusalNoticeTextV1 answers each language for its own tag and joins every language for an unknown tag, for every reason", () => {
+    for (const reason of Object.keys(INPUT_REFUSAL_LABELS_V1) as InputRefusalReasonV1[]) {
+      const label = INPUT_REFUSAL_LABELS_V1[reason];
+      expect(inputRefusalNoticeTextV1(reason, "de")).toBe(label.de);
+      expect(inputRefusalNoticeTextV1(reason, "en")).toBe(label.en);
+      expect(inputRefusalNoticeTextV1(reason, "DE")).toBe(label.de);
+      expect(inputRefusalNoticeTextV1(reason, "de-DE")).toBe(label.de);
+      for (const locale of ["fr", "", "fr-CA"]) {
+        expect(inputRefusalNoticeTextV1(reason, locale)).toBe(`${label.en} | ${label.de}`);
+      }
     }
+  });
+
+  it("inputIdentitySettleNoticeTextV1 answers each language for its own tag and joins every language for an unknown tag", () => {
+    expect(inputIdentitySettleNoticeTextV1("de")).toBe(INPUT_IDENTITY_SETTLE_LABEL_V1.de);
+    expect(inputIdentitySettleNoticeTextV1("en")).toBe(INPUT_IDENTITY_SETTLE_LABEL_V1.en);
+    expect(inputIdentitySettleNoticeTextV1("fr")).toBe(`${INPUT_IDENTITY_SETTLE_LABEL_V1.en} | ${INPUT_IDENTITY_SETTLE_LABEL_V1.de}`);
   });
 
   it("gives every refusal reason a non-empty English and German label", () => {

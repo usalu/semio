@@ -11,7 +11,8 @@ pub use schema::snapshot::STDIO_GIF89A_DOCUMENT_SCHEMA;
 pub mod schema {
     pub use super::standards::v89a::subsets::any::schema::*;
 }
-pub use semio_s_artifact_stdio_gif_inferences::{STDIO_GIF_DOCUMENT_SCHEMA, native_codecs};
+pub use semio_s_artifact_stdio_gif_inferences::{STDIO_GIF_DOCUMENT_SCHEMA};
+pub use crate::editor::gif_87a::artifact_items_6::{native_codec_87a, native_codec_89a, native_codecs};
 pub use crate::editor::gif_87a::artifact_items_3::{ARTIFACT_DEFINITION_SCHEMA};
 pub use crate::editor::gif_87a::artifact_items_4::{definition};
 pub use crate::editor::gif_87a::artifact_items_5::{formats};

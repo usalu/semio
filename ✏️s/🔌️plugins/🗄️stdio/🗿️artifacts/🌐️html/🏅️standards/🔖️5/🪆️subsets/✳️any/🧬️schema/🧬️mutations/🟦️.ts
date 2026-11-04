@@ -25,4 +25,5 @@ export type HtmlMutation =
   | { mutation: 'setAttribute'; path: NodePath; name: string; value?: string | null }
   | { mutation: 'setText'; path: NodePath; text: string }
   | { mutation: 'setComment'; path: NodePath; text: string }
-  | { mutation: 'setRawText'; path: NodePath; text: string };
+  | { mutation: 'setRawText'; path: NodePath; text: string }
+  | { mutation: 'spliceSource'; splices: { offset: number; delete: number; insert: string }[] };

@@ -347,7 +347,7 @@ function resolvePlayground(id: string, variant: string, chosen: Pins, extra: str
   const key = renderer === "react" ? "react" : "wgpu";
   const port = slot === undefined ? row.ports[key] : row.userPorts[key][slot - 1];
   const env: Record<string, string> = { SEMIO_PLUGIN: variant, SEMIO_RENDERER: key, S_OS_PORT: String(extraEnv.S_OS_PORT ?? port), ...(row.app ? { SEMIO_APP_ID: row.app, VITE_SEMIO_APP_ID: row.app } : {}) };
-  const target = renderer === "react" ? `dev-${variant}-react-dev` : renderer === "wgpu-native" ? `run-${variant}-native-dev` : `dev-${variant}-wgpu-dev`;
+  const target = renderer === "react" ? `dev-${variant}-react-prototype` : renderer === "wgpu-native" ? `run-${variant}-native-prototype` : `dev-${variant}-wgpu-prototype`;
   const effects=apply(axesFor("dev",[],true,true),chosen,{},env),args = ["run", `@semio-tech/framework-os-dev:${target}`,...effects.buildFlags];
   if (chosen.example !== undefined) {
     const slug = (row.examples as string[]).find((candidate) => candidate === chosen.example || candidate.split("️").pop() === chosen.example)!;

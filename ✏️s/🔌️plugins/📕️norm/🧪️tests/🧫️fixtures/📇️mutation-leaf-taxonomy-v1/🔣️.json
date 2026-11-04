@@ -3149,6 +3149,31 @@
       "verb": "change"
     },
     {
+      "aggregateVariant": "ChangeReliabilityMemberId",
+      "artifact": "⚖️en1990",
+      "edit": {
+        "rule": "set-field",
+        "path": "reliabilityAnalyses[].memberId",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "id"
+          }
+        ],
+        "value": "newMemberId"
+      },
+      "entity": "reliability-member-id",
+      "kind": "change-reliability-member-id",
+      "module": "🚦️change-reliability-member-id",
+      "physicalLayout": "direct",
+      "record": "ChangedReliabilityMemberId",
+      "source": "⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️change-reliability-member-id/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeReliabilityMemberId",
+      "verb": "change"
+    },
+    {
       "aggregateVariant": "UpdateRenewables",
       "artifact": "⚡️din18599",
       "edit": {
@@ -58385,6 +58410,31 @@
       "standard": "🔖️1",
       "subset": "✳️any",
       "type": "ChangeAssessmentMidSteelAreaM2",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeAssessmentAnalysisMethod",
+      "artifact": "🫨️en1998",
+      "edit": {
+        "rule": "set-field",
+        "path": "assessments[].analysisMethod",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "id"
+          }
+        ],
+        "value": "newAnalysisMethod"
+      },
+      "entity": "assessment-analysis-method",
+      "kind": "change-assessment-analysis-method",
+      "module": "✏️change-assessment-analysis-method",
+      "physicalLayout": "direct",
+      "record": "ChangedAssessmentAnalysisMethod",
+      "source": "🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-assessment-analysis-method/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeAssessmentAnalysisMethod",
       "verb": "change"
     },
     {

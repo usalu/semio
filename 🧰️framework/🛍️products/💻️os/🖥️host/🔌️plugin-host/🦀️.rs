@@ -13,7 +13,7 @@ use semio_framework_value::ValueError;
 use semio_framework::{AppDefinition, PluginManifest, ProgramContributionEntry, ViewModel};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::{Arc, Mutex};
 use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::document_backbone_ref, os_store::document_materialize::materialize_document_snapshot, os_store::store_schema::ArtifactBackboneRef, os_store::store_schema::ArtifactCommand, os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 use semio_framework_ui_declaration::ui::{ui_recovery_panel, UiNode};
 use vcs::{ArtifactVcs, VcsError};

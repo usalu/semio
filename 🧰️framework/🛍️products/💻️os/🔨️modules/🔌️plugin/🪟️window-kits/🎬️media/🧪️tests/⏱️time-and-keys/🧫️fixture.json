@@ -1,0 +1,211 @@
+{
+  "schema": "framework.media.time-and-keys.fixture.v1",
+  "time": [
+    {
+      "ms": 0,
+      "en": "0:00.000",
+      "de": "0:00,000",
+      "enText": "0.000 seconds",
+      "deText": "0,000 Sekunden"
+    },
+    {
+      "ms": 5250,
+      "en": "0:05.250",
+      "de": "0:05,250",
+      "enText": "5.250 seconds",
+      "deText": "5,250 Sekunden"
+    },
+    {
+      "ms": 65007,
+      "en": "1:05.007",
+      "de": "1:05,007",
+      "enText": "1 minute 5.007 seconds",
+      "deText": "1 Minute 5,007 Sekunden"
+    },
+    {
+      "ms": 3723456,
+      "en": "1:02:03.456",
+      "de": "1:02:03,456",
+      "enText": "1 hour 2 minutes 3.456 seconds",
+      "deText": "1 Stunde 2 Minuten 3,456 Sekunden"
+    },
+    {
+      "ms": -40,
+      "en": "0:00.000",
+      "de": "0:00,000",
+      "enText": "0.000 seconds",
+      "deText": "0,000 Sekunden"
+    }
+  ],
+  "keys": [
+    {
+      "key": " ",
+      "target": "DIV",
+      "type": null,
+      "shift": false,
+      "duration": 10000,
+      "expect": {
+        "kind": "toggle"
+      }
+    },
+    {
+      "key": " ",
+      "target": "BUTTON",
+      "type": null,
+      "shift": false,
+      "duration": 10000,
+      "expect": null
+    },
+    {
+      "key": "ArrowRight",
+      "target": "DIV",
+      "type": null,
+      "shift": false,
+      "duration": 10000,
+      "expect": {
+        "kind": "seek",
+        "deltaMs": 5000
+      }
+    },
+    {
+      "key": "ArrowLeft",
+      "target": "DIV",
+      "type": null,
+      "shift": true,
+      "duration": 10000,
+      "expect": {
+        "kind": "seek",
+        "deltaMs": -1000
+      }
+    },
+    {
+      "key": "ArrowRight",
+      "target": "INPUT",
+      "type": "range",
+      "shift": false,
+      "duration": 10000,
+      "expect": null
+    },
+    {
+      "key": " ",
+      "target": "INPUT",
+      "type": "range",
+      "shift": false,
+      "duration": 10000,
+      "expect": {
+        "kind": "toggle"
+      }
+    },
+    {
+      "key": "Home",
+      "target": "DIV",
+      "type": null,
+      "shift": false,
+      "duration": 10000,
+      "expect": {
+        "kind": "seek-to",
+        "positionMs": 0
+      }
+    },
+    {
+      "key": "End",
+      "target": "DIV",
+      "type": null,
+      "shift": false,
+      "duration": 10000,
+      "expect": {
+        "kind": "seek-to",
+        "positionMs": 10000
+      }
+    },
+    {
+      "key": "End",
+      "target": "DIV",
+      "type": null,
+      "shift": false,
+      "duration": null,
+      "expect": null
+    },
+    {
+      "key": "x",
+      "target": "DIV",
+      "type": null,
+      "shift": false,
+      "duration": 10000,
+      "expect": null
+    }
+  ],
+  "seek": [
+    {
+      "command": {
+        "kind": "seek",
+        "deltaMs": 5000
+      },
+      "position": 8000,
+      "duration": 10000,
+      "expect": 10000
+    },
+    {
+      "command": {
+        "kind": "seek",
+        "deltaMs": -5000
+      },
+      "position": 2000,
+      "duration": 10000,
+      "expect": 0
+    },
+    {
+      "command": {
+        "kind": "seek",
+        "deltaMs": 5000
+      },
+      "position": 2000,
+      "duration": null,
+      "expect": 7000
+    }
+  ],
+  "trim": {
+    "declared": {
+      "actionId": "cut-frames",
+      "revision": "abababababababababababababababababababababababababababababababab",
+      "unit": "frame",
+      "unitsPerSecondNumerator": 44100,
+      "unitsPerSecondDenominator": 1152,
+      "totalUnits": 462
+    },
+    "cases": [
+      {
+        "startMs": 1000,
+        "endMs": 2000,
+        "expect": "38-77"
+      },
+      {
+        "startMs": 0,
+        "endMs": 1,
+        "expect": "0-1"
+      },
+      {
+        "startMs": 11000,
+        "endMs": 99999,
+        "expect": "421-462"
+      },
+      {
+        "startMs": 12100,
+        "endMs": 12200,
+        "expect": null
+      }
+    ]
+  },
+  "plural": [
+    {
+      "ms": 1000,
+      "enText": "1.000 second",
+      "deText": "1,000 Sekunde"
+    },
+    {
+      "ms": 3661001,
+      "enText": "1 hour 1 minute 1.001 seconds",
+      "deText": "1 Stunde 1 Minute 1,001 Sekunden"
+    }
+  ]
+}

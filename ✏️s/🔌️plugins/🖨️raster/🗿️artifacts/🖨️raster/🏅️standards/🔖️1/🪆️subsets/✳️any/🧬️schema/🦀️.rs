@@ -96,7 +96,7 @@ pub use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot
 
 /// 🖼️ A one-frame straight-alpha RGBA8 image of `width × height` over `rgba8`.
 pub fn semio_image_from_rgba8(width: u32, height: u32, rgba8: Vec<u8>) -> SemioImageSnapshot {
-    SemioImageSnapshot { schema: "s.stdio.semio.image".into(), width, height, colorspace: semio_s_artifact_stdio_semio_image::schema::snapshot::SemioColorspace::Rgba, bit_depth: 8, frames: vec![semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageFrame { delay_ms: 0, rgba8 }], icc: None, metadata: Vec::new() }
+    SemioImageSnapshot { schema: "stdio.semio.image".into(), width, height, colorspace: semio_s_artifact_stdio_semio_image::schema::snapshot::SemioColorspace::Rgba, bit_depth: 8, frames: vec![semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageFrame { delay_ms: 0, rgba8 }], icc: None, metadata: Vec::new() }
 }
 
 

@@ -146,7 +146,9 @@
       },
       "style": {},
       "activity": "idle",
-      "accessibility": {},
+      "accessibility": {
+        "label": "Visible"
+      },
       "children": []
     },
     {
@@ -202,7 +204,9 @@
       },
       "style": {},
       "activity": "idle",
-      "accessibility": {},
+      "accessibility": {
+        "label": "Mode"
+      },
       "children": []
     },
     {
@@ -255,7 +259,9 @@
       },
       "style": {},
       "activity": "idle",
-      "accessibility": {},
+      "accessibility": {
+        "label": "Spacing"
+      },
       "children": []
     },
     {
@@ -335,7 +341,9 @@
       },
       "style": {},
       "activity": "idle",
-      "accessibility": {},
+      "accessibility": {
+        "label": "Intensity"
+      },
       "children": []
     }
   ],

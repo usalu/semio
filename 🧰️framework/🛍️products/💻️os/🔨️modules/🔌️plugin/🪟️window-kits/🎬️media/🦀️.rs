@@ -48,6 +48,24 @@ pub struct MediaResource {
     pub generation: String,
 }
 
+/// ✂️ The unit a media editor cuts in: whole encoded frames or single samples.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MediaTrimUnit {
+    Frame,
+    Sample,
+}
+
+/// ✂️ The editor-declared mapping from a selected time range to the range-cut action it dispatches through history: the action id, its canonical revision argument, and how many units the media holds per second (a rational) out of how many in total.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MediaTrim {
+    pub action_id: String,
+    pub revision: String,
+    pub unit: MediaTrimUnit,
+    pub units_per_second_numerator: u64,
+    pub units_per_second_denominator: u64,
+    pub total_units: u64,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct MediaView {
     pub duration_ms: Option<u64>,
@@ -62,6 +80,7 @@ pub struct MediaView {
     pub capability: MediaCapabilityStatus,
     pub capability_reason: Option<String>,
     pub host_content_height: f64,
+    pub trim: Option<MediaTrim>,
 }
 
 pub struct MediaWindowKit;
@@ -76,7 +95,7 @@ impl MediaWindowKit {
     }
 
     fn labels(locale: Locale) -> UiAssemblyResult<UiValue> {
-        let labels = match locale {
+        let labels: [(&str, &str); 22] = match locale {
             Locale::De => [
                 ("play", "Wiedergabe"),
                 ("pause", "Pause"),
@@ -88,6 +107,14 @@ impl MediaWindowKit {
                 ("loading", "Medium wird geladen…"),
                 ("progress", "Ladefortschritt"),
                 ("cancel", "Abbrechen"),
+                ("cancelled", "Abgebrochen"),
+                ("cutSelection", "Auswahl ausschneiden"),
+                ("hourOne", "Stunde"),
+                ("hourOther", "Stunden"),
+                ("minuteOne", "Minute"),
+                ("minuteOther", "Minuten"),
+                ("secondOne", "Sekunde"),
+                ("secondOther", "Sekunden"),
                 ("unsupported", "Dieses Medium kann auf diesem Gerät nicht wiedergegeben werden."),
                 ("unknownDuration", "Dauer unbekannt"),
                 ("audio", "Audio"),
@@ -104,6 +131,14 @@ impl MediaWindowKit {
                 ("loading", "Loading media…"),
                 ("progress", "Loading progress"),
                 ("cancel", "Cancel"),
+                ("cancelled", "Cancelled"),
+                ("cutSelection", "Cut selection"),
+                ("hourOne", "hour"),
+                ("hourOther", "hours"),
+                ("minuteOne", "minute"),
+                ("minuteOther", "minutes"),
+                ("secondOne", "second"),
+                ("secondOther", "seconds"),
                 ("unsupported", "This media cannot be played on this device."),
                 ("unknownDuration", "Unknown duration"),
                 ("audio", "Audio"),
@@ -114,6 +149,21 @@ impl MediaWindowKit {
         for (key, value) in labels {
             Self::put(&mut map, key, Self::value_text(value, "media-window.label")?)?;
         }
+        Ok(UiValue::Map(map.finish()))
+    }
+
+    fn trim(trim: &MediaTrim) -> UiAssemblyResult<UiValue> {
+        let mut map = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("media-window.trim"))?;
+        let unit = match trim.unit {
+            MediaTrimUnit::Frame => "frame",
+            MediaTrimUnit::Sample => "sample",
+        };
+        Self::put(&mut map, "actionId", Self::value_text(&trim.action_id, "media-window.trim-action")?)?;
+        Self::put(&mut map, "revision", Self::value_text(&trim.revision, "media-window.trim-revision")?)?;
+        Self::put(&mut map, "unit", Self::value_text(unit, "media-window.trim-unit")?)?;
+        Self::put(&mut map, "unitsPerSecondNumerator", UiValue::Number(trim.units_per_second_numerator as f64))?;
+        Self::put(&mut map, "unitsPerSecondDenominator", UiValue::Number(trim.units_per_second_denominator as f64))?;
+        Self::put(&mut map, "totalUnits", UiValue::Number(trim.total_units as f64))?;
         Ok(UiValue::Map(map.finish()))
     }
 
@@ -159,6 +209,20 @@ impl WindowKit for MediaWindowKit {
         }) || matches!(view.capability, MediaCapabilityStatus::Ready) && view.resource.is_none()
         {
             return Err(ui_assembly_error("media-window.resource-authority"));
+        }
+        if view.trim.as_ref().is_some_and(|trim| {
+            trim.action_id.is_empty()
+                || trim.action_id.len() > 128
+                || trim.revision.is_empty()
+                || trim.revision.len() > 128
+                || trim.units_per_second_numerator == 0
+                || trim.units_per_second_denominator == 0
+                || trim.total_units == 0
+                || trim.units_per_second_numerator > MAX_SAFE_INTEGER
+                || trim.units_per_second_denominator > MAX_SAFE_INTEGER
+                || trim.total_units > MAX_SAFE_INTEGER
+        }) {
+            return Err(ui_assembly_error("media-window.trim"));
         }
         let duration_ms = view.duration_ms.filter(|duration| *duration > 0 && *duration <= MAX_SAFE_INTEGER);
         let position_ms = duration_ms.map_or(0, |duration| view.position_ms.min(duration));
@@ -213,6 +277,10 @@ impl WindowKit for MediaWindowKit {
             ),
             ("capability", UiValue::Map(capability.finish())),
             ("hostContentHeight", UiValue::Number(view.host_content_height)),
+            ("trim", match &view.trim {
+                Some(trim) => Self::trim(trim)?,
+                None => UiValue::Null,
+            }),
         ] {
             Self::put(&mut props, key, value)?;
         }

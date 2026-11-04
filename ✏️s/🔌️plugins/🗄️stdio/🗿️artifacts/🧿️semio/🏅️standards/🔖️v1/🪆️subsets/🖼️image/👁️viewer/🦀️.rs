@@ -32,7 +32,7 @@ use semio_framework_2d_compute::EngineHandles;
 /// `impl ArtifactAnalysis for …AnalyzerAnalysis { const DIALECT }` row (read, not guessed) — see
 /// the packet report for the exact grep evidence per subset.
 pub const SEMIO_IMAGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
-pub const SEMIO_IMAGE_DOCUMENT_SCHEMA: &str = "s.stdio.semio.image";
+pub const SEMIO_IMAGE_DOCUMENT_SCHEMA: &str = "stdio.semio.image";
 //#endregion 🔖️Dialect
 
 //#region 🔖️Command

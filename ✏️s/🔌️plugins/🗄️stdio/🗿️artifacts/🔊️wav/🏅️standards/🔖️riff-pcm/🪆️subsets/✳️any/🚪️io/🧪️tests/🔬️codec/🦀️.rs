@@ -1,11 +1,9 @@
 use crate::{standards::riff_pcm::subsets::any::schema::snapshot::validate_wav_serialization, standards::riff_pcm::subsets::any::schema::snapshot::RiffChunk, standards::riff_pcm::subsets::any::schema::snapshot::WavChunkRef, standards::riff_pcm::subsets::any::schema::snapshot::WavData, standards::riff_pcm::subsets::any::schema::snapshot::WavFmt, standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot};
 use crate::apply_mutation;
 use crate::standards::riff_pcm::subsets::any::io::*;
-use semio_framework_test_fixtures::fixture_text;
+use semio_framework_test_fixtures::{fixture_path, fixture_text};
 
-/// 🌱 Real ~1s 440Hz mono 8kHz 16-bit PCM fixture — byte-identical to the artifact's own
-/// `📚️examples/🎬️demo/🖼️assets/🔊️example.wav` (per ticket `fixtures/wav/NOTES.md`), duplicated
-/// here as a literal so the test doesn't reach across an emoji-path `include_bytes!` boundary.
+/// 🌱 The artifact's own shipped example (`📚️examples/🎬️demo/🖼️assets/🎧️example/🔊️.wav`), embedded with `include_bytes!` so the test reads exactly the bytes the editor ships.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn real_fixture() -> Vec<u8> {
     include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎧️example/🔊️.wav").to_vec()
@@ -266,5 +264,102 @@ async fn unrepresentable_serialization_states_are_refused_before_writing() {
         let error = validate_wav_serialization(snapshot).expect_err("invalid serialization state must be rejected by schema validation");
         assert_eq!(error.code, code);
         assert!(try_encode_wav(snapshot).expect_err("invalid serialization state must not write bytes").contains(code));
+    }
+}
+
+/// 🔬️ Runs the independent `ffprobe` binary over `bytes` and returns its exact `key=value` report; a missing `ffprobe` is a hard failure because this cross-check is required.
+fn ffprobe_fields(bytes: &[u8], suffix: &str, arguments: &[&str]) -> std::collections::BTreeMap<String, String> {
+    static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let path = std::env::temp_dir().join(format!("semio-{}-{}.{suffix}", std::process::id(), NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)));
+    std::fs::write(&path, bytes).expect("temporary stream is writable");
+    let output = std::process::Command::new("ffprobe").args(["-v", "error", "-of", "default=noprint_wrappers=1"]).args(arguments).arg(&path).output().expect("ffprobe is required for this cross-check and must be installed");
+    let _ = std::fs::remove_file(&path);
+    assert!(output.status.success(), "ffprobe rejected the stream: {}", String::from_utf8_lossy(&output.stderr));
+    String::from_utf8_lossy(&output.stdout).lines().filter_map(|line| line.split_once('=')).map(|(key, value)| (key.to_string(), value.to_string())).collect()
+}
+
+#[test]
+fn ffprobe_measures_exactly_the_duration_left_by_a_frame_boundary_trim_and_the_format_survives() {
+    let mut trimmed = decode_wav(&real_fixture()).expect("decode real fixture");
+    let channels = usize::from(trimmed.fmt.channels);
+    let rate = trimmed.fmt.sample_rate;
+    let kept_frames = (rate / 2) as usize;
+    let WavData::Pcm16(samples) = &mut trimmed.data else { panic!("the real fixture is PCM16") };
+    samples.truncate(kept_frames * channels);
+    let bytes = encode_wav(&trimmed);
+    let reopened = decode_wav(&bytes).expect("trimmed stream reopens");
+    assert_eq!(reopened.fmt, trimmed.fmt);
+    assert_eq!(reopened.data, trimmed.data);
+    let report = ffprobe_fields(&bytes, "wav", &["-show_entries", "format=duration:stream=codec_name,sample_rate,channels"]);
+    assert_eq!(report["codec_name"], "pcm_s16le");
+    assert_eq!(report["sample_rate"], rate.to_string());
+    assert_eq!(report["channels"], channels.to_string());
+    let duration: f64 = report["duration"].parse().expect("ffprobe reports a numeric duration");
+    assert!((duration - kept_frames as f64 / f64::from(rate)).abs() < 1e-6, "{duration}");
+}
+
+#[test]
+fn a_sample_edit_retains_the_list_info_chunk_and_its_position_and_ffprobe_still_reads_the_title() {
+    let mut edited = decode_wav(&real_fixture()).expect("decode real fixture");
+    let mut info = b"INFOINAM".to_vec();
+    info.extend_from_slice(&6u32.to_le_bytes());
+    info.extend_from_slice(b"Titel\0");
+    edited.other_chunks = vec![RiffChunk { fourcc: "LIST".into(), data: info, pad_byte: 0 }];
+    edited.chunk_order = vec![WavChunkRef::Format, WavChunkRef::Samples, WavChunkRef::Other(0)];
+    validate_wav_serialization(&edited).expect("the tagged document is serializable");
+    let WavData::Pcm16(samples) = &mut edited.data else { panic!("the real fixture is PCM16") };
+    samples[10] = samples[10].wrapping_add(1000);
+    let bytes = encode_wav(&edited);
+    let reopened = decode_wav(&bytes).expect("edited stream reopens");
+    assert_eq!(reopened.other_chunks, edited.other_chunks);
+    assert_eq!(reopened.chunk_order, edited.chunk_order);
+    assert_eq!(reopened.data, edited.data);
+    let report = ffprobe_fields(&bytes, "wav", &["-show_entries", "format_tags=title"]);
+    assert_eq!(report["TAG:title"], "Titel");
+}
+
+/// 🔊️ Proves the actual WAV native codec, its compiled protocol identity and publishes the receipt the native-codec projection consumes.
+#[test]
+fn owned_fixture_publication_reports_canonical_logical_carriers() {
+    use semio_framework_os_kernel as store;
+    use store::snapshot::{ArtifactDsl, ArtifactPack};
+    let snapshot = decode_wav(&real_fixture()).expect("decode real fixture");
+    let text = snapshot.print_dsl();
+    let binary = snapshot.encode_pack_with(&Default::default()).unwrap();
+    assert_eq!(WavSnapshot::parse_dsl(&text).unwrap(), snapshot);
+    assert_eq!(WavSnapshot::decode_pack_with(&binary, &Default::default()).unwrap(), snapshot);
+    let factories = semio_s_artifact_stdio_wav_io_registry::native_codecs();
+    assert_eq!(factories.len(), 1);
+    let factory = &factories[0];
+    let codec = (factory.codec)();
+    let kind = (factory.kind)();
+    let compiled = std::fs::read(fixture_path!("../../../../../🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio")).unwrap();
+    let digest = semio_framework_hash::Sha256::digest(&compiled);
+    assert_ne!(codec.pack_schema_hash, [0; 32]);
+    assert_eq!(codec.pack_schema_hash, digest, "the wav pack identity is the digest of its compiled protocol");
+    let definition: serde_json::Value = serde_json::from_str(semio_s_artifact_stdio_wav_io_registry::ARTIFACT_DEFINITION_SCHEMA).expect("wav definition parses");
+    assert_eq!(definition["codecs"][0]["native_factory"]["pack_schema_hash"].as_str().expect("declared pack hash"), semio_framework_hash::hex_lower(&codec.pack_schema_hash), "the definition declares exactly the factory's pack hash");
+    assert_eq!(kind.id, "s.stdio.wav");
+    assert_eq!(codec.schema, "stdio.wav");
+    assert_eq!(codec.extension, "semio");
+    let hex = |bytes: &[u8]| bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let receipt = serde_json::json!({"schemaVersion":1,"artifactKind":kind.id,"artifactSchema":codec.schema,"factoryId":factory.id,"extension":codec.extension,"packSchemaHash":hex(&codec.pack_schema_hash),"protocolSourceSha256":hex(&digest)});
+    eprintln!("native-codec-publication={receipt}");
+}
+
+/// 📖️ Every authored grammar and protocol of the diff and mutation facets parses in the semio dialects they are written in.
+#[test]
+fn the_diff_and_mutation_grammars_and_protocols_parse_in_their_dialects() {
+    for (name, source) in [
+        ("text diff grammar", include_str!("../../📝️text/🔺️diff/📖️.grammar.semio")),
+        ("text mutation grammar", include_str!("../../📝️text/🧬️mutations/📖️.grammar.semio")),
+    ] {
+        semio_framework_dsl::parse_grammar(source).unwrap_or_else(|error| panic!("{name} must parse: {error:?}"));
+    }
+    for (name, source) in [
+        ("binary diff protocol", include_str!("../../💾️binary/🔺️diff/📡️.protocol.semio")),
+        ("binary mutation protocol", include_str!("../../💾️binary/🧬️mutations/📡️.protocol.semio")),
+    ] {
+        semio_framework_dsl::parse_protocol(source).unwrap_or_else(|error| panic!("{name} must parse: {error:?}"));
     }
 }

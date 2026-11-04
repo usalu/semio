@@ -109,7 +109,7 @@
         "@semio-tech/space-home:build",
         "@semio-tech/space-space:build",
         "@semio-tech/stdio-docx:build",
-        "@semio-tech/puzzle-plugin:wasm"
+        "@semio-tech/puzzle-plugin:wasm", "generate-stdio-format-claims"
       ],
       "outputs": [],
       "options": {
@@ -208,7 +208,22 @@
         "test-catalog-exports"
       ]
     },
+    "generate-stdio-format-claims": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": ["{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📜️artifact-definition.json", "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🧫️fixtures/✏️editor-catalog/🔣️.json", "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧭️format-claims/📜️generate.ts"],
+      "outputs": ["{workspaceRoot}/✏️s/🧑‍💻dev/🚀️entry/🧭️format-catalog/🤖️generated/stdio-format-claims.json"],
+      "options": { "cwd": "✏️s/🧑‍💻dev", "command": "repo ./📜️script.ts stdio-format-claims" }
+    },
+    "check-stdio-format-claims": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": ["{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/📜️artifact-definition.json", "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🧫️fixtures/✏️editor-catalog/🔣️.json", "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧭️format-claims/📜️generate.ts"],
+      "outputs": [],
+      "options": { "cwd": "✏️s/🧑‍💻dev", "command": "repo ./📜️script.ts stdio-format-claims check" }
+    },
     "generate": {
+      "dependsOn": ["generate-stdio-format-claims"],
       "executor": "repo:script",
       "cache": true,
       "inputs": [
@@ -228,6 +243,7 @@
       }
     },
     "check-generated": {
+      "dependsOn": ["check-stdio-format-claims"],
       "executor": "repo:script",
       "cache": true,
       "outputs": [],

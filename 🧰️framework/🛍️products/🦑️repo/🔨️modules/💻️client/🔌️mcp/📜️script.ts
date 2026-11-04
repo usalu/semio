@@ -9,7 +9,7 @@ import { runOwnedCommand } from "../../../../../🔨️modules/🏃️process/�
 import { resolveMcpBin } from "../../📚️library/📦️packages/🟦️typescript/🚨️policy/🖥️cli/🟦️.ts";
 import { createHash, randomBytes } from "node:crypto";
 import { homedir } from "node:os";
-import { closeSync, constants, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, constants, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, posix, win32 } from "node:path";
 import installationSchema from "./📥️installation/🧬️schema/🔣️.json" with { type: "json" };
 import { isMainModuleV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
@@ -31,6 +31,12 @@ export function nativeRepoShellProfileV1(before:string,directory:string):string 
  if(first<0&&last<0)return before+(before&&!before.endsWith("\n")?"\n":"")+block+"\n";
  if(first<0||last<first||before.indexOf(start,first+start.length)>=0||before.indexOf(end,last+end.length)>=0)throw Error("Ambiguous managed repository PATH block");
  return before.slice(0,first)+block+before.slice(last+end.length);
+}
+
+/** 🔗️Recognizes the documented single-copy link from the user directory to the launcher so that the full native command may replace it atomically. */
+function nativeRepoLauncherLinkV1(executable:string,platform:string,home:string):boolean {
+ if(platform==="win32")return false;
+ try{const data=process.env.XDG_DATA_HOME||join(home,".local","share");return realpathSync(executable)===realpathSync(join(data,"semio","launcher","bin","repo"));}catch{return false;}
 }
 
 function publishNativeRepoFileV1(destination:string,bytes:Uint8Array,mode:number,check:()=>void):void {
@@ -55,7 +61,7 @@ class InstallScript extends BundleScript {
   await run(source,["--help"],process.env);if(createHash("sha256").update(nativeRepoBytesV1(source,process.platform)).digest("hex")!==digest)throw Error("Native build changed after installation probe");
   nativeRepoDirectoryV1(plan.root);nativeRepoDirectoryV1(plan.directory);const receiptPath=join(plan.root,installationPolicy.receiptFile);let previous:any;
   const receiptFacts=lstatSync(receiptPath,{throwIfNoEntry:false});if(receiptFacts){if(!receiptFacts.isFile()||receiptFacts.isSymbolicLink()||receiptFacts.size>4096)throw Error("Physical native installation receipt required");previous=JSON.parse(readFileSync(receiptPath,"utf8"));}
-  const actual=lstatSync(plan.executable,{throwIfNoEntry:false});if(actual){if(!actual.isFile()||actual.isSymbolicLink())throw Error("Native installation refuses a non-file destination");const current=createHash("sha256").update(nativeRepoBytesV1(plan.executable,process.platform)).digest("hex");if(current!==digest&&(!previous||previous.executable!==plan.executable||previous.digest!==current))throw Error("Native installation refuses an executable owned by another installer");if(current!==digest)publishNativeRepoFileV1(plan.executable,bytes,0o755,check);}else publishNativeRepoFileV1(plan.executable,bytes,0o755,check);
+  const actual=lstatSync(plan.executable,{throwIfNoEntry:false}),launcherLink=Boolean(actual?.isSymbolicLink())&&nativeRepoLauncherLinkV1(plan.executable,plan.platform,plan.home);if(launcherLink)publishNativeRepoFileV1(plan.executable,bytes,0o755,check);else if(actual){if(!actual.isFile()||actual.isSymbolicLink())throw Error("Native installation refuses a non-file destination");const current=createHash("sha256").update(nativeRepoBytesV1(plan.executable,process.platform)).digest("hex");if(current!==digest&&(!previous||previous.executable!==plan.executable||previous.digest!==current))throw Error("Native installation refuses an executable owned by another installer");if(current!==digest)publishNativeRepoFileV1(plan.executable,bytes,0o755,check);}else publishNativeRepoFileV1(plan.executable,bytes,0o755,check);
   if(process.platform==="win32"){
    const script='$ErrorActionPreference="Stop";$root=$env:SEMIO_REPO_INSTALL_ROOT;$selected=$env:SEMIO_REPO_INSTALL_BIN;$old=[Environment]::GetEnvironmentVariable("Path","User");$kept=@();foreach($entry in ($old -split ";")){if(!$entry){if($null -ne $old -and $old.Length -gt 0){$kept+=$entry};continue};$parent=[IO.Path]::GetDirectoryName($entry.TrimEnd("\\"));$leaf=[IO.Path]::GetFileName($entry.TrimEnd("\\"));if($parent -ieq $root -and $leaf -cmatch "^[a-f0-9]{64}$"){continue};$kept+=$entry};[Environment]::SetEnvironmentVariable("Path",((@($selected)+$kept)-join ";"),"User")';
    await run("powershell.exe",["-NoProfile","-NonInteractive","-Command",script],{...process.env,SEMIO_REPO_INSTALL_ROOT:plan.root,SEMIO_REPO_INSTALL_BIN:plan.directory});

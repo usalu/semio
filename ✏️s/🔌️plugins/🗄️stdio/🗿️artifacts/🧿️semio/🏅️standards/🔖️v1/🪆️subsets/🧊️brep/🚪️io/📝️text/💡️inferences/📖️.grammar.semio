@@ -4,6 +4,6 @@ extension semio.brep.inference
 start document
 
 document = header body
-header = "schema" SP "s.stdio.semio.brep.inference" NL
+header = "schema" SP "stdio.semio.brep.inference" NL
 body = payload NL?
 payload = OCTET+

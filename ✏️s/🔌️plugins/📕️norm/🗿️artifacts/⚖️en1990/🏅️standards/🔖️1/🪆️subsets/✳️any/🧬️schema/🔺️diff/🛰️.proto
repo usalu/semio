@@ -318,6 +318,10 @@ message En1990ReliabilityAnalysisPatch {
   optional string action_distribution = 4;
   optional double action_mean = 5;
   optional double action_sd = 6;
+  optional string second_action_distribution = 7;
+  optional double second_action_mean = 8;
+  optional double second_action_sd = 9;
+  optional string member_id = 10;
 }
 message En1990TestSeriesDelta {
   repeated En1990TestSeriesRemoval removed = 1;
@@ -351,6 +355,9 @@ message En1990TestSeriesPatch {
   optional double variation_known = 6;
   optional double conversion_factor = 7;
   optional double required = 8;
+  optional string pairs = 9;
+  optional double theory_variation = 10;
+  optional double theory_mean = 11;
 }
 message En1990PlacementDelta {
   repeated En1990PlacementRemoval removed = 1;

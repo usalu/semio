@@ -19,7 +19,7 @@
   "accessibility": [
     {
       "id": 0,
-      "label": null,
+      "label": "Orb phase",
       "description": null,
       "live": "off",
       "shortcut": null,

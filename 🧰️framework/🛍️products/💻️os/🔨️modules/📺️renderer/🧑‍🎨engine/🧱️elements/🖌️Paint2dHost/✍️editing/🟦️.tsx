@@ -1,24 +1,25 @@
 import { parsePixelLayerSelectionV1 } from "@semio-tech/framework/pixels/selection";
 /** 🧰️ Accessible pixel tools over the authoritative paint scene and command channel. */
-import { useEffect, useMemo, useRef, useState, type PointerEvent, type WheelEvent, type RefObject } from "../../⚛️react-port/🟦️.ts";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type WheelEvent, type RefObject } from "../../⚛️react-port/🟦️.ts";
 import { GestureRecognizer } from "@semio-tech/framework";
 import { canvasPinchCamera, type CanvasCamera } from "../../📐️Canvas2dHost/📷️camera-math/🟦️.ts";
 import { useTranslation } from "@semio-tech/ui-react";
 import { combineSelections, floodSelection, selectPixels, validateExtent, type PixelImage, type PixelPoint, type SelectionMerge } from "@semio-tech/framework/pixels/editing";
+import { STROKE_POINT_CAP, cursorAnnouncement, keyboardCameraStep, keyboardMarquee, keyboardStampPath, rolloverStroke, stepKeyboardCursor, strokeLimitState, type PixelCursor } from "./⌨️keyboard/🟦️.ts";
 import { editSelection, layerPoint, pixelLayers, maskLayers, pixelGestureRevision, selectionBounds, selectionSpans, restoreSelection, type PixelLayer } from "./🟦️.ts";
 
 const labels = {
   en: {
-    locked:"Locked",lockedHint:"Unlock this layer or its parent in Inspection to edit pixels or masks.",target:"Edit target",pixelTarget:"Layer pixels",maskTarget:"Mask",maskValue:"Mask value",fillMask:"Fill mask",tools:"Image tools", hand:"Pan canvas", navigation:"Pan with middle mouse or Space; pinch or scroll to zoom", layer:"Layer", layers:"Select layers", brush:"Brush", eraser:"Eraser", rectangle:"Rectangle selection", ellipse:"Ellipse selection", lasso:"Lasso selection", wand:"Magic wand", bucket:"Fill", eyedropper:"Color picker",
+    locked:"Locked",lockedHint:"Unlock this layer or its parent in Inspection to edit pixels or masks.",target:"Edit target",pixelTarget:"Layer pixels",maskTarget:"Mask",maskValue:"Mask value",fillMask:"Fill mask",imageEditor:"Image editor",paintTools:"Paint tools",painting:"Painting", hand:"Pan canvas", navigation:"Pan with middle mouse or Space; pinch or scroll to zoom", layer:"Layer", layers:"Select layers", brush:"Brush", eraser:"Eraser", rectangle:"Rectangle selection", ellipse:"Ellipse selection", lasso:"Lasso selection", wand:"Magic wand", bucket:"Fill", eyedropper:"Color picker",
     color:"Foreground", size:"Size", opacity:"Opacity", hardness:"Hardness", tolerance:"Tolerance", selection:"Selection", replace:"Replace", add:"Add", subtract:"Subtract", intersect:"Intersect", all:"Select all pixels", none:"Deselect", invertSelection:"Invert selection",
     adjustment:"Adjustment", invert:"Invert colors", grayscale:"Grayscale", brightness:"Brightness", contrast:"Contrast", saturation:"Saturation", gamma:"Gamma", threshold:"Threshold", posterize:"Posterize", blur:"Box blur", sharpen:"Sharpen", value:"Amount", apply:"Apply",
-    flipHorizontal:"Flip horizontally", flipVertical:"Flip vertically", rotateClockwise:"Rotate right", rotateCounterclockwise:"Rotate left", resize:"Resize layer", width:"Width", height:"Height", maskFromSelection:"Mask from selection", crop:"Crop to selection", clear:"Clear selected pixels", cancel:"Cancel", selectLayer:"Choose a visible pixel layer", selectMask:"Choose a layer with a mask", busy:"Preparing edit", submitted:"Edit submitted",applied:"Edit applied",pending:"Editing image; progress and cancellation are available in Tasks.",refused:"The edit could not be applied. Try again on the current image.",superseded:"A newer action replaced this edit.", error:"Image edit failed", hidden:"Hidden", pixels:"pixels", more:"Adjustments and transforms"
+    flipHorizontal:"Flip horizontally", flipVertical:"Flip vertically", rotateClockwise:"Rotate right", rotateCounterclockwise:"Rotate left", resize:"Resize layer", width:"Width", height:"Height", maskFromSelection:"Mask from selection", crop:"Crop to selection", clear:"Clear selected pixels", cancel:"Cancel", selectLayer:"Choose a visible pixel layer", selectMask:"Choose a layer with a mask", busy:"Preparing edit", submitted:"Edit submitted",applied:"Edit applied",pending:"Editing image; progress and cancellation are available in Tasks.",refused:"The edit could not be applied. Try again on the current image.",superseded:"A newer action replaced this edit.", error:"Image edit failed", hidden:"Hidden", pixels:"pixels", more:"Adjustments and transforms", keyboard:"Keyboard: arrows move the pixel cursor, Shift and arrows extend a selection, Enter or Space paints, fills or selects, plus, minus and 0 zoom; arrows pan when no painting tool is active", strokeNearing:"This stroke is nearing its segment length; painting continues in segments within one undo step", strokeLimit:"Selection path limit reached; release to apply"
   },
   de: {
-    locked:"Gesperrt",lockedHint:"Entsperre diese Ebene oder ihre Elternebene in der Inspektion, um Pixel oder Masken zu bearbeiten.",target:"Bearbeitungsziel",pixelTarget:"Ebenenpixel",maskTarget:"Maske",maskValue:"Maskenwert",fillMask:"Maske füllen",tools:"Bildwerkzeuge", hand:"Ansicht verschieben", navigation:"Mit mittlerer Maustaste oder Leertaste verschieben; mit zwei Fingern oder Mausrad zoomen", layer:"Ebene", layers:"Ebenen auswählen", brush:"Pinsel", eraser:"Radiergummi", rectangle:"Rechteckauswahl", ellipse:"Ellipsenauswahl", lasso:"Lassoauswahl", wand:"Zauberstab", bucket:"Füllen", eyedropper:"Farbpipette",
+    locked:"Gesperrt",lockedHint:"Entsperre diese Ebene oder ihre Elternebene in der Inspektion, um Pixel oder Masken zu bearbeiten.",target:"Bearbeitungsziel",pixelTarget:"Ebenenpixel",maskTarget:"Maske",maskValue:"Maskenwert",fillMask:"Maske füllen",imageEditor:"Bildeditor",paintTools:"Malwerkzeuge",painting:"Malen", hand:"Ansicht verschieben", navigation:"Mit mittlerer Maustaste oder Leertaste verschieben; mit zwei Fingern oder Mausrad zoomen", layer:"Ebene", layers:"Ebenen auswählen", brush:"Pinsel", eraser:"Radiergummi", rectangle:"Rechteckauswahl", ellipse:"Ellipsenauswahl", lasso:"Lassoauswahl", wand:"Zauberstab", bucket:"Füllen", eyedropper:"Farbpipette",
     color:"Vordergrund", size:"Größe", opacity:"Deckkraft", hardness:"Härte", tolerance:"Toleranz", selection:"Auswahl", replace:"Ersetzen", add:"Hinzufügen", subtract:"Abziehen", intersect:"Schnittmenge", all:"Alle Pixel auswählen", none:"Auswahl aufheben", invertSelection:"Auswahl umkehren",
     adjustment:"Anpassung", invert:"Farben umkehren", grayscale:"Graustufen", brightness:"Helligkeit", contrast:"Kontrast", saturation:"Sättigung", gamma:"Gamma", threshold:"Schwellenwert", posterize:"Tontrennung", blur:"Box-Weichzeichnung", sharpen:"Schärfen", value:"Stärke", apply:"Anwenden",
-    flipHorizontal:"Horizontal spiegeln", flipVertical:"Vertikal spiegeln", rotateClockwise:"Rechts drehen", rotateCounterclockwise:"Links drehen", resize:"Ebene skalieren", width:"Breite", height:"Höhe", maskFromSelection:"Maske aus Auswahl", crop:"Auf Auswahl zuschneiden", clear:"Ausgewählte Pixel löschen", cancel:"Abbrechen", selectLayer:"Eine sichtbare Pixelebene wählen", selectMask:"Eine Ebene mit Maske wählen", busy:"Bearbeitung vorbereiten", submitted:"Bearbeitung übermittelt",applied:"Bearbeitung angewendet",pending:"Bild wird bearbeitet; Fortschritt und Abbruch sind unter Aufgaben verfügbar.",refused:"Die Bearbeitung konnte nicht angewendet werden. Auf dem aktuellen Bild erneut versuchen.",superseded:"Eine neuere Aktion hat diese Bearbeitung ersetzt.", error:"Bildbearbeitung fehlgeschlagen", hidden:"Ausgeblendet", pixels:"Pixel", more:"Anpassungen und Transformationen"
+    flipHorizontal:"Horizontal spiegeln", flipVertical:"Vertikal spiegeln", rotateClockwise:"Rechts drehen", rotateCounterclockwise:"Links drehen", resize:"Ebene skalieren", width:"Breite", height:"Höhe", maskFromSelection:"Maske aus Auswahl", crop:"Auf Auswahl zuschneiden", clear:"Ausgewählte Pixel löschen", cancel:"Abbrechen", selectLayer:"Eine sichtbare Pixelebene wählen", selectMask:"Eine Ebene mit Maske wählen", busy:"Bearbeitung vorbereiten", submitted:"Bearbeitung übermittelt",applied:"Bearbeitung angewendet",pending:"Bild wird bearbeitet; Fortschritt und Abbruch sind unter Aufgaben verfügbar.",refused:"Die Bearbeitung konnte nicht angewendet werden. Auf dem aktuellen Bild erneut versuchen.",superseded:"Eine neuere Aktion hat diese Bearbeitung ersetzt.", error:"Bildbearbeitung fehlgeschlagen", hidden:"Ausgeblendet", pixels:"Pixel", more:"Anpassungen und Transformationen", keyboard:"Tastatur: Pfeiltasten bewegen den Pixelcursor, Umschalt und Pfeiltasten erweitern eine Auswahl, Eingabe oder Leertaste malt, füllt oder wählt aus, Plus, Minus und 0 zoomen; Pfeiltasten verschieben die Ansicht, wenn kein Malwerkzeug aktiv ist", strokeNearing:"Dieser Strich erreicht bald seine Segmentlänge; das Malen läuft in Segmenten innerhalb eines Rückgängig-Schritts weiter", strokeLimit:"Pfadgrenze der Auswahl erreicht; zum Anwenden loslassen"
   }
 } as const;
 type Tool = "layers"|"hand"|"brush"|"eraser"|"rectangle"|"ellipse"|"lasso"|"wand"|"bucket"|"eyedropper";
@@ -96,6 +97,9 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
   const pan=useRef<PixelPoint|null>(null);
   const space=useRef(false);
   const [viewportVersion,setViewportVersion]=useState(0);
+  const [cursor,setCursor]=useState<PixelCursor|null>(null);
+  const [anchor,setAnchor]=useState<PixelCursor|null>(null);
+  const [announcement,setAnnouncement]=useState("");
   useEffect(()=>{
     const host=container.current;if(!host) return;
     const observer=new ResizeObserver(()=>setViewportVersion(v=>v+1));observer.observe(host);
@@ -130,7 +134,7 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
   useEffect(()=>{
     epoch.current++;
     abort.current?.abort();working.current=false;abandonStream();
-    setProgress(null);setGesture([]);points.current=[];pointer.current=null;
+    setProgress(null);setGesture([]);points.current=[];pointer.current=null;setCursor(null);setAnchor(null);setAnnouncement("");
     if(active) {setWidth(active.width);setHeight(active.height);}
   },[gestureRevision,active?.id,active?.width,active?.height,target,activeUtility,pixelSelectionJson]);
   useEffect(()=>{
@@ -194,7 +198,10 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
       }
       ctx.stroke();
     }
-  },[active,maskCanvas,gesture,tool,color,target,maskValue,brushSize,brushOpacity,viewportVersion,camera.current?.x,camera.current?.y,camera.current?.zoom]);
+    ctx.setLineDash([]);
+    if(anchor&&cursor){const box=keyboardMarquee(anchor,cursor);ctx.setLineDash([4/view.zoom,4/view.zoom]);ctx.strokeStyle="#ffffff";ctx.strokeRect(box.x,box.y,box.width,box.height);ctx.setLineDash([]);}
+    if(cursor){ctx.lineWidth=2/view.zoom;ctx.strokeStyle="#ffcc00";ctx.strokeRect(cursor.x,cursor.y,1,1);}
+  },[active,cursor,anchor,maskCanvas,gesture,tool,color,target,maskValue,brushSize,brushOpacity,viewportVersion,camera.current?.x,camera.current?.y,camera.current?.zoom]);
 
   const cancel=()=>{epoch.current++;abort.current?.abort();working.current=false;abandonStream();points.current=[];pointer.current=null;setGesture([]);setProgress(null);};
   const run=async(work:(signal:AbortSignal)=>Promise<void>)=>{
@@ -261,6 +268,43 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
     const selected=await floodSelection(image,x,y,fillTolerance,{signal,onProgress:p=>setProgress(0.5*p.completed/p.total)});
     if(!signal.aborted) await select(selected,signal);
   };
+  const keyboardExtent=active?{width:active.width,height:active.height}:null;
+  const keyboardPaint=(event:KeyboardEvent<HTMLDivElement>):boolean=>{
+    if(event.ctrlKey||event.metaKey||event.altKey) return false;
+    const view=camera.current;
+    const painting=tool!=="layers"&&tool!=="hand";
+    if(["+","=","-","0"].includes(event.key)&&view){const next=keyboardCameraStep(view,event.key);if(next){event.preventDefault();onCameraChange(next);setViewportVersion(v=>v+1);return true;}}
+    if(!painting&&view){const next=keyboardCameraStep(view,event.key);if(next){event.preventDefault();onCameraChange(next);setViewportVersion(v=>v+1);return true;}return false;}
+    if(!active||!keyboardExtent) return false;
+    const origin=cursor??{x:Math.floor(keyboardExtent.width/2),y:Math.floor(keyboardExtent.height/2)};
+    const moved=stepKeyboardCursor(origin,event.key,keyboardExtent,event.repeat?8:1);
+    if(moved){
+      event.preventDefault();event.stopPropagation();
+      setAnchor(event.shiftKey?(anchor??origin):null);setCursor(moved);
+      setAnnouncement(cursorAnnouncement(locale==="de"?"de":"en",moved,keyboardExtent));return true;
+    }
+    if(event.key!=="Enter"&&!(event.code==="Space"&&(tool==="brush"||tool==="eraser"))) return false;
+    event.preventDefault();event.stopPropagation();
+    if(event.repeat||!ready) return true;
+    const at=cursor??origin;
+    if(!cursor){setCursor(at);setAnnouncement(cursorAnnouncement(locale==="de"?"de":"en",at,keyboardExtent));}
+    if(tool==="brush"||tool==="eraser") {
+      if(active.locked) return true;
+      const path=keyboardStampPath(at),layerId=active.id,stroke=tool;
+      void run(async signal=>{if(!signal.aborted)await dispatchEdit("paintStroke",{layerId,tool:stroke,xs:path.map(sample=>sample[0]),ys:path.map(sample=>sample[1])});});
+      return true;
+    }
+    if(tool==="bucket"||tool==="wand"||tool==="eyedropper") {void run(signal=>pick([at.x+0.5,at.y+0.5],signal));return true;}
+    if(tool==="rectangle"||tool==="ellipse"||tool==="lasso") {
+      const box=keyboardMarquee(anchor??at,at),shape=tool==="ellipse"?{...box,kind:"ellipse" as const}:box;
+      setAnchor(null);
+      void run(async signal=>{
+        const next=await selectPixels(active.width,active.height,shape,{signal,onProgress:p=>setProgress(0.5*p.completed/p.total)});
+        await select(next,signal,event.altKey?"subtract":merge);
+      });
+    }
+    return true;
+  };
   const down=(event:PointerEvent<HTMLDivElement>)=>{
     if(event.button!==0 && event.button!==1) return;
     event.stopPropagation();event.preventDefault();event.currentTarget.focus();event.currentTarget.setPointerCapture(event.pointerId);
@@ -297,9 +341,17 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
     try {
       const point=localPoint(event),last=points.current[points.current.length-1]!;
       if(Math.hypot(point[0]-last[0],point[1]-last[1])<0.5) return;
-      if(points.current.length>=2048) {setError("Stroke limit reached; release to apply");return;}
-      points.current.push(point);setGesture([...points.current]);
       const open=streamed.current;
+      const rolled=open?rolloverStroke(points.current,open.sent):null;
+      if(open&&rolled){
+        points.current=rolled.points as PixelPoint[];open.sent=rolled.sent;
+        void dispatch("paintStroke",{layerId:open.layerId,tool:open.tool,xs:rolled.batch.map(sample=>sample[0]),ys:rolled.batch.map(sample=>sample[1]),phase:"stream",gesture:open.gesture});
+      } else if(!open) {
+        const limit=strokeLimitState(points.current.length);
+        if(limit==="full") {setError(text?.strokeLimit??"");return;}
+        if(limit==="warn") setMessage(text?.strokeNearing??"");
+      }
+      points.current.push(point);setGesture([...points.current]);
       if(open&&points.current.length-open.sent>=STROKE_STREAM_BATCH){
         const batch=points.current.slice(open.sent);open.sent=points.current.length;
         void dispatch("paintStroke",{layerId:open.layerId,tool:open.tool,xs:batch.map(point=>point[0]),ys:batch.map(point=>point[1]),phase:"stream",gesture:open.gesture});
@@ -311,7 +363,7 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
     if(verdict.kind!=="single" || pan.current) {pan.current=null;cancel();return;}
     if(pointer.current!==event.pointerId || !active) return;
     const path=points.current;
-    try {if(path.length<2048) path.push(localPoint(event));} catch(cause) {setError(String(cause));cancel();return;}
+    try {if(path.length<STROKE_POINT_CAP) path.push(localPoint(event));} catch(cause) {setError(String(cause));cancel();return;}
     const open=streamed.current;streamed.current=null;
     points.current=[];pointer.current=null;setGesture([]);
     if(event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
@@ -338,31 +390,33 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
   if(!text) return null;
   return <>
     <canvas ref={overlay} aria-hidden="true" className="pointer-events-none absolute inset-0 z-30" />
-    {tool!=="layers" && <div tabIndex={0} role="application" aria-label={text.tools} className="absolute inset-0 z-30 touch-none focus-visible:outline focus-visible:outline-accent"
+    <div tabIndex={0} role="application" aria-label={text.imageEditor} aria-description={text.keyboard} className={"absolute inset-0 z-30 touch-none focus-visible:outline focus-visible:outline-accent"+(tool==="layers"?" pointer-events-none":"")}
       onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={event=>{navigation.up(event.pointerId);pan.current=null;cancel();}} onLostPointerCapture={()=>{if(pointer.current!==null)cancel();}} onWheel={onWheel}
       onBlur={()=>{space.current=false;pan.current=null;for(const tracked of [...navigation.pointers])navigation.up(tracked.pointerId);if(pointer.current!==null)cancel();}}
       onKeyUp={event=>{if(event.code==="Space"){event.preventDefault();space.current=false;}}}
       onKeyDown={event=>{
+        if(keyboardPaint(event)) return;
         if(event.code==="Space"){event.preventDefault();space.current=true;}
         if(!event.ctrlKey&&!event.metaKey&&!event.altKey) {
           const shortcut=({b:"brush",e:"eraser",m:"rectangle",l:"lasso",w:"wand",g:"bucket",i:"eyedropper",h:"hand",v:"layers"} as Record<string,Tool>)[event.key.toLowerCase()];
           if(shortcut&&!(target==="mask"&&["bucket","wand","eyedropper"].includes(shortcut))){event.preventDefault();cancel();setTool(shortcut);}
           if(event.key==="["||event.key==="]"){event.preventDefault();dispatch("setBrushSize",{value:Math.max(1,Math.min(2048,brushSize+(event.key==="["?-1:1)))});}
         }
-        if(event.key==="Escape"){event.preventDefault();if(working.current||pointer.current!==null)cancel();else clearSelection();}
+        if(event.key==="Escape"){event.preventDefault();setAnchor(null);if(working.current||pointer.current!==null)cancel();else clearSelection();}
         if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="a"&&active){event.preventDefault();event.stopPropagation();changeSelection("all");}
         if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="d"){event.preventDefault();event.stopPropagation();clearSelection();}
         if(target==="pixels"&&(event.key==="Delete"||event.key==="Backspace")){event.preventDefault();event.stopPropagation();filterImage("clear");}
-      }}/>}
-    <section aria-label={text.tools} className="absolute left-2 top-2 z-40 max-h-[calc(100%-1rem)] max-w-[calc(100%-1rem)] overflow-auto rounded border border-border bg-background/95 p-2 text-foreground shadow-lg" style={{width:collapsed?"auto":"18rem"}}>
-      <button type="button" className={control+" w-full text-left"} aria-expanded={!collapsed} onClick={()=>setCollapsed(!collapsed)}>{text.tools} {collapsed?"+":"−"}</button>
+      }}/>
+    <p role="status" aria-live="polite" className="sr-only">{announcement}</p>
+    <section aria-label={text.painting} className="absolute left-2 top-2 z-40 max-h-[calc(100%-1rem)] max-w-[calc(100%-1rem)] overflow-auto rounded border border-border bg-background/95 p-2 text-foreground shadow-lg" style={{width:collapsed?"auto":"18rem"}}>
+      <button type="button" className={control+" w-full text-left"} aria-expanded={!collapsed} onClick={()=>setCollapsed(!collapsed)}>{text.painting} {collapsed?"+":"−"}</button>
       {!collapsed && <div className="mt-2 flex flex-col gap-2">
         <label className="text-xs">{text.target}<select className={control+" w-full"} value={target} onChange={event=>{cancel();setTarget(event.target.value as "pixels"|"mask");if(["bucket","wand","eyedropper"].includes(tool))setTool("brush");}}><option value="pixels">{text.pixelTarget}</option><option value="mask">{text.maskTarget}</option></select></label>
         <label className="text-xs">{text.layer}<select className={control+" w-full"} value={active?.id??""} onChange={event=>{dispatch("interactionSelect",{domainId:"layers",targets:JSON.stringify([{granularity:"layer",id:event.target.value}]),merge:"replace",method:"pick"});}}>
           <option value="" disabled>{target==="mask"?text.selectMask:text.selectLayer}</option>{layers.map(layer=><option key={layer.id} value={layer.id} disabled={!layer.visible}>{layer.name}{layer.visible?"":" · "+text.hidden}{layer.locked?" · "+text.locked:""}</option>)}
         </select></label>
         {active?.locked&&<p role="status" className="text-xs">{text.lockedHint}</p>}
-        <div role="toolbar" aria-label={text.tools} className="grid grid-cols-3 gap-1">{toolList.filter(value=>target==="pixels"||!["bucket","wand","eyedropper"].includes(value)).map(value=><button type="button" key={value} className={control} aria-pressed={tool===value} onClick={()=>{cancel();setTool(value);}}>{text[value]}</button>)}</div>
+        <div role="toolbar" aria-label={text.paintTools} className="grid grid-cols-3 gap-1">{toolList.filter(value=>target==="pixels"||!["bucket","wand","eyedropper"].includes(value)).map(value=><button type="button" key={value} className={control} aria-pressed={tool===value} onClick={()=>{cancel();setTool(value);}}>{text[value]}</button>)}</div>
         <div className="flex gap-2">{target==="pixels"?<label className="text-xs">{text.color}<input aria-label={text.color} type="color" value={color} onChange={e=>setColor(e.target.value)} /></label>:<label className="text-xs">{text.maskValue}<input className={control+" w-20"} type="number" min={0} max={255} step={1} value={maskValue} onChange={e=>{if(e.target.validity.valid&&e.target.value)setMaskValue(Number(e.target.value));}}/></label>}
           <label className="text-xs">{text.size}<input className={control+" w-20"} type="number" min={1} max={2048} step={1} value={brushSize} onChange={e=>{if(e.target.validity.valid && e.target.value)dispatch("setBrushSize",{value:Number(e.target.value)});}} /></label>
         </div>
@@ -391,6 +445,7 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
           <button className={control} disabled={!editable} onClick={()=>filterImage("clear")}>{text.clear}</button>
         </div></details>}
         <p className="text-xs text-muted-foreground">{text.navigation}</p>
+        <p className="text-xs text-muted-foreground">{text.keyboard}</p>
         {active&&<output className="text-xs">{active.width} × {active.height} {text.pixels}</output>}
         {pending&&<p role="status" aria-live="polite">{text.pending}</p>}
         {!pending&&(progress!==null||restoreProgress!==null)&&<div role="status" className="text-xs">{text.busy}<progress className="w-full" max={1} value={progress??restoreProgress!}/><button className={control} onClick={restoreProgress!==null?clearSelection:cancel}>{text.cancel}</button></div>}

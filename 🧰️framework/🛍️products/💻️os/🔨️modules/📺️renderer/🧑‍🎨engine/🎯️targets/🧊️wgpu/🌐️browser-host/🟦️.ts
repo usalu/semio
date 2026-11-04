@@ -342,7 +342,7 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
             status.remove();
             if (options.pageBindings)
                 detachIntrospection = attachIntrospectionBindings(transport);
-            mediaOverlay = createBrowserMediaOverlay(root, (slot) => transport.mediaPort(slot.token));
+            mediaOverlay = createBrowserMediaOverlay(root, (slot) => transport.mediaPort(slot.token), (slot) => (action, args) => { void transport.applyMediaAction(slot.token, action, args).catch((error: unknown) => console.warn("[wgpu-host] media action refused", error)); });
             accessibility = createAccessibilityMirror(root, transport, options.locale, canvas, (surface, node) => mediaOverlay?.owns(surface.windowId, node.nodeId, node.key) === true, options.pageBindings ? undefined : "semio-wgpu-accessibility-" + options.mountId);
             accessibility.refresh();
             cleanupInput = wireInput(root, canvas, transport);

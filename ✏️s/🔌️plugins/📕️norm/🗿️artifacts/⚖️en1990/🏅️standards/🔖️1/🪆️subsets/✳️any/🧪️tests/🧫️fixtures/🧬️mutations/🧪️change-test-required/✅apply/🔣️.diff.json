@@ -77,7 +77,8 @@
           "conversionFactor": null,
           "required": 2.0,
           "pairs": null,
-          "theoryVariation": null
+          "theoryVariation": null,
+          "theoryMean": null
         }
       }
     ]

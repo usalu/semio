@@ -43,9 +43,10 @@ const PLUGIN_DISTRIBUTION_PORT_V1: PluginDistributionPortV1 = Object.freeze({
 
 const DOCUMENT_ACCESS_PORT_V1: DocumentAccessPortV1 = Object.freeze({ permitsDocumentWrite: (role) => directoryAccessPermits(declaredAccessPolicy, [role], "document.write") });
 
-/** 🪝️ Every port the React shell host reads, bound to this product. */
-export function createFrameworkOsHostPortsV1(): ShellHostPortsV1 {
+/** 🪝️ Every port the React shell host reads, bound to this product; a product root supplies the ports only it can know, such as its Open file format catalog. */
+export function createFrameworkOsHostPortsV1(productPorts: Pick<ShellHostPortsV1, "formatCatalog"> = {}): ShellHostPortsV1 {
   return Object.freeze({
+    ...productPorts,
     catalogAdmission: CATALOG_ADMISSION_PORT_V1,
     pluginDistribution: PLUGIN_DISTRIBUTION_PORT_V1,
     documentAccess: DOCUMENT_ACCESS_PORT_V1,

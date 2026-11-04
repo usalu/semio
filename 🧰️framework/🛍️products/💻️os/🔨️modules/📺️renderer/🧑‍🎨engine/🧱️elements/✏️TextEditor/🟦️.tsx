@@ -7,7 +7,7 @@
 // #region 🔌️Adapters
 import { useEffect, useMemo, useRef, useState } from "../⚛️react-port/🟦️.ts";
 import { WasmCanvas } from "@semio-tech/framework/canvas/react-renderer";
-import { cn, ContextMenuController, glassClass, Textarea, useLabel } from "@semio-tech/ui-react";
+import { cn, ContextMenuController, ContextMenuTriggerButton, glassClass, Textarea, useLabel } from "@semio-tech/ui-react";
 import { textEditorActions, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene } from "@semio-tech/framework";
 import { useLocalDocumentOwnerV1, useLocalDocumentWindowV1 } from "../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { useClient } from "@semio-tech/framework-os-node-graph-rs/index";
@@ -17,7 +17,9 @@ import { TextPeerCaretsOverlayV1 } from "../👕️canvas-presence/🟦️.tsx";
 import type { EditorDiagnostic, GrammarToken, PickTarget, SpanRange, TextEditorExplicitDraftSettings, TextEditorExplicitDraftState, WasmEditorSurfaceProps } from "./🏷️editor-types/🟦️.ts";
 import { acquireRetainedTextEditorDraftV1, publishRetainedTextEditorDraftV1, retainedTextEditorDraftKeyV1 } from "./📌️retained-drafts/🟦️.ts";
 import { HighlightedBuffer, ignoreInputSinkChange } from "./🖍️buffer-and-edit-helpers/🟦️.tsx";
-import { documentHistoryChord, isTextEditingKey } from "./🚫️edit-refusals-and-keys/🟦️.ts";
+import { documentHistoryChord, isTextEditingKey, TAB_TRAP_ANNOUNCEMENTS_V1, tabTrapStepV1, type TabTrapStateV1 } from "./🚫️edit-refusals-and-keys/🟦️.ts";
+import { createTouchSelectionV1 } from "./👆️touch-selection/🟦️.ts";
+import { localizedLabelTextV1 } from "../🏛️ShellHost/📣️replay-refusal/🟦️.ts";
 import { parseJsonOr } from "./📤️outbox-and-scene-packets/🟦️.ts";
 import { acceptTextEditorExplicitDraftCancellation, beginTextEditorExplicitDraft, changeTextEditorExplicitDraft, createTextEditorExplicitDraft, parseTextEditorExplicitDraftSettings, reconcileTextEditorExplicitDraft, refuseTextEditorExplicitDraftCancellation, requestTextEditorExplicitDraftCancellation, settleTextEditorExplicitDraft, startTextEditorExplicitDraftOperation, textEditorExplicitDraftAction, textEditorExplicitDraftFailureV1 } from "./✍️explicit-draft-state/🟦️.ts";
 import { useEditorSurfaceState } from "./🧰️surface-state-and-delivery/🟦️.ts";
@@ -41,7 +43,22 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
   Object.assign(core, useEditorSessionPresence(core));
   Object.assign(core, useEditorCompletionsRenameAndMenu(core));
   const { surfaceId } = props;
+  const selectWordRef = useRef<(x: number, y: number) => void>(() => undefined);
+  const touchSelection = useMemo(() => createTouchSelectionV1({
+    now: () => Date.now(),
+    setTimer: (callback, milliseconds) => { const handle = window.setTimeout(callback, milliseconds); return () => window.clearTimeout(handle); },
+    selectWord: (x, y) => selectWordRef.current(x, y),
+  }), []);
+  const tabTrapRef = useRef<TabTrapStateV1>({ armed: false, leaveMode: false });
+  const [tabAnnouncement, setTabAnnouncement] = useState("");
+  const editorLocale = typeof document !== "undefined" && document.documentElement.lang !== "" ? document.documentElement.lang : "en";
   const { applyCompletion, cancelRename, caretScreenPosition, commitRename, completionIndex, completions, completionsOpen, contextMenu, contextMenuTitleLabel, descriptionId, dismissContextMenu, dispatch, editorLabel, emitSelection, invalid, lastHoverRangeRef, moveExplicitHistory, newlineGates, onSessionReady, openCompletions, presenceFrame, presenceWindowId, projectPeerCaret, publishCaretPresence, readOnly, readOnlyRef, renameDraft, renameInfo, renamePosition, requestContextMenu, scene, sessionEpoch, sessionFactory, sessionRef, setCompletionIndex, setCompletionsOpen, setContextMenu, setPresenceFrame, shellContextMenuFallback, sinkRef, startRename, surfaceRef, textEditorMenuKeysByActionId, updateRenamePreview , presenceRuntimeKey } = core;
+  selectWordRef.current = (x, y) => {
+    const session = sessionRef.current;
+    if (!session) return;
+    session.selectSpanAtScreen(x, y);
+    emitSelection();
+  };
 
   return (
     <div ref={surfaceRef} className="relative min-h-0 flex-1">
@@ -49,12 +66,15 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
       <TextPeerCaretsOverlayV1 windowId={presenceWindowId} project={projectPeerCaret} frame={presenceFrame + sessionEpoch} lineHeightPx={16} locale={typeof document !== "undefined" ? document.documentElement.lang : undefined} />
       <div
         className="absolute inset-0"
+        data-text-editor-pointer-layer=""
+        style={{ touchAction: "none" }}
         onPointerDown={(event) => {
           const session = sessionRef.current;
           if (!session) return;
           const rect = event.currentTarget.getBoundingClientRect();
           const sx = event.clientX - rect.left;
           const sy = event.clientY - rect.top;
+          if (event.pointerType === "touch") touchSelection.down(sx, sy);
           if (event.detail >= 2) {
             session.selectSpanAtScreen(sx, sy);
             emitSelection();
@@ -67,6 +87,7 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
           const session = sessionRef.current;
           if (!session) return;
           const rect = event.currentTarget.getBoundingClientRect();
+          if (event.pointerType === "touch") touchSelection.move(event.clientX - rect.left, event.clientY - rect.top);
           session.pointerMoveScreen(event.clientX - rect.left, event.clientY - rect.top, event.buttons);
           try {
             const hover = JSON.parse(session.hoverTokenRangeJson()) as SpanRange | null;
@@ -83,11 +104,13 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
         onPointerUp={(event) => {
           const session = sessionRef.current;
           if (!session) return;
+          if (event.pointerType === "touch") touchSelection.up();
           const rect = event.currentTarget.getBoundingClientRect();
           session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.buttons);
           emitSelection();
         }}
         onPointerCancel={() => {
+          touchSelection.cancel();
           const session = sessionRef.current;
           if (!session) return;
           session.pointerCancelScreen();
@@ -247,6 +270,7 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
             })()
           : null}
       </div>
+      <ContextMenuTriggerButton className="absolute right-1 top-1 z-10 bg-background/80" resolveTarget={() => surfaceRef.current?.querySelector("[data-text-editor-pointer-layer]") ?? null} />
       <ContextMenuController title={contextMenuTitleLabel} open={contextMenu != null} position={contextMenu?.position ?? null} items={contextMenu?.items ?? []} onOpenChange={(open) => !open && dismissContextMenu()} />
       <textarea
         ref={sinkRef}
@@ -292,6 +316,14 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
             dispatch(history, {});
             return;
           }
+          const trap = tabTrapStepV1(tabTrapRef.current, event, readOnlyRef.current);
+          tabTrapRef.current = trap.state;
+          if (trap.announce !== null) setTabAnnouncement(localizedLabelTextV1(TAB_TRAP_ANNOUNCEMENTS_V1[trap.announce], editorLocale));
+          if (trap.action === "consume") {
+            event.preventDefault();
+            return;
+          }
+          if (trap.action === "leave") return;
           if (readOnlyRef.current && isTextEditingKey(event)) {
             event.preventDefault();
             return;
@@ -385,7 +417,7 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
             emitSelection();
             return;
           }
-          if (event.key === "Tab") {
+          if (event.key === "Tab" && trap.action === "insert-tab") {
             event.preventDefault();
             session.insertText(session.tabInsertText());
             emitSelection();
@@ -424,7 +456,9 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
         aria-label={editorLabel}
         aria-describedby={descriptionId}
         aria-invalid={invalid || undefined}
+        onBlur={() => { tabTrapRef.current = { armed: false, leaveMode: tabTrapRef.current.leaveMode }; }}
       />
+      <span role="status" aria-live="polite" className="sr-only">{tabAnnouncement}</span>
     </div>
   );
 }

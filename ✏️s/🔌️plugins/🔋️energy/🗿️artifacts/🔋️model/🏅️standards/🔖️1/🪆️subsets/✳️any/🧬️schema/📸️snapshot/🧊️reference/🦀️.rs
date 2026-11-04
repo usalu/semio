@@ -239,7 +239,7 @@ pub fn energy_model_from_structure(structure: &semio_s_artifact_stdio_semio_valu
     serde_json::from_value(json_from_semio_value(&structure.root)).unwrap_or_default()
 }
 
-/// 📊️ REAL, DERIVED converter: one `s.stdio.semio.table` row per `Zone` (`id`/`name`/`volumeM3`/
+/// 📊️ REAL, DERIVED converter: one `stdio.semio.table` row per `Zone` (`id`/`name`/`volumeM3`/
 /// `multiplier`/`conditioned`/`partOfTotalFloorArea`) — a non-authoritative convenience projection,
 /// always regenerated alongside `structure` from the SAME model (never an independent source, so
 /// the two never diverge). `energy_model_from_structure` alone is authoritative on read; this table

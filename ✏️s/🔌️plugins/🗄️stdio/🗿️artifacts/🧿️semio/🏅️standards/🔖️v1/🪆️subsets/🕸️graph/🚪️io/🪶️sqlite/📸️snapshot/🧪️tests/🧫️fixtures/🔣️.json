@@ -1,6 +1,6 @@
 {
   "nativeOutputBytes": 100000,
-  "schema": "s.stdio.semio.graph",
+  "schema": "stdio.semio.graph",
   "nodeIds": [
     "first",
     "second"

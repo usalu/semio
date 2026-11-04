@@ -2,7 +2,7 @@
   "query": "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label",
   "rootNodeId": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
   "child": {
-    "schema": "s.stdio.semio.graph",
+    "schema": "stdio.semio.graph",
     "nodes": [
       {
         "id": {

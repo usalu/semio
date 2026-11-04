@@ -61,6 +61,51 @@
         "🔗️.graphql",
         "🛰️.proto"
       ]
+    },
+    {
+      "kind": "set-palette-entry",
+      "variant": "SetPaletteEntry",
+      "directory": "🌈️set-palette-entry",
+      "textOpcode": "set-palette-entry",
+      "binaryTag": 14,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🧬️schema/🔣️.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto"
+      ]
+    },
+    {
+      "kind": "insert-palette-entry",
+      "variant": "InsertPaletteEntry",
+      "directory": "📥️insert-palette-entry",
+      "textOpcode": "insert-palette-entry",
+      "binaryTag": 15,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🧬️schema/🔣️.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto"
+      ]
+    },
+    {
+      "kind": "remove-palette-entry",
+      "variant": "RemovePaletteEntry",
+      "directory": "📤️remove-palette-entry",
+      "textOpcode": "remove-palette-entry",
+      "binaryTag": 16,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🧬️schema/🔣️.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto"
+      ]
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "nativeOutputBytes": 100000,
-  "schema": "s.stdio.semio.table",
+  "schema": "stdio.semio.table",
   "columns": [
     [
       "null",

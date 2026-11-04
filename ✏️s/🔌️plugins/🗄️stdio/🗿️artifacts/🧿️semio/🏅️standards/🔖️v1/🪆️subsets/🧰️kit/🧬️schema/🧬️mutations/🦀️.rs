@@ -35,7 +35,7 @@ use crate::schema::mutations::unbind_representation;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioKitSnapshot, diff = SemioKitDiff, schema = "s.stdio.semio.kit", reference = SemioKitSnapshot, reference_diff = SemioKitDiff)]
+#[mutations(snapshot = SemioKitSnapshot, diff = SemioKitDiff, schema = "stdio.semio.kit", reference = SemioKitSnapshot, reference_diff = SemioKitDiff)]
 pub enum SemioKitMutation {
     CreateObject(create_object::CreateObject),
     DeleteObject(delete_object::DeleteObject),

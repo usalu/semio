@@ -13,6 +13,9 @@ use crate::{MP4_DIALECT, STDIO_MP4_DOCUMENT_SCHEMA};
 use semio_framework_2d_compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin::ArtifactOwnedToolJobRequest;
@@ -52,6 +55,11 @@ pub enum Mp4EditCommand {
     SetActiveExample {
         example_id: String,
     },
+    /// ✂️ Cuts the whole units of a half-open `start-end` range as one revision-guarded history step.
+    CutFrames {
+        revision: String,
+        value: String,
+    },
     EditSnapshot {
         event: editing::SnapshotEditEvent,
     },
@@ -70,9 +78,11 @@ impl protocol::OpBinary for Mp4EditCommand {
 }
 //#endregion 🔖️Command
 
-const STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID];
+pub const CUT_FRAMES_ACTION_ID: &str = "cut-frames";
+const STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, CUT_FRAMES_ACTION_ID];
 const STDIO_MP4_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
     semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
+    CUT_FRAMES_ACTION_ID,
     editing::SET_SNAPSHOT_VALUE_ACTION_ID,
     editing::INSERT_SNAPSHOT_VALUE_ACTION_ID,
     editing::REMOVE_SNAPSHOT_VALUE_ACTION_ID,
@@ -83,6 +93,7 @@ const STDIO_MP4_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
 const STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.mp4.tool-command.v1";
 const STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 const STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
+const STDIO_MP4_CUT_FRAMES_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: CUT_FRAMES_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] };
 fn mp4_editor_example_snapshot(example_id: &str) -> Mp4Snapshot {
     if example_id == crate::examples::demo::ID {
         <Mp4Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
@@ -96,6 +107,7 @@ fn mp4_editor_command_id(command: &Mp4EditCommand) -> &'static str {
     }
     match command {
         Mp4EditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
+        Mp4EditCommand::CutFrames { .. } => CUT_FRAMES_ACTION_ID,
         _ => "other",
     }
 }
@@ -104,12 +116,38 @@ fn mp4_editor_command_from_action(action: &str, args: Option<&semio_framework_va
         return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| Mp4EditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit"))));
     }
     match action {
+        CUT_FRAMES_ACTION_ID => Ok(Mp4EditCommand::CutFrames { revision: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "revision")?, value: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "value")? }),
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(Mp4EditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
         _ => Err(Fault::from(format!("action '{action}' is not setActiveExample"))),
     }
 }
 fn mp4_editor_retained_extent(command: &Mp4EditCommand, _snapshot: &Mp4Snapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    matches!(command, Mp4EditCommand::SetActiveExample { .. }).then_some(1)
+    matches!(command, Mp4EditCommand::SetActiveExample { .. } | Mp4EditCommand::CutFrames { .. }).then_some(1)
+}
+/// ✂️ Parses a half-open range written `start-end`, both counted in whole units.
+pub(crate) fn parse_cut_range(value: &str) -> Result<(usize, usize), Fault> {
+    let invalid = || Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.mp4.cut-range"), "Range must be written start-end with whole numbers. / Der Bereich muss als Start-Ende mit ganzen Zahlen geschrieben werden.");
+    let whole = |text: &str| Some(text.trim()).filter(|text| !text.is_empty() && text.bytes().all(|byte| byte.is_ascii_digit())).and_then(|text| text.parse::<usize>().ok());
+    let (start, end) = value.trim().split_once('-').ok_or_else(invalid)?;
+    Ok((whole(start).ok_or_else(invalid)?, whole(end).ok_or_else(invalid)?))
+}
+/// ✂️ The removals of the samples `start-end` of the first track as one run at one stable index, or why the range is refused.
+pub(crate) fn cut_range_mutations(snapshot: &Mp4Snapshot, value: &str) -> Result<Vec<Mp4Mutation>, Fault> {
+    let (start, end) = parse_cut_range(value)?;
+    let samples = snapshot.tracks.first().map_or(0, |track| track.samples.len());
+    if start >= end || end > samples {
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.mp4.cut-range"), format!("Sample range {start}-{end} must satisfy 0 <= start < end <= {samples}. / Der Samplebereich {start}-{end} muss 0 <= Start < Ende <= {samples} erfüllen.")));
+    }
+    Ok((start..end).map(|_| Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index: 0, index: start })).collect())
+}
+/// ✂️ The localized `cut-frames` action: a revision-guarded range cut dispatched by the transport trim.
+pub(crate) fn cut_frames_action() -> ActionDefinition {
+    let mut action = ActionDefinition::bounded_catalog(CUT_FRAMES_ACTION_ID, semio_framework_ui_locale::LocalizedLabel::native("Cut range", "Bereich ausschneiden"), ActionKind::Mutation).with_args([
+        ActionArgDef::document_revision("revision", semio_framework_ui_locale::LocalizedLabel::native("Document revision", "Dokumentrevision")),
+        ActionArgDef::text("value", semio_framework_ui_locale::LocalizedLabel::native("Range (start-end)", "Bereich (Start-Ende)")).required(),
+    ]);
+    action.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+    action
 }
 fn mp4_editor_retained_reduce(
     command: &Mp4EditCommand,
@@ -119,9 +157,15 @@ fn mp4_editor_retained_reduce(
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Mp4Editor>>>,
-    _operation: &AppOperationContext,
+    operation: &AppOperationContext,
 ) -> Result<Emit<Mp4Mutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
+        Mp4EditCommand::CutFrames { revision, value } => {
+            if *revision != semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision) {
+                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.mp4.cut-conflict"), "The document changed before this cut was applied. / Das Dokument wurde vor dem Schnitt geändert."));
+            }
+            Ok(Emit { artifact_mutations: cut_range_mutations(_snapshot, value)?, ..Default::default() })
+        }
         Mp4EditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&mp4_editor_example_snapshot(example_id), STDIO_MP4_DOCUMENT_SCHEMA)], ..Default::default() }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
@@ -156,7 +200,7 @@ impl ArtifactOwnedToolJobFactory for Mp4EditorExampleFactory {
     const TOOL_IDS: &'static [&'static str] = STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = STDIO_MP4_DOCUMENT_SCHEMA;
 
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT, STDIO_MP4_CUT_FRAMES_CONTRACT];
 }
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
@@ -217,7 +261,7 @@ impl ArtifactEditor for Mp4Editor {
         factory: "Mp4EditorExampleFactory",
         factory_type: Mp4EditorExampleFactory,
         contract: ToolExecutionContract::bounded_first_step(STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500),
-        tools: ["setActiveExample"]
+        tools: ["setActiveExample", "cut-frames"]
     }
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         registry.register(Mp4EditorExampleFactory::new(registry.controller_id()))?;
@@ -235,7 +279,8 @@ impl ArtifactEditor for Mp4Editor {
         if mp4_editor_command_id(&original.command) != original.tool_id {
             return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-mismatch").into());
         }
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, mp4_editor_command_id, STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, mp4_editor_retained_reduce, mp4_editor_retained_extent))
+        let tool: &'static str = STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.iter().copied().find(|id| *id == original.tool_id).ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-unknown"))?;
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, mp4_editor_command_id, STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(tool, mp4_editor_retained_reduce, mp4_editor_retained_extent))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
@@ -283,13 +328,14 @@ impl ArtifactEditor for Mp4Editor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             Mp4EditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
+            Mp4EditCommand::CutFrames { .. } => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.mp4.cut-conflict"), "A cut is revision-guarded and only runs through its retained command route. / Ein Schnitt ist revisionsgebunden und läuft nur über seine Befehlsroute.")),
             Mp4EditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&mp4_editor_example_snapshot(example_id), STDIO_MP4_DOCUMENT_SCHEMA)], ..Default::default() }),
         }
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot, view_state.locale, semio_s_artifact_stdio_contract::media_transport_resource(doc, "s.stdio.mp4@isobmff/*#editor")).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render(doc.snapshot, view_state.locale, semio_s_artifact_stdio_contract::media_transport_resource(doc, "s.stdio.mp4@isobmff/*#editor"), doc.render_operation().map(|operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision))).map(semio_framework_plugin::built_to_component_tree),
             editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.mp4@isobmff/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY))
                 .map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
@@ -337,12 +383,13 @@ pub fn create_mp4_editor() -> semio_framework_plugin::AppDefinition {
         .default_mode_id(edit::MODE_ID)
         .window_kind_def(main::definition())
         .window_kind_def(editing::snapshot_details_window_definition())
-        .default_layout(edit::layout())
+        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Main"))
         .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
-        .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated);
+        .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
+        .action_with(cut_frames_action());
     editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest

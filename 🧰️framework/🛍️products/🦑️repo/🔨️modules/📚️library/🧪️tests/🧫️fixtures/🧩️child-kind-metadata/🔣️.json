@@ -38,11 +38,11 @@
         {
           "owner": "kit",
           "format": "rs",
-          "kind": "s.stdio.semio.kit"
+          "kind": "stdio.semio.kit"
         }
       ],
       "rejectedKinds": [
-        "s.stdio.semio.kit"
+        "stdio.semio.kit"
       ]
     },
     {
@@ -62,11 +62,11 @@
         {
           "owner": "kit",
           "format": "ts",
-          "kind": "s.stdio.semio.kit"
+          "kind": "stdio.semio.kit"
         }
       ],
       "rejectedKinds": [
-        "s.stdio.semio.kit"
+        "stdio.semio.kit"
       ]
     },
     {
@@ -86,11 +86,11 @@
         {
           "owner": "kit",
           "format": "json",
-          "kind": "s.stdio.semio.kit"
+          "kind": "stdio.semio.kit"
         }
       ],
       "rejectedKinds": [
-        "s.stdio.semio.kit"
+        "stdio.semio.kit"
       ]
     },
     {
@@ -110,11 +110,11 @@
         {
           "owner": "kit",
           "format": "graphql",
-          "kind": "s.stdio.semio.kit"
+          "kind": "stdio.semio.kit"
         }
       ],
       "rejectedKinds": [
-        "s.stdio.semio.kit"
+        "stdio.semio.kit"
       ]
     },
     {
@@ -134,11 +134,11 @@
         {
           "owner": "kit",
           "format": "proto",
-          "kind": "s.stdio.semio.kit"
+          "kind": "stdio.semio.kit"
         }
       ],
       "rejectedKinds": [
-        "s.stdio.semio.kit"
+        "stdio.semio.kit"
       ]
     },
     {

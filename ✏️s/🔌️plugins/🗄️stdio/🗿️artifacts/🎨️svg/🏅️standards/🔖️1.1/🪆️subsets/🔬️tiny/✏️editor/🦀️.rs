@@ -48,6 +48,10 @@ use semio_s_artifact_stdio_contract::editing;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum SvgTinyEditCommand {
     SetPixelRegion { source: String },
+    /// ✂️ Drops every element and presentation attribute SVG Tiny 1.1 excludes.
+    StripNonTiny,
+    /// 🏷️ Sets (empty text clears) the root's `baseProfile` and `version` declaration.
+    StampBaseProfile { base_profile: String, version: String },
     /// 🎬️ Navbar example picker payload.
     SetActiveExample { example_id: String },
     EditSnapshot { event: editing::SnapshotEditEvent },
@@ -67,9 +71,13 @@ impl protocol::OpBinary for SvgTinyEditCommand {
 //#endregion 🔖️Command
 
 
-const STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID];
+pub const STRIP_NON_TINY_ACTION_ID: &str = "stripNonTiny";
+pub const STAMP_BASE_PROFILE_ACTION_ID: &str = "stampBaseProfile";
+const STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, STRIP_NON_TINY_ACTION_ID, STAMP_BASE_PROFILE_ACTION_ID];
 const STDIO_SVG_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
     semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
+    STRIP_NON_TINY_ACTION_ID,
+    STAMP_BASE_PROFILE_ACTION_ID,
     editing::SET_SNAPSHOT_VALUE_ACTION_ID,
     editing::INSERT_SNAPSHOT_VALUE_ACTION_ID,
     editing::REMOVE_SNAPSHOT_VALUE_ACTION_ID,
@@ -80,28 +88,49 @@ const STDIO_SVG_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
 const STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.svg.tool-command.v1";
 const STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 const STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
+const STDIO_SVG_DOCUMENT_SCHEMA_STRIP_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: STRIP_NON_TINY_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
+const STDIO_SVG_DOCUMENT_SCHEMA_STAMP_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: STAMP_BASE_PROFILE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
 fn svg_tiny_editor_example_snapshot(example_id: &str) -> SvgSnapshot {
     if example_id == crate::examples::demo::ID { <SvgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default() } else { SvgSnapshot::default() }
 }
 fn svg_tiny_editor_command_id(command: &SvgTinyEditCommand) -> &'static str {
     if let SvgTinyEditCommand::EditSnapshot { event } = command { return event.action_id(); }
-    match command { SvgTinyEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, _ => "other" }
+    match command {
+        SvgTinyEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
+        SvgTinyEditCommand::StripNonTiny => STRIP_NON_TINY_ACTION_ID,
+        SvgTinyEditCommand::StampBaseProfile { .. } => STAMP_BASE_PROFILE_ACTION_ID,
+        _ => "other",
+    }
 }
 fn svg_tiny_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<SvgTinyEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| SvgTinyEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(SvgTinyEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        _ => Err(Fault::from(format!("action '{action}' is not setActiveExample"))),
+        STRIP_NON_TINY_ACTION_ID => Ok(SvgTinyEditCommand::StripNonTiny),
+        STAMP_BASE_PROFILE_ACTION_ID => {
+            let text = |key: &str| args.and_then(|value| value.get(key)).and_then(|value| value.as_str()).unwrap_or_default().to_string();
+            Ok(SvgTinyEditCommand::StampBaseProfile { base_profile: text("baseProfile"), version: text("version") })
+        }
+        _ => Err(Fault::from(format!("action '{action}' is not an SVG Tiny editor action"))),
     }
 }
 fn svg_tiny_editor_retained_extent(command: &SvgTinyEditCommand, _snapshot: &SvgSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    matches!(command, SvgTinyEditCommand::SetActiveExample { .. }).then_some(1)
+    matches!(command, SvgTinyEditCommand::SetActiveExample { .. } | SvgTinyEditCommand::StripNonTiny | SvgTinyEditCommand::StampBaseProfile { .. }).then_some(1)
 }
 fn svg_tiny_editor_retained_reduce(command: &SvgTinyEditCommand, _snapshot: &SvgSnapshot, _config: &NoConfig, _history: &semio_framework_plugin::HistoryView, _interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<SvgTinyEditor>>>, _operation: &AppOperationContext) -> Result<Emit<SvgTinyMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         SvgTinyEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&svg_tiny_editor_example_snapshot(example_id), STDIO_SVG_DOCUMENT_SCHEMA)], ..Default::default() }),
+        SvgTinyEditCommand::StripNonTiny => Ok(Emit::mutations(vec![svg_tiny_strip_mutation()])),
+        SvgTinyEditCommand::StampBaseProfile { base_profile, version } => Ok(Emit::mutations(vec![svg_tiny_stamp_mutation(base_profile, version)])),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
+}
+fn svg_tiny_strip_mutation() -> SvgTinyMutation {
+    SvgTinyMutation::StripNonTiny(crate::standards::v1_1::subsets::tiny::schema::mutations::strip_non_tiny::StripNonTiny {})
+}
+fn svg_tiny_stamp_mutation(base_profile: &str, version: &str) -> SvgTinyMutation {
+    let text = |value: &str| (!value.is_empty()).then(|| value.to_string());
+    SvgTinyMutation::StampBaseProfile(crate::standards::v1_1::subsets::tiny::schema::mutations::stamp_base_profile::StampBaseProfile { base_profile: text(base_profile), version: text(version), base_profile_index: None, version_index: None })
 }
 struct SvgTinyEditorExampleFactory { keys: Vec<ToolFactoryKey> }
 impl SvgTinyEditorExampleFactory { fn new(controller_id: &str) -> Self { Self { keys: STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() } } }
@@ -118,7 +147,7 @@ impl ArtifactOwnedToolJobFactory for SvgTinyEditorExampleFactory {
     type Owner = EditorApp<SvgTinyEditor>;
     const TOOL_IDS: &'static [&'static str] = STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = STDIO_SVG_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT, STDIO_SVG_DOCUMENT_SCHEMA_STRIP_CONTRACT, STDIO_SVG_DOCUMENT_SCHEMA_STAMP_CONTRACT];
 }
 //#region 🔖️Editor
 fn svg_tiny_editor_validate_natural_snapshot(snapshot: &SvgSnapshot) -> Result<(), semio_framework_plugin::MediaError> {
@@ -183,7 +212,7 @@ impl ArtifactEditor for SvgTinyEditor {
         factory: "SvgTinyEditorExampleFactory",
         factory_type: SvgTinyEditorExampleFactory,
         contract: ToolExecutionContract::bounded_first_step(STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500),
-        tools: ["setActiveExample"]
+        tools: ["setActiveExample", "stripNonTiny", "stampBaseProfile"]
     }
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         registry.register(SvgTinyEditorExampleFactory::new(registry.controller_id()))?;
@@ -194,7 +223,8 @@ impl ArtifactEditor for SvgTinyEditor {
         if editing::is_snapshot_edit_action(&original.tool_id) { return editing::build_snapshot_edit_tool_job::<Self>(request, output, cx); }
         if !STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&original.tool_id.as_str()) { return Ok(false); }
         if svg_tiny_editor_command_id(&original.command) != original.tool_id { return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-mismatch").into()); }
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, svg_tiny_editor_command_id, STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, svg_tiny_editor_retained_reduce, svg_tiny_editor_retained_extent))
+        let tool = svg_tiny_editor_command_id(&original.command);
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, svg_tiny_editor_command_id, STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |_request| BoundedArtifactCommandWork::new(tool, svg_tiny_editor_retained_reduce, svg_tiny_editor_retained_extent))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
@@ -226,6 +256,8 @@ impl ArtifactEditor for SvgTinyEditor {
                 effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&svg_tiny_editor_example_snapshot(example_id), STDIO_SVG_DOCUMENT_SCHEMA)],
                 ..Default::default()
             }),
+            SvgTinyEditCommand::StripNonTiny => Ok(Emit::mutations(vec![svg_tiny_strip_mutation()])),
+            SvgTinyEditCommand::StampBaseProfile { base_profile, version } => Ok(Emit::mutations(vec![svg_tiny_stamp_mutation(base_profile, version)])),
             SvgTinyEditCommand::SetPixelRegion { source } => match <SvgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(source) {
                 Ok(snapshot) => edit_rules::region(doc.snapshot, &snapshot).map(Emit::mutations).map_err(Fault::from),
                 Err(_) => Ok(Emit::default()),
@@ -259,11 +291,21 @@ impl editing::SnapshotEditingEditor for SvgTinyEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_svg_tiny_editor() -> semio_framework_plugin::AppDefinition {
-    let builder = Editor::builder(SVG_TINY_DIALECT).document(["semio", "svg"]).icon_id("image").mode_def(edit::definition()).default_mode_id(edit::MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
+    let builder = Editor::builder(SVG_TINY_DIALECT).document(["semio", "svg"]).icon_id("image").mode_def(edit::definition()).default_mode_id(edit::MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Main")).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
+        .action_with(semio_framework_plugin::ActionDefinition::new(STRIP_NON_TINY_ACTION_ID, semio_framework_ui_locale::LocalizedLabel::native("Strip to SVG Tiny", "Auf SVG Tiny reduzieren"), semio_framework_plugin::ActionKind::Mutation, "scissors"))
+        .action_describe(STRIP_NON_TINY_ACTION_ID, semio_framework_ui_locale::LocalizedLabel::native("Removes every element and presentation attribute that SVG Tiny 1.1 excludes; undo restores them at their exact positions.", "Entfernt jedes Element und Darstellungsattribut, das SVG Tiny 1.1 ausschließt; Rückgängig stellt sie an ihren genauen Positionen wieder her."))
+        .action_interactive_job(STRIP_NON_TINY_ACTION_ID, InteractiveJobClassification::Migrated)
+        .action_with(semio_framework_plugin::ActionDefinition::new(STAMP_BASE_PROFILE_ACTION_ID, semio_framework_ui_locale::LocalizedLabel::native("Stamp Base Profile", "Basisprofil stempeln"), semio_framework_plugin::ActionKind::Mutation, "tag"))
+        .action_args(STAMP_BASE_PROFILE_ACTION_ID, vec![
+            semio_framework_plugin::ActionArgDef::text("baseProfile", semio_framework_ui_locale::LocalizedLabel::native("Base profile", "Basisprofil")).min_length(0),
+            semio_framework_plugin::ActionArgDef::text("version", semio_framework_ui_locale::LocalizedLabel::native("Version", "Version")).min_length(0),
+        ])
+        .action_describe(STAMP_BASE_PROFILE_ACTION_ID, semio_framework_ui_locale::LocalizedLabel::native("Sets the root element's baseProfile and version declaration; an empty value clears it.", "Setzt die baseProfile- und version-Angabe des Wurzelelements; ein leerer Wert löscht sie."))
+        .action_interactive_job(STAMP_BASE_PROFILE_ACTION_ID, InteractiveJobClassification::Migrated)
         ;
     editing::snapshot_edit_actions_with(builder).build_definition()
 }

@@ -335,8 +335,11 @@ export async function requestDocumentSocketAuthority(state: ArtifactState, bindi
   }
 }
 
+/** 🚦️ The one place `persisted` is derived. A folder document is saved only while nothing admitted awaits the folder, no write failed and the folder holds an archive (written or read); every other document keeps the value its owner reports. Callers never set `persisted` for a folder document. */
 export function setStatus(state: ArtifactState, patch: Partial<ArtifactSyncStatus>): void {
-  state.status = { ...state.status, ...patch };
+  const merged = { ...state.status, ...patch };
+  const folder = folderBinding(state.config) !== null;
+  state.status = folder ? { ...merged, persisted: state.pendingMutations.length === 0 && merged.writeFailure === undefined && state.folderArchive !== null } : merged;
   emitEvent(state, { kind: "status", ...state.status });
 }
 

@@ -6,7 +6,7 @@ use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.video")]
+#[artifact_schema(id = "stdio.semio.video")]
 pub struct SemioVideoArtifact {
     #[state(artifact)]
     pub schema: String,

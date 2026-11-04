@@ -58,7 +58,7 @@ pub fn decode_shooting_mutation_json(text: &str) -> Result<ShootingMutation, Str
 /// ⚖️ The SEMANTIC PROJECTION this subset is compared through. It belongs to the subset rather than
 /// to a test adapter, because what counts as this document's meaning is this subset's ruling, not a
 /// case's. Every inline artifact-lane field is present; the composed `emblem` child handle is not,
-/// because it is a content address for an `s.stdio.semio.image` child that no kind of this
+/// because it is a content address for an `stdio.semio.image` child that no kind of this
 /// vocabulary addresses.
 pub fn encode_shooting_projection_json(snapshot: &ShootingSnapshot) -> String {
     let assets = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&snapshot.assets));

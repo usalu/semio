@@ -1,3 +1,5 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.wav.mutations"
+; A binary mutation op: format octet, variant tag (LEB128 varint; 1 setFmt, 2 setData, 3 setOtherChunks, 4 patchData, 5 setPadBytes), then the variant's wire value.
+op = format tag payload
+format = OCTET
+tag = *( %x80-FF ) %x00-7F
+payload = *OCTET

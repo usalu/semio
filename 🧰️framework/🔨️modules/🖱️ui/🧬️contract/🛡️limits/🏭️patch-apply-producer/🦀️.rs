@@ -280,6 +280,10 @@ impl UiPatchApplyProducer {
                 if frame.parent_in_section && is_section(&record.component) {
                     return self.reject_violation(UiContractViolation::SectionNested { node: frame.id });
                 }
+                let parent_record = self.validation_stack.len().checked_sub(2).and_then(|index| self.validation_stack.get(index)).and_then(|parent| draft.nodes.get(&parent.id));
+                if crate::control_is_unnamed(record, parent_record) {
+                    return self.reject_violation(UiContractViolation::UnnamedControl { node: frame.id });
+                }
                 if !component_is_finite(&record.component) {
                     return self.reject_violation(UiContractViolation::NonFiniteNumber { node: frame.id });
                 }

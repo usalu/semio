@@ -23,7 +23,7 @@ use super::flattened_scene::DrawFlattenedScene;
 /// `💡️inferences/` (currently: `flattenedScene`, backed by the `🎛️flattened-scene/` slug dir).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.drawing.inference")]
+#[artifact_schema(id = "stdio.semio.drawing.inference")]
 pub struct SemioDrawingInference {
     #[derived]
     pub flattened_scene: BTreeMap<String, FlattenedNode>,
@@ -40,25 +40,25 @@ impl protocol::Inference<SemioDrawingSnapshot> for SemioDrawingInference {
 
 impl protocol::InferenceSpec<SemioDrawingSnapshot> for SemioDrawingInference {
     fn inference_schema_id() -> &'static str {
-        "s.stdio.semio.drawing.inference"
+        "stdio.semio.drawing.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.semio.drawing.inference.flattenedScene", reads: &["layers", "styles"] }]
+        &[protocol::InferenceFieldSpec { id: "stdio.semio.drawing.inference.flattenedScene", reads: &["layers", "styles"] }]
     }
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.stdio.semio.drawing.inference`'s facet leaves into the OS-wide inference
+/// 💡️ Registers `stdio.semio.drawing.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `semio_drawing_artifact_schema_descriptor`'s own
 /// registration (`../🦀️.rs`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_drawing_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.stdio.semio.drawing.inference",
+        id: "stdio.semio.drawing.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

@@ -34,6 +34,9 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
   edition = "2021"
   rust-version = "1.95"
 
+[workspace.dependencies.semio-framework-hash]
+path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust"
+
 [workspace.dependencies.pack]
 path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust"
 package = "semio-framework-pack"

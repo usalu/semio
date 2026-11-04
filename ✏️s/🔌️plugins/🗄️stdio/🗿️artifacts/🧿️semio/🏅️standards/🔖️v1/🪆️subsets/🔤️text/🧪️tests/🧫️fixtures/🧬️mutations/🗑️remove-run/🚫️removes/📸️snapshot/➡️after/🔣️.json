@@ -1,5 +1,5 @@
 {
-  "schema": "s.stdio.semio.text",
+  "schema": "stdio.semio.text",
   "runs": [
     {
       "language": "en",

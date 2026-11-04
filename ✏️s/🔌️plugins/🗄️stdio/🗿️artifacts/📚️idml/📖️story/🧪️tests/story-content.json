@@ -1,0 +1,20 @@
+{
+  "part": "Stories/Story_u1.xml",
+  "before": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<!-- <Content>decoy</Content> -->\n<idPkg:Story xmlns:idPkg=\"http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging\" DOMVersion=\"8.0\">\n  <Story Self=\"u1\"><ParagraphStyleRange AppliedParagraphStyle=\"ParagraphStyle/$ID/NormalParagraphStyle\"><CharacterStyleRange><Content>Hello &amp; welcome</Content><Br/></CharacterStyleRange><CharacterStyleRange><Content/></CharacterStyleRange><CharacterStyleRange><Content>Gr&#252;&#xDF;e</Content></CharacterStyleRange></ParagraphStyleRange><Custom:Note xmlns:Custom=\"urn:x\" kept=\"yes\"/></Story>\n</idPkg:Story>\n",
+  "initial": ["Hello & welcome", "", "Grüße"],
+  "valid": [
+    { "name": "plain replacement", "index": 0, "text": "Servus", "after": ["Servus", "", "Grüße"] },
+    { "name": "markup is escaped", "index": 0, "text": "a < b & c > d", "after": ["a < b & c > d", "", "Grüße"] },
+    { "name": "empty element gains text", "index": 1, "text": "Neu 日本", "after": ["Hello & welcome", "Neu 日本", "Grüße"] },
+    { "name": "text cleared", "index": 2, "text": "", "after": ["Hello & welcome", "", ""] },
+    { "name": "line break kept", "index": 0, "text": "one\ntwo", "after": ["one\ntwo", "", "Grüße"] }
+  ],
+  "unchanged": [{ "index": 0, "text": "Hello & welcome" }, { "index": 2, "text": "Grüße" }],
+  "invalid": [
+    { "name": "index out of range", "index": 3, "text": "x", "error": "stdio.idml.story.missing-content" },
+    { "name": "control character", "index": 0, "text": "a\u0001b", "error": "stdio.idml.story.invalid-text" },
+    { "name": "stale revision", "index": 0, "text": "x", "revision": "0000000000000000", "error": "stdio.idml.story.stale-revision" },
+    { "name": "not a story part", "part": "designmap.xml", "index": 0, "text": "x", "error": "stdio.idml.story.not-a-story" },
+    { "name": "missing part", "part": "Stories/absent.xml", "index": 0, "text": "x", "error": "stdio.idml.story.missing-part" }
+  ]
+}

@@ -168,7 +168,7 @@ pub fn document_layout(main_window_kind_id: &str) -> WindowLayout {
         root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
             kind: "row".into(),
             size: None,
-            children: vec![stack(0.56, main_window_kind_id, "Document"), stack(0.22, INSPECTOR_WINDOW_KIND_ID, "Object"), stack(0.22, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_WINDOW_KIND_ID, "Details")],
+            children: vec![stack(0.46, main_window_kind_id, "Document"), stack(0.18, TEXT_LAYER_WINDOW_KIND_ID, "Text layer"), stack(0.18, INSPECTOR_WINDOW_KIND_ID, "Object"), stack(0.18, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_WINDOW_KIND_ID, "Details")],
         }),
     }
 }

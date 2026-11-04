@@ -152,7 +152,7 @@ impl HeadlessWorkspace {
     /// consult ONLY (b). `ArtifactHost::open`'s actor persists asynchronously on its own thread —
     /// `ensure_probe_artifact`'s `dispatch`+`send` returns as soon as the LOCAL `ArtifactStore` has
     /// applied the mutation, before the actor thread has necessarily flushed it to
-    /// `<folder>/.semio/documents.db`. A cold-disk-only reader therefore raced the actor and lost:
+    /// `<folder>/.semio/events.semio`. A cold-disk-only reader therefore raced the actor and lost:
     /// exactly `resolve_context_reports_the_open_probe_artifact_as_active`'s failure. (a) closes that
     /// gap because it is the SAME map `ensure_probe_artifact` writes to, read under the same lock,
     /// with no cross-thread hop in between.

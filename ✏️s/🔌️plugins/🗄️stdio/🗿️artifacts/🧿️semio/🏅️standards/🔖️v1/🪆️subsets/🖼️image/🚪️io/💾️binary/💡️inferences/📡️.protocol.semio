@@ -1,7 +1,7 @@
 dialect protocol
 protocol semio.image.inference
 version 1
-schema s.stdio.semio.image.inference
+schema stdio.semio.image.inference
 start frame
 framing magic 0x8953f83f7d340d0b
 header fixed 32

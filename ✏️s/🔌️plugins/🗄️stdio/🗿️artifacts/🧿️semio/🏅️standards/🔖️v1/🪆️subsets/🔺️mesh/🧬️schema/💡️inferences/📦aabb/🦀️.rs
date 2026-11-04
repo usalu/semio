@@ -73,7 +73,7 @@ impl store::InferredField<SemioMeshSnapshot> for MeshAabb {
     type Dependency = semio_framework_value::DslValue;
     type Key = String;
     type Value = SemioAabb;
-    const FIELD_ID: &'static str = "s.stdio.semio.mesh.inference.aabb";
+    const FIELD_ID: &'static str = "stdio.semio.mesh.inference.aabb";
     const SCHEMA_VERSION: u32 = 1;
 
     fn reads() -> &'static [&'static str] {

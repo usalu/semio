@@ -27,6 +27,9 @@ pub mod bytes;
 pub mod raster;
 #[path = "🧭️rules/🦀️.rs"]
 pub mod rules;
+#[path = "📐️transform/🦀️.rs"]
+pub mod transform;
+pub use transform::{Transform, TRANSFORM_PATH};
 pub use rules::{edited_subtree, Carried, EditPlan, EditRules, EntityRule, InsertRule, ItemField, RemoveRule, RowKey, Selector};
 
 #[path = "📜️edit-contract/🦀️.rs"]

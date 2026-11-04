@@ -218,12 +218,12 @@ fn sync_pill_text_covers_persisted_pending_and_every_remote_state() {
         shell_sync_pill_text(shell.sync.sync_pill(), false)
     };
     assert_eq!(pill_for(None, None), "Remote: detached");
-    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote: RemoteState::Live { peer_count: 1 }, acknowledged_head: None }), None), "Persisted");
-    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 3, remote: RemoteState::Live { peer_count: 1 }, acknowledged_head: None }), None), "Pending (3)");
-    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Connecting, acknowledged_head: None }), None), "Remote: connecting");
-    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Backoff { retry_in_ms: 500 }, acknowledged_head: None }), None), "Remote: backoff");
-    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Detached, acknowledged_head: None }), None), "Remote: detached");
-    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 9, remote: RemoteState::Backoff { retry_in_ms: 500 }, acknowledged_head: None }), None), "Remote: backoff");
+    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote: RemoteState::Live { peer_count: 1 }, acknowledged_head: None, write_failure: None }), None), "Persisted");
+    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 3, remote: RemoteState::Live { peer_count: 1 }, acknowledged_head: None, write_failure: None }), None), "Pending (3)");
+    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Connecting, acknowledged_head: None, write_failure: None }), None), "Remote: connecting");
+    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Backoff { retry_in_ms: 500 }, acknowledged_head: None, write_failure: None }), None), "Remote: backoff");
+    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Detached, acknowledged_head: None, write_failure: None }), None), "Remote: detached");
+    assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: false, pending_mutations: 9, remote: RemoteState::Backoff { retry_in_ms: 500 }, acknowledged_head: None, write_failure: None }), None), "Remote: backoff");
     assert_eq!(pill_for(None, Some((4, 8, 1, 2))), "Recovering 4/8 · 1/2");
 }
 

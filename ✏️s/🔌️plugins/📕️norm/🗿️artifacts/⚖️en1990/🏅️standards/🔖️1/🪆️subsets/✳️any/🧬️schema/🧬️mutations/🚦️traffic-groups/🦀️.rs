@@ -13,4 +13,6 @@ extern crate semio_framework_value_derive as value_derive;
 pub mod change_traffic_group_group;
 #[path = "../🚦️change-traffic-group-variable-id/🦀️.rs"]
 pub mod change_traffic_group_variable_id;
+#[path = "../🚦️change-reliability-member-id/🦀️.rs"]
+pub mod change_reliability_member_id;
 //#endregion 🪢️Mounts

@@ -12,7 +12,7 @@ pub fn deserialize_bytes(bytes: &[u8]) -> Result<EnergyModelSnapshot, semio_fram
                 records.first().is_some_and(|record| crate::export::idf::DICTIONARY.iter().any(|object| object.kind.eq_ignore_ascii_case(&record.kind)))
             });
             if !is_idf { return Err(dsl_error); }
-            crate::idf::deserialize_bytes(bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))
+            crate::idf::deserialize_bytes(bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.message_en(), semio_framework_diagnostic::TextSpan::at(1, 1)))
         }
     }
 }

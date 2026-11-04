@@ -126,9 +126,15 @@ describe("framework sync utilities", () => {
     );
     expect(remote.container.querySelector("[data-semio-sync-browse]")).toBeNull();
     remote.unmount();
-    const { spacesUiLabel } = await import("@semio-tech/framework-renderer-react");
+    const { spacesUiLabel, SPACES_UI_LABELS } = await import("@semio-tech/framework-renderer-react");
     expect(spacesUiLabel("ui.sync.browse", "en")).toBe("Browse…");
     expect(spacesUiLabel("ui.sync.browse", "de")).toBe("Durchsuchen…");
+    for (const key of Object.keys(SPACES_UI_LABELS) as (keyof typeof SPACES_UI_LABELS)[]) {
+      const pair = SPACES_UI_LABELS[key];
+      expect(spacesUiLabel(key, "en")).toBe(pair.en);
+      expect(spacesUiLabel(key, "de")).toBe(pair.de);
+      expect(spacesUiLabel(key, "fr")).toBe(`${pair.en} | ${pair.de}`);
+    }
     await uiI18n.changeLanguage("en");
   });
 

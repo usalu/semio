@@ -24,7 +24,7 @@
       "schema": "dag.dag",
       "content": {
         "childId": "dag-content",
-        "target": "s.stdio.semio.graph"
+        "target": "stdio.semio.graph"
       }
     },
     {

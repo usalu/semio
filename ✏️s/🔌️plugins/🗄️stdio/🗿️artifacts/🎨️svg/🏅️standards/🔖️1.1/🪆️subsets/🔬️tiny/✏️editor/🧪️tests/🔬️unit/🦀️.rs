@@ -107,3 +107,18 @@ fn natural_file_route_enforces_tiny_and_publishes_the_decoded_snapshot() {
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::svg_tiny::SvgTinyEditor, || semio_framework_plugin::App { definition: crate::editor::svg_tiny::create_svg_tiny_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny");
+
+#[test]
+fn profile_actions_resolve_to_their_commands_and_typed_mutations() {
+    use super::{svg_tiny_editor_command_from_action, svg_tiny_editor_command_id, svg_tiny_stamp_mutation, svg_tiny_strip_mutation, SvgTinyEditCommand, STAMP_BASE_PROFILE_ACTION_ID, STRIP_NON_TINY_ACTION_ID};
+    let strip = svg_tiny_editor_command_from_action(STRIP_NON_TINY_ACTION_ID, None).expect("strip resolves");
+    assert_eq!(strip, SvgTinyEditCommand::StripNonTiny);
+    assert_eq!(svg_tiny_editor_command_id(&strip), STRIP_NON_TINY_ACTION_ID);
+    assert!(matches!(svg_tiny_strip_mutation(), SvgTinyMutation::StripNonTiny(_)));
+    let args = semio_framework_value::DslValue::Object(vec![("baseProfile".into(), semio_framework_value::DslValue::String("tiny".into())), ("version".into(), semio_framework_value::DslValue::String("1.1".into()))]);
+    let stamp = svg_tiny_editor_command_from_action(STAMP_BASE_PROFILE_ACTION_ID, Some(&args)).expect("stamp resolves");
+    assert_eq!(stamp, SvgTinyEditCommand::StampBaseProfile { base_profile: "tiny".into(), version: "1.1".into() });
+    let SvgTinyMutation::StampBaseProfile(payload) = svg_tiny_stamp_mutation("tiny", "") else { panic!("a stamp mutation") };
+    assert_eq!((payload.base_profile.as_deref(), payload.version.as_deref()), (Some("tiny"), None));
+    assert!(svg_tiny_editor_command_from_action("unknown", None).is_err());
+}

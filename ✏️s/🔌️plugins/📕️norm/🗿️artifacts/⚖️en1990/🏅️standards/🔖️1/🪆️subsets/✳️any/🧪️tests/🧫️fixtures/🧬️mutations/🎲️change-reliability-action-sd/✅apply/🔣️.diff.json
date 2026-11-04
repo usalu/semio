@@ -67,7 +67,11 @@
           "resistanceSd": null,
           "actionDistribution": null,
           "actionMean": null,
-          "actionSd": 2.0
+          "actionSd": 2.0,
+          "secondActionDistribution": "normal",
+          "secondActionMean": 0.0,
+          "secondActionSd": 0.0,
+          "memberId": null
         }
       }
     ]

@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 @mutations-semio-v1-table
 Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, against an independent Python implementation
-  `s.stdio.semio.table` is a semio-NATIVE format: no third party in any ecosystem reads or writes
+  `stdio.semio.table` is a semio-NATIVE format: no third party in any ecosystem reads or writes
   `.dsl.semio` or `.pack.semio`, so the second producer a differential comparison needs is a second
   IMPLEMENTATION. `🐍️component.py` beside this file is that implementation — the envelope, the DSL
   grammar, the `SemioValue` cell grammar, the pack frame and all eight verbs with their inverses,
@@ -16,7 +16,7 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
   `semio-table-python-independent` in `…/📊️table/🔮️oracles/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against.
 
-  🧫️ **The document under test is a real one.** The richest `s.stdio.semio.table` document committed
+  🧫️ **The document under test is a real one.** The richest `stdio.semio.table` document committed
   anywhere in this artifact is the three-row demo sheet, which is a fixture, not a data set. So the
   table this case mutates was derived ONCE — by `derive_document_from_csv` in `🐍️component.py`, and
   re-derived on every run by the `payload-fidelity` scenario — from the real committed survey

@@ -25,7 +25,7 @@ pub use semio_s_artifact_stdio_wav_io_registry::{definition};
 
 pub use semio_s_artifact_stdio_wav_io_registry::{formats};
 
-pub use semio_s_artifact_stdio_wav_schema::{native_codecs};
+pub use semio_s_artifact_stdio_wav_io_registry::{native_codec, native_codecs};
 
 pub use semio_s_artifact_stdio_wav_io_registry::{contribution};
 

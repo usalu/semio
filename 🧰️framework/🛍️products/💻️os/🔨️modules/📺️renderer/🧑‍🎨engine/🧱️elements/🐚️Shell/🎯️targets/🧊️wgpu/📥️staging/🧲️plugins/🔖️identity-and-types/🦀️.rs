@@ -11,6 +11,31 @@ pub fn find_dialect_app<'a>(program: &'a ProgramBridgeEntry, dialect: &semio_fra
     program.manifest.apps.iter().find(|app| &app.dialect == dialect && app.role == role)
 }
 
+/// 📌️ The pinned `(plugin_id, app_id)` of one `(dialect coordinate, role)` in the shell's default-app pin store, whose keys are
+/// `"<dialect>/<role>"` and values `"<plugin_id> <app_id>"` (the Settings row encoding); `None` when unpinned or malformed.
+pub fn pinned_app_for(pins: &std::collections::HashMap<String, String>, dialect_coordinate: &str, role: &str) -> Option<(String, String)> {
+    let (plugin_id, app_id) = pins.get(&format!("{dialect_coordinate}/{role}"))?.split_once(' ')?;
+    (!plugin_id.is_empty() && !app_id.is_empty()).then(|| (plugin_id.to_string(), app_id.to_string()))
+}
+
+/// 🚪️ What an `os.open-artifact` relay does once its owner app is resolved: `Refuse` when no owner was found or installed (the
+/// mounted session is NEVER a fallback target), `SeedMounted` when the owner is already the mounted app, `Switch` otherwise.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RelayOpenPlan {
+    Refuse,
+    SeedMounted,
+    Switch,
+}
+
+/// 🚪️ Pure decision of [`RelayOpenPlan`] from the resolved `(plugin_id, app_id)` and the mounted `(plugin_id, app_id)`.
+pub fn relay_open_plan(resolved: Option<(&str, &str)>, mounted: Option<(&str, &str)>) -> RelayOpenPlan {
+    match resolved {
+        None => RelayOpenPlan::Refuse,
+        Some(owner) if mounted == Some(owner) => RelayOpenPlan::SeedMounted,
+        Some(_) => RelayOpenPlan::Switch,
+    }
+}
+
 /// 🎬️ The phase a lazy plugin install is in, the one value chrome reads while it runs. `Failed`
 /// keeps the message so a refused open explains itself instead of vanishing into the debug log. Both
 /// targets run the same phase machine — only the step that actually acquires the module differs

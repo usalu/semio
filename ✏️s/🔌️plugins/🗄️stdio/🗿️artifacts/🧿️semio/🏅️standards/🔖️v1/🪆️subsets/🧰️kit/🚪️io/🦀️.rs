@@ -127,7 +127,7 @@ pub mod derived_composition {
             .composers(semio_s_artifact_stdio_semio_base::semio_written(io_entries(), &COMPOSERS))
     }
 
-    /// 💡️ Registers `s.stdio.semio.kit.inference`'s facet leaves into the OS-wide inference
+    /// 💡️ Registers `stdio.semio.kit.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

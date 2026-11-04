@@ -1,2 +1,2 @@
-/** 🚪️ IO (Mp3 io). 🚧 scaffolded by W1b — leaves land in W4. */
+/** 🚪️ IO (Mp3 io). TypeScript twin of the IO facets (the `🦀️.rs` sibling is the codec). */
 export {};

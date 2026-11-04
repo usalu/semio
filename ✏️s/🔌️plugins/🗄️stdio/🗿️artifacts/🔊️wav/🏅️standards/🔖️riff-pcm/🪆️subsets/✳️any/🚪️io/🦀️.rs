@@ -1,7 +1,4 @@
-//! 🚪️ IO — 🚧 scaffolded by W1b: structure only. Registration flows through
-//! 🎹️composer::register (matching the repo-wide convention — see gif's own io leaf doc comment).
-//! W4 adds the real import/export leaves under 📥️import/🧩️deserializers and
-//! 📤️export/🧵️serializers.
+//! 🚪️ IO of `stdio.wav`: the facets (snapshot, mutations, diff) in their text and binary forms, the SQLite snapshot and the registered composers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;

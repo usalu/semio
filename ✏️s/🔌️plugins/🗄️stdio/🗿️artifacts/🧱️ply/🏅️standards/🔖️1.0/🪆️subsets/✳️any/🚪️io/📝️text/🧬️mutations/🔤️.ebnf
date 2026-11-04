@@ -1,3 +1,26 @@
-(* ebnf stdio.ply mutations *)
-document = header, body ;
-header = 'schema', space, 'stdio.ply', newline ;
+(* ebnf stdio.ply mutations: one line per PlyMutation, the form print_op emits and parse_op reads (see 📖️.grammar.semio) *)
+op                  = set-format | insert-comment | remove-comment | add-element | remove-element | insert-row | remove-row | set-row-property ;
+set-format          = "set-format", space, "format=", format-tag ;
+insert-comment      = "insert-comment", space, "index=", int, space, "comment=", hex ;
+remove-comment      = "remove-comment", space, "index=", int ;
+add-element         = "add-element", space, "index=", int, space, "element=", element-value ;
+remove-element      = "remove-element", space, "name=", hex ;
+insert-row          = "insert-row", space, "element-name=", hex, space, "index=", int, space, "row=", row-value ;
+remove-row          = "remove-row", space, "element-name=", hex, space, "index=", int ;
+set-row-property    = "set-row-property", space, "element-name=", hex, space, "row-index=", int, space, "property-name=", hex, space, "value=", ply-value ;
+format-tag          = "a" | "l" | "b" ;
+element-value       = "[", hex, ",", int, ",", "[", [ property-list ], "]", ",", "[", [ row-list ], "]", "]" ;
+property-list       = ply-property, { ",", ply-property } ;
+ply-property        = "S[", hex, ",", scalar-kind, "]" | "L[", hex, ",", scalar-kind, ",", scalar-kind, "]" ;
+scalar-kind         = "c" | "C" | "s" | "w" | "i" | "u" | "f" | "d" ;
+row-list            = row-value, { ",", row-value } ;
+row-value           = "[", [ value-list ], "]" ;
+value-list          = ply-value, { ",", ply-value } ;
+ply-value           = ( "c" | "C" | "s" | "w" | "i" | "u" ), "[", int, "]" | ( "f" | "d" ), "[", number, "]" | "L[", [ value-list ], "]" ;
+number              = int | float ;
+int                 = [ "-" ], digit, { digit } ;
+float               = int, ".", digit, { digit }, [ ( "e" | "E" ), [ "+" | "-" ], digit, { digit } ] ;
+hex                 = { hexdigit } ;
+hexdigit            = digit | "a" | "b" | "c" | "d" | "e" | "f" ;
+digit               = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+space               = " " ;

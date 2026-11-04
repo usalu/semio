@@ -87,7 +87,7 @@ pub struct SemioKitDesign {
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(layout = "lines")]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[artifact_schema(id = "s.stdio.semio.kit")]
+#[artifact_schema(id = "stdio.semio.kit")]
 pub struct SemioKitSnapshot {
     #[state(artifact)]
     pub schema: String,

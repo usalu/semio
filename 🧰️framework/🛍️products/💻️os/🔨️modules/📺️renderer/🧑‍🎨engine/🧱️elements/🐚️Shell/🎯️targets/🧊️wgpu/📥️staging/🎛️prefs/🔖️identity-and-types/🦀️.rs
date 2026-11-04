@@ -67,9 +67,13 @@ impl ReplayRefusalReasonV1 {
         serde_json::to_value(self).ok().and_then(|value| value.as_str().map(str::to_owned)).unwrap_or_default()
     }
 
-    /// 🗣️ The notice text in `locale`; only an unknown locale reads English.
+    /// 🗣️ The notice text in `locale`; a tag without a row has no default language, so every language is rendered joined with `" | "`.
     pub fn notice_text(self, locale: &str) -> String {
-        REPLAY_REFUSAL_V1.reasons.get(&self.key()).map(|label| if locale == "de" { label.de.clone() } else { label.en.clone() }).unwrap_or_default()
+        REPLAY_REFUSAL_V1.reasons.get(&self.key()).map(|label| match locale.split(['-', '_']).next().unwrap_or_default().to_ascii_lowercase().as_str() {
+            "en" => label.en.clone(),
+            "de" => label.de.clone(),
+            _ => format!("{} | {}", label.en, label.de),
+        }).unwrap_or_default()
     }
 
     /// 🩺️ The fault code the notice carries, so a probe, a law and the console name the same gate.

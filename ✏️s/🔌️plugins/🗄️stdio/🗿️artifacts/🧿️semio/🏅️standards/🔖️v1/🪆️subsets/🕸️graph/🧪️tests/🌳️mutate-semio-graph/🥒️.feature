@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 @mutations-semio-v1-graph
 Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's port graph, against an independent Python implementation
-  `s.stdio.semio.graph` is a semio-NATIVE format: no third party reads or writes `.dsl.semio` or
+  `stdio.semio.graph` is a semio-NATIVE format: no third party reads or writes `.dsl.semio` or
   `.pack.semio`, so the second producer a differential comparison needs is a second IMPLEMENTATION.
   `🐍️component.py` beside this file is that implementation — the carrier, the DSL grammar, the pack
   frame, the recursive `SemioValue` codec and all eleven verbs, written in Python from the committed
@@ -17,7 +17,7 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
   `semio-graph-python-independent` in `…/🕸️graph/🔮️oracles/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against.
 
-  🏗️ **The graph under test is a real building's wiring.** The richest `s.stdio.semio.graph` document
+  🏗️ **The graph under test is a real building's wiring.** The richest `stdio.semio.graph` document
   committed anywhere in this artifact is the two-node wires graph — 297 bytes, which is a fixture,
   not a graph. So the document every mutation row below runs on was derived ONCE — by
   `🐍️derive-graph-fixture.py` in the ticket folder — from the real committed IFC 4 file

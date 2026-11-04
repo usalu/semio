@@ -182,6 +182,22 @@ impl ArtifactEditor for StlAnyEditor {
     const DIALECT: Dialect = STL_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STL_ANY_DOCUMENT_SCHEMA;
 
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.stl@ascii", extension: ".stl", media_type: "model/stl", binary: false })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        Ok(crate::engine::encode_stl_ascii(snapshot).into_bytes())
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        crate::engine::decode_stl_auto(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+    }
+
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
+    }
+
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<StlAnyEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/✏️editor/🦀️.rs",
@@ -262,6 +278,13 @@ impl editing::SnapshotEditingEditor for StlAnyEditor {
     }
     fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
         use crate::standards::v_ascii::subsets::any::schema::mutations::{set_triangle_normal, set_triangle_vertices};
+        if let Some(transform) = editing::Transform::from_event(event) {
+            let transform = transform?;
+            return Ok(Some(snapshot.triangles.iter().enumerate().flat_map(|(index, triangle)| [
+                StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index, normal: transform.direction(triangle.normal) }),
+                StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index, vertices: triangle.vertices.map(|vertex| transform.point(vertex)) }),
+            ]).collect()));
+        }
         let editing::SnapshotEditEvent::SetValue { path, value } = event else { return Ok(None) };
         let Some(index) = path.strip_prefix("/triangles/").and_then(|rest| rest.parse::<usize>().ok()) else { return Ok(None) };
         let triangle = <crate::standards::v_ascii::subsets::any::schema::snapshot::StlTriangle as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| Fault::from(error.to_string()))?;
@@ -280,7 +303,7 @@ impl editing::SnapshotEditingEditor for StlAnyEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_stl_any_editor() -> semio_framework_plugin::AppDefinition {
-    let builder = Editor::builder(STL_ANY_DIALECT).document(["stdio", "stl"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::STL_ANY_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
+    let builder = Editor::builder(STL_ANY_DIALECT).document(["stdio", "stl"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::STL_ANY_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Main")).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())

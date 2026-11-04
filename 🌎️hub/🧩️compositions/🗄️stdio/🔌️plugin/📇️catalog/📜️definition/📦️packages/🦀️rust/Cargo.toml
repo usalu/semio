@@ -35,6 +35,7 @@ semio-s-artifact-stdio-epw = { workspace = true }
 semio-s-artifact-stdio-gif = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }
 semio-s-artifact-stdio-html = { workspace = true }
+semio-s-artifact-stdio-idml = { workspace = true }
 semio-s-artifact-stdio-jpg = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-las = { workspace = true }

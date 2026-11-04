@@ -1,0 +1,1707 @@
+{
+  "schema": "semio.stdio.format-resolution-law/v1",
+  "rosterArtifacts": [
+    "binary",
+    "txt",
+    "xml",
+    "deflate",
+    "zip",
+    "json",
+    "csv",
+    "md",
+    "gltf",
+    "obj",
+    "stl",
+    "ply",
+    "las",
+    "step",
+    "ifc",
+    "dwg",
+    "dxf",
+    "svg",
+    "png",
+    "jpg",
+    "gif",
+    "bmp",
+    "tiff",
+    "pdf",
+    "docx",
+    "pptx",
+    "xlsx",
+    "bcf",
+    "semio",
+    "mp4",
+    "avi",
+    "mp3",
+    "wav",
+    "epw",
+    "tsv",
+    "html"
+  ],
+  "pendingArtifacts": [
+    "idf",
+    "idml"
+  ],
+  "wellKnown": [
+    {
+      "id": "json",
+      "query": {
+        "fileName": "plan.json"
+      },
+      "artifact": "json"
+    },
+    {
+      "id": "xml-not-svg",
+      "query": {
+        "fileName": "drawing.xml",
+        "mime": "image/svg+xml"
+      },
+      "artifact": "xml"
+    },
+    {
+      "id": "svg-not-xml",
+      "query": {
+        "fileName": "logo.svg",
+        "mime": "application/xml"
+      },
+      "artifact": "svg"
+    },
+    {
+      "id": "htm",
+      "query": {
+        "fileName": "index.htm"
+      },
+      "artifact": "html"
+    },
+    {
+      "id": "docx-not-zip",
+      "query": {
+        "fileName": "letter.docx",
+        "mime": "application/zip"
+      },
+      "artifact": "docx"
+    },
+    {
+      "id": "xlsx-not-zip",
+      "query": {
+        "fileName": "sheet.xlsx",
+        "mime": "application/zip"
+      },
+      "artifact": "xlsx"
+    },
+    {
+      "id": "pptx-not-zip",
+      "query": {
+        "fileName": "deck.pptx",
+        "mime": "application/zip"
+      },
+      "artifact": "pptx"
+    },
+    {
+      "id": "zip",
+      "query": {
+        "fileName": "bundle.zip",
+        "mime": "application/zip"
+      },
+      "artifact": "zip"
+    },
+    {
+      "id": "jpeg",
+      "query": {
+        "fileName": "photo.JPEG",
+        "mime": "image/jpeg"
+      },
+      "artifact": "jpg"
+    },
+    {
+      "id": "tif",
+      "query": {
+        "fileName": "scan.tif"
+      },
+      "artifact": "tiff"
+    },
+    {
+      "id": "markdown",
+      "query": {
+        "fileName": "notes.markdown",
+        "mime": "text/plain"
+      },
+      "artifact": "md"
+    },
+    {
+      "id": "stp",
+      "query": {
+        "fileName": "part.stp"
+      },
+      "artifact": "step"
+    },
+    {
+      "id": "glb-octet-stream",
+      "query": {
+        "fileName": "scene.glb",
+        "mime": "application/octet-stream"
+      },
+      "artifact": "gltf"
+    },
+    {
+      "id": "bin",
+      "query": {
+        "fileName": "dump.bin"
+      },
+      "artifact": "binary"
+    },
+    {
+      "id": "explicit-binary-over-name",
+      "query": {
+        "explicit": "bin",
+        "fileName": "plan.json"
+      },
+      "artifact": "binary"
+    }
+  ],
+  "ownerCoordinates": {
+    "pdf": {
+      "coordinate": "s.stdio.pdf@1.7/*",
+      "kindIdContains": "standard.1-7."
+    },
+    "gif": {
+      "coordinate": "s.stdio.gif@89a/*",
+      "kindIdContains": "standard.89a."
+    },
+    "dwg": {
+      "coordinate": "s.stdio.dwg@ac1024/*",
+      "kindIdContains": "standard.ac1024."
+    },
+    "ifc": {
+      "coordinate": "s.stdio.ifc@4/*",
+      "kindIdContains": "standard.4."
+    }
+  },
+  "canonicalExportExtension": {
+    "jpg": ".jpg",
+    "tiff": ".tiff",
+    "html": ".html",
+    "md": ".md",
+    "step": ".step"
+  },
+  "formats": [
+    {
+      "artifact": "las",
+      "pending": false,
+      "mimes": [
+        "application/vnd.las"
+      ],
+      "extensions": [
+        ".las"
+      ]
+    },
+    {
+      "artifact": "idf",
+      "pending": true,
+      "mimes": [],
+      "extensions": [
+        ".idf"
+      ]
+    },
+    {
+      "artifact": "html",
+      "pending": false,
+      "mimes": [
+        "text/html"
+      ],
+      "extensions": [
+        ".html",
+        ".htm"
+      ]
+    },
+    {
+      "artifact": "epw",
+      "pending": false,
+      "mimes": [],
+      "extensions": [
+        ".epw"
+      ]
+    },
+    {
+      "artifact": "zip",
+      "pending": false,
+      "mimes": [
+        "application/zip"
+      ],
+      "extensions": [
+        ".zip"
+      ]
+    },
+    {
+      "artifact": "gif",
+      "pending": false,
+      "mimes": [
+        "image/gif"
+      ],
+      "extensions": [
+        ".gif"
+      ]
+    },
+    {
+      "artifact": "mp4",
+      "pending": false,
+      "mimes": [
+        "video/mp4"
+      ],
+      "extensions": [
+        ".mp4"
+      ]
+    },
+    {
+      "artifact": "svg",
+      "pending": false,
+      "mimes": [
+        "image/svg+xml"
+      ],
+      "extensions": [
+        ".svg"
+      ]
+    },
+    {
+      "artifact": "mp3",
+      "pending": false,
+      "mimes": [
+        "audio/mpeg"
+      ],
+      "extensions": [
+        ".mp3"
+      ]
+    },
+    {
+      "artifact": "ifc",
+      "pending": false,
+      "mimes": [
+        "application/x-ifc"
+      ],
+      "extensions": [
+        ".ifc"
+      ]
+    },
+    {
+      "artifact": "bcf",
+      "pending": false,
+      "mimes": [
+        "application/vnd.bcf+xml"
+      ],
+      "extensions": [
+        ".bcf"
+      ]
+    },
+    {
+      "artifact": "binary",
+      "pending": false,
+      "mimes": [
+        "application/octet-stream"
+      ],
+      "extensions": [
+        ".bin"
+      ]
+    },
+    {
+      "artifact": "csv",
+      "pending": false,
+      "mimes": [
+        "text/csv"
+      ],
+      "extensions": [
+        ".csv"
+      ]
+    },
+    {
+      "artifact": "step",
+      "pending": false,
+      "mimes": [
+        "model/step"
+      ],
+      "extensions": [
+        ".step",
+        ".stp"
+      ]
+    },
+    {
+      "artifact": "tsv",
+      "pending": false,
+      "mimes": [
+        "text/tab-separated-values"
+      ],
+      "extensions": [
+        ".tsv"
+      ]
+    },
+    {
+      "artifact": "xlsx",
+      "pending": false,
+      "mimes": [
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ],
+      "extensions": [
+        ".xlsx"
+      ]
+    },
+    {
+      "artifact": "pdf",
+      "pending": false,
+      "mimes": [
+        "application/pdf"
+      ],
+      "extensions": [
+        ".pdf"
+      ]
+    },
+    {
+      "artifact": "idml",
+      "pending": true,
+      "mimes": [
+        "application/vnd.adobe.indesign-idml-package"
+      ],
+      "extensions": [
+        ".idml"
+      ]
+    },
+    {
+      "artifact": "docx",
+      "pending": false,
+      "mimes": [
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ],
+      "extensions": [
+        ".docx"
+      ]
+    },
+    {
+      "artifact": "md",
+      "pending": false,
+      "mimes": [
+        "text/markdown"
+      ],
+      "extensions": [
+        ".md",
+        ".markdown"
+      ]
+    },
+    {
+      "artifact": "xml",
+      "pending": false,
+      "mimes": [
+        "application/xml"
+      ],
+      "extensions": [
+        ".xml"
+      ]
+    },
+    {
+      "artifact": "png",
+      "pending": false,
+      "mimes": [
+        "image/png"
+      ],
+      "extensions": [
+        ".png"
+      ]
+    },
+    {
+      "artifact": "jpg",
+      "pending": false,
+      "mimes": [
+        "image/jpeg"
+      ],
+      "extensions": [
+        ".jpg",
+        ".jpeg"
+      ]
+    },
+    {
+      "artifact": "avi",
+      "pending": false,
+      "mimes": [
+        "video/x-msvideo"
+      ],
+      "extensions": [
+        ".avi"
+      ]
+    },
+    {
+      "artifact": "pptx",
+      "pending": false,
+      "mimes": [
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      ],
+      "extensions": [
+        ".pptx"
+      ]
+    },
+    {
+      "artifact": "wav",
+      "pending": false,
+      "mimes": [
+        "audio/wav"
+      ],
+      "extensions": [
+        ".wav"
+      ]
+    },
+    {
+      "artifact": "txt",
+      "pending": false,
+      "mimes": [
+        "text/plain"
+      ],
+      "extensions": [
+        ".txt"
+      ]
+    },
+    {
+      "artifact": "stl",
+      "pending": false,
+      "mimes": [
+        "model/stl"
+      ],
+      "extensions": [
+        ".stl"
+      ]
+    },
+    {
+      "artifact": "dwg",
+      "pending": false,
+      "mimes": [
+        "image/vnd.dwg"
+      ],
+      "extensions": [
+        ".dwg"
+      ]
+    },
+    {
+      "artifact": "dxf",
+      "pending": false,
+      "mimes": [
+        "image/vnd.dxf"
+      ],
+      "extensions": [
+        ".dxf"
+      ]
+    },
+    {
+      "artifact": "tiff",
+      "pending": false,
+      "mimes": [
+        "image/tiff"
+      ],
+      "extensions": [
+        ".tiff",
+        ".tif"
+      ]
+    },
+    {
+      "artifact": "deflate",
+      "pending": false,
+      "mimes": [
+        "application/zlib"
+      ],
+      "extensions": [
+        ".zz"
+      ]
+    },
+    {
+      "artifact": "obj",
+      "pending": false,
+      "mimes": [
+        "model/obj"
+      ],
+      "extensions": [
+        ".obj"
+      ]
+    },
+    {
+      "artifact": "gltf",
+      "pending": false,
+      "mimes": [
+        "model/gltf+json"
+      ],
+      "extensions": [
+        ".gltf"
+      ]
+    },
+    {
+      "artifact": "gltf",
+      "pending": false,
+      "mimes": [
+        "model/gltf-binary"
+      ],
+      "extensions": [
+        ".glb"
+      ]
+    },
+    {
+      "artifact": "ply",
+      "pending": false,
+      "mimes": [
+        "model/ply"
+      ],
+      "extensions": [
+        ".ply"
+      ]
+    },
+    {
+      "artifact": "json",
+      "pending": false,
+      "mimes": [
+        "application/json"
+      ],
+      "extensions": [
+        ".json"
+      ]
+    },
+    {
+      "artifact": "semio",
+      "pending": false,
+      "mimes": [
+        "application/vnd.semio"
+      ],
+      "extensions": [
+        ".semio"
+      ]
+    },
+    {
+      "artifact": "bmp",
+      "pending": false,
+      "mimes": [
+        "image/bmp"
+      ],
+      "extensions": [
+        ".bmp"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "las-.las",
+      "query": {
+        "fileName": "sample.las"
+      },
+      "artifact": "las",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "las-.LAS",
+      "query": {
+        "fileName": "sample.LAS"
+      },
+      "artifact": "las",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "las-mime-application/vnd.las",
+      "query": {
+        "mime": "application/vnd.las"
+      },
+      "artifact": "las",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "idf-.idf",
+      "query": {
+        "fileName": "sample.idf"
+      },
+      "artifact": "idf",
+      "pending": true,
+      "basis": "extension"
+    },
+    {
+      "id": "idf-.IDF",
+      "query": {
+        "fileName": "sample.IDF"
+      },
+      "artifact": "idf",
+      "pending": true,
+      "basis": "extension"
+    },
+    {
+      "id": "html-.html",
+      "query": {
+        "fileName": "sample.html"
+      },
+      "artifact": "html",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "html-.HTML",
+      "query": {
+        "fileName": "sample.HTML"
+      },
+      "artifact": "html",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "html-.htm",
+      "query": {
+        "fileName": "sample.htm"
+      },
+      "artifact": "html",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "html-.HTM",
+      "query": {
+        "fileName": "sample.HTM"
+      },
+      "artifact": "html",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "html-mime-text/html",
+      "query": {
+        "mime": "text/html"
+      },
+      "artifact": "html",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "epw-.epw",
+      "query": {
+        "fileName": "sample.epw"
+      },
+      "artifact": "epw",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "epw-.EPW",
+      "query": {
+        "fileName": "sample.EPW"
+      },
+      "artifact": "epw",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "zip-.zip",
+      "query": {
+        "fileName": "sample.zip"
+      },
+      "artifact": "zip",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "zip-.ZIP",
+      "query": {
+        "fileName": "sample.ZIP"
+      },
+      "artifact": "zip",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "zip-mime-application/zip",
+      "query": {
+        "mime": "application/zip"
+      },
+      "artifact": "zip",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "gif-.gif",
+      "query": {
+        "fileName": "sample.gif"
+      },
+      "artifact": "gif",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "gif-.GIF",
+      "query": {
+        "fileName": "sample.GIF"
+      },
+      "artifact": "gif",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "gif-mime-image/gif",
+      "query": {
+        "mime": "image/gif"
+      },
+      "artifact": "gif",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "mp4-.mp4",
+      "query": {
+        "fileName": "sample.mp4"
+      },
+      "artifact": "mp4",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "mp4-.MP4",
+      "query": {
+        "fileName": "sample.MP4"
+      },
+      "artifact": "mp4",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "mp4-mime-video/mp4",
+      "query": {
+        "mime": "video/mp4"
+      },
+      "artifact": "mp4",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "svg-.svg",
+      "query": {
+        "fileName": "sample.svg"
+      },
+      "artifact": "svg",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "svg-.SVG",
+      "query": {
+        "fileName": "sample.SVG"
+      },
+      "artifact": "svg",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "svg-mime-image/svg+xml",
+      "query": {
+        "mime": "image/svg+xml"
+      },
+      "artifact": "svg",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "mp3-.mp3",
+      "query": {
+        "fileName": "sample.mp3"
+      },
+      "artifact": "mp3",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "mp3-.MP3",
+      "query": {
+        "fileName": "sample.MP3"
+      },
+      "artifact": "mp3",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "mp3-mime-audio/mpeg",
+      "query": {
+        "mime": "audio/mpeg"
+      },
+      "artifact": "mp3",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "ifc-.ifc",
+      "query": {
+        "fileName": "sample.ifc"
+      },
+      "artifact": "ifc",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "ifc-.IFC",
+      "query": {
+        "fileName": "sample.IFC"
+      },
+      "artifact": "ifc",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "ifc-mime-application/x-ifc",
+      "query": {
+        "mime": "application/x-ifc"
+      },
+      "artifact": "ifc",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "bcf-.bcf",
+      "query": {
+        "fileName": "sample.bcf"
+      },
+      "artifact": "bcf",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "bcf-.BCF",
+      "query": {
+        "fileName": "sample.BCF"
+      },
+      "artifact": "bcf",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "bcf-mime-application/vnd.bcf+xml",
+      "query": {
+        "mime": "application/vnd.bcf+xml"
+      },
+      "artifact": "bcf",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "binary-.bin",
+      "query": {
+        "fileName": "sample.bin"
+      },
+      "artifact": "binary",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "binary-.BIN",
+      "query": {
+        "fileName": "sample.BIN"
+      },
+      "artifact": "binary",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "binary-mime-application/octet-stream",
+      "query": {
+        "mime": "application/octet-stream"
+      },
+      "artifact": "binary",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "csv-.csv",
+      "query": {
+        "fileName": "sample.csv"
+      },
+      "artifact": "csv",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "csv-.CSV",
+      "query": {
+        "fileName": "sample.CSV"
+      },
+      "artifact": "csv",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "csv-mime-text/csv",
+      "query": {
+        "mime": "text/csv"
+      },
+      "artifact": "csv",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "step-.step",
+      "query": {
+        "fileName": "sample.step"
+      },
+      "artifact": "step",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "step-.STEP",
+      "query": {
+        "fileName": "sample.STEP"
+      },
+      "artifact": "step",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "step-.stp",
+      "query": {
+        "fileName": "sample.stp"
+      },
+      "artifact": "step",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "step-.STP",
+      "query": {
+        "fileName": "sample.STP"
+      },
+      "artifact": "step",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "step-mime-model/step",
+      "query": {
+        "mime": "model/step"
+      },
+      "artifact": "step",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "tsv-.tsv",
+      "query": {
+        "fileName": "sample.tsv"
+      },
+      "artifact": "tsv",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "tsv-.TSV",
+      "query": {
+        "fileName": "sample.TSV"
+      },
+      "artifact": "tsv",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "tsv-mime-text/tab-separated-values",
+      "query": {
+        "mime": "text/tab-separated-values"
+      },
+      "artifact": "tsv",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "xlsx-.xlsx",
+      "query": {
+        "fileName": "sample.xlsx"
+      },
+      "artifact": "xlsx",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "xlsx-.XLSX",
+      "query": {
+        "fileName": "sample.XLSX"
+      },
+      "artifact": "xlsx",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "xlsx-mime-application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "query": {
+        "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      },
+      "artifact": "xlsx",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "pdf-.pdf",
+      "query": {
+        "fileName": "sample.pdf"
+      },
+      "artifact": "pdf",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "pdf-.PDF",
+      "query": {
+        "fileName": "sample.PDF"
+      },
+      "artifact": "pdf",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "pdf-mime-application/pdf",
+      "query": {
+        "mime": "application/pdf"
+      },
+      "artifact": "pdf",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "idml-.idml",
+      "query": {
+        "fileName": "sample.idml"
+      },
+      "artifact": "idml",
+      "pending": true,
+      "basis": "extension"
+    },
+    {
+      "id": "idml-.IDML",
+      "query": {
+        "fileName": "sample.IDML"
+      },
+      "artifact": "idml",
+      "pending": true,
+      "basis": "extension"
+    },
+    {
+      "id": "idml-mime-application/vnd.adobe.indesign-idml-package",
+      "query": {
+        "mime": "application/vnd.adobe.indesign-idml-package"
+      },
+      "artifact": "idml",
+      "pending": true,
+      "basis": "mime"
+    },
+    {
+      "id": "docx-.docx",
+      "query": {
+        "fileName": "sample.docx"
+      },
+      "artifact": "docx",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "docx-.DOCX",
+      "query": {
+        "fileName": "sample.DOCX"
+      },
+      "artifact": "docx",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "docx-mime-application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "query": {
+        "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      },
+      "artifact": "docx",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "md-.md",
+      "query": {
+        "fileName": "sample.md"
+      },
+      "artifact": "md",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "md-.MD",
+      "query": {
+        "fileName": "sample.MD"
+      },
+      "artifact": "md",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "md-.markdown",
+      "query": {
+        "fileName": "sample.markdown"
+      },
+      "artifact": "md",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "md-.MARKDOWN",
+      "query": {
+        "fileName": "sample.MARKDOWN"
+      },
+      "artifact": "md",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "md-mime-text/markdown",
+      "query": {
+        "mime": "text/markdown"
+      },
+      "artifact": "md",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "xml-.xml",
+      "query": {
+        "fileName": "sample.xml"
+      },
+      "artifact": "xml",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "xml-.XML",
+      "query": {
+        "fileName": "sample.XML"
+      },
+      "artifact": "xml",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "xml-mime-application/xml",
+      "query": {
+        "mime": "application/xml"
+      },
+      "artifact": "xml",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "png-.png",
+      "query": {
+        "fileName": "sample.png"
+      },
+      "artifact": "png",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "png-.PNG",
+      "query": {
+        "fileName": "sample.PNG"
+      },
+      "artifact": "png",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "png-mime-image/png",
+      "query": {
+        "mime": "image/png"
+      },
+      "artifact": "png",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "jpg-.jpg",
+      "query": {
+        "fileName": "sample.jpg"
+      },
+      "artifact": "jpg",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "jpg-.JPG",
+      "query": {
+        "fileName": "sample.JPG"
+      },
+      "artifact": "jpg",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "jpg-.jpeg",
+      "query": {
+        "fileName": "sample.jpeg"
+      },
+      "artifact": "jpg",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "jpg-.JPEG",
+      "query": {
+        "fileName": "sample.JPEG"
+      },
+      "artifact": "jpg",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "jpg-mime-image/jpeg",
+      "query": {
+        "mime": "image/jpeg"
+      },
+      "artifact": "jpg",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "avi-.avi",
+      "query": {
+        "fileName": "sample.avi"
+      },
+      "artifact": "avi",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "avi-.AVI",
+      "query": {
+        "fileName": "sample.AVI"
+      },
+      "artifact": "avi",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "avi-mime-video/x-msvideo",
+      "query": {
+        "mime": "video/x-msvideo"
+      },
+      "artifact": "avi",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "pptx-.pptx",
+      "query": {
+        "fileName": "sample.pptx"
+      },
+      "artifact": "pptx",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "pptx-.PPTX",
+      "query": {
+        "fileName": "sample.PPTX"
+      },
+      "artifact": "pptx",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "pptx-mime-application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "query": {
+        "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      },
+      "artifact": "pptx",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "wav-.wav",
+      "query": {
+        "fileName": "sample.wav"
+      },
+      "artifact": "wav",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "wav-.WAV",
+      "query": {
+        "fileName": "sample.WAV"
+      },
+      "artifact": "wav",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "wav-mime-audio/wav",
+      "query": {
+        "mime": "audio/wav"
+      },
+      "artifact": "wav",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "txt-.txt",
+      "query": {
+        "fileName": "sample.txt"
+      },
+      "artifact": "txt",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "txt-.TXT",
+      "query": {
+        "fileName": "sample.TXT"
+      },
+      "artifact": "txt",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "txt-mime-text/plain",
+      "query": {
+        "mime": "text/plain"
+      },
+      "artifact": "txt",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "stl-.stl",
+      "query": {
+        "fileName": "sample.stl"
+      },
+      "artifact": "stl",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "stl-.STL",
+      "query": {
+        "fileName": "sample.STL"
+      },
+      "artifact": "stl",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "stl-mime-model/stl",
+      "query": {
+        "mime": "model/stl"
+      },
+      "artifact": "stl",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "dwg-.dwg",
+      "query": {
+        "fileName": "sample.dwg"
+      },
+      "artifact": "dwg",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "dwg-.DWG",
+      "query": {
+        "fileName": "sample.DWG"
+      },
+      "artifact": "dwg",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "dwg-mime-image/vnd.dwg",
+      "query": {
+        "mime": "image/vnd.dwg"
+      },
+      "artifact": "dwg",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "dxf-.dxf",
+      "query": {
+        "fileName": "sample.dxf"
+      },
+      "artifact": "dxf",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "dxf-.DXF",
+      "query": {
+        "fileName": "sample.DXF"
+      },
+      "artifact": "dxf",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "dxf-mime-image/vnd.dxf",
+      "query": {
+        "mime": "image/vnd.dxf"
+      },
+      "artifact": "dxf",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "tiff-.tiff",
+      "query": {
+        "fileName": "sample.tiff"
+      },
+      "artifact": "tiff",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "tiff-.TIFF",
+      "query": {
+        "fileName": "sample.TIFF"
+      },
+      "artifact": "tiff",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "tiff-.tif",
+      "query": {
+        "fileName": "sample.tif"
+      },
+      "artifact": "tiff",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "tiff-.TIF",
+      "query": {
+        "fileName": "sample.TIF"
+      },
+      "artifact": "tiff",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "tiff-mime-image/tiff",
+      "query": {
+        "mime": "image/tiff"
+      },
+      "artifact": "tiff",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "deflate-.zz",
+      "query": {
+        "fileName": "sample.zz"
+      },
+      "artifact": "deflate",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "deflate-.ZZ",
+      "query": {
+        "fileName": "sample.ZZ"
+      },
+      "artifact": "deflate",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "deflate-mime-application/zlib",
+      "query": {
+        "mime": "application/zlib"
+      },
+      "artifact": "deflate",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "obj-.obj",
+      "query": {
+        "fileName": "sample.obj"
+      },
+      "artifact": "obj",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "obj-.OBJ",
+      "query": {
+        "fileName": "sample.OBJ"
+      },
+      "artifact": "obj",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "obj-mime-model/obj",
+      "query": {
+        "mime": "model/obj"
+      },
+      "artifact": "obj",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "gltf-.gltf",
+      "query": {
+        "fileName": "sample.gltf"
+      },
+      "artifact": "gltf",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "gltf-.GLTF",
+      "query": {
+        "fileName": "sample.GLTF"
+      },
+      "artifact": "gltf",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "gltf-mime-model/gltf+json",
+      "query": {
+        "mime": "model/gltf+json"
+      },
+      "artifact": "gltf",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "gltf-.glb",
+      "query": {
+        "fileName": "sample.glb"
+      },
+      "artifact": "gltf",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "gltf-.GLB",
+      "query": {
+        "fileName": "sample.GLB"
+      },
+      "artifact": "gltf",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "gltf-mime-model/gltf-binary",
+      "query": {
+        "mime": "model/gltf-binary"
+      },
+      "artifact": "gltf",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "ply-.ply",
+      "query": {
+        "fileName": "sample.ply"
+      },
+      "artifact": "ply",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "ply-.PLY",
+      "query": {
+        "fileName": "sample.PLY"
+      },
+      "artifact": "ply",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "ply-mime-model/ply",
+      "query": {
+        "mime": "model/ply"
+      },
+      "artifact": "ply",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "json-.json",
+      "query": {
+        "fileName": "sample.json"
+      },
+      "artifact": "json",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "json-.JSON",
+      "query": {
+        "fileName": "sample.JSON"
+      },
+      "artifact": "json",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "json-mime-application/json",
+      "query": {
+        "mime": "application/json"
+      },
+      "artifact": "json",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "semio-.semio",
+      "query": {
+        "fileName": "sample.semio"
+      },
+      "artifact": "semio",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "semio-.SEMIO",
+      "query": {
+        "fileName": "sample.SEMIO"
+      },
+      "artifact": "semio",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "semio-mime-application/vnd.semio",
+      "query": {
+        "mime": "application/vnd.semio"
+      },
+      "artifact": "semio",
+      "pending": false,
+      "basis": "mime"
+    },
+    {
+      "id": "bmp-.bmp",
+      "query": {
+        "fileName": "sample.bmp"
+      },
+      "artifact": "bmp",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "bmp-.BMP",
+      "query": {
+        "fileName": "sample.BMP"
+      },
+      "artifact": "bmp",
+      "pending": false,
+      "basis": "extension"
+    },
+    {
+      "id": "bmp-mime-image/bmp",
+      "query": {
+        "mime": "image/bmp"
+      },
+      "artifact": "bmp",
+      "pending": false,
+      "basis": "mime"
+    }
+  ]
+}

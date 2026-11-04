@@ -63,6 +63,7 @@
       "id": "s.stdio.gif.standard.87a.representation.document",
       "standard": "s.stdio.gif.standard.87a",
       "representation": "document",
+      "sniff": {"window": 6, "contains": ["GIF87a"]},
       "mimes": ["image/gif"],
       "extensions": [".gif"],
       "is_binary": true,
@@ -74,6 +75,8 @@
       "id": "s.stdio.gif.standard.89a.representation.document",
       "standard": "s.stdio.gif.standard.89a",
       "representation": "document",
+      "sniff": {"window": 6, "contains": ["GIF89a"]},
+      "owner": true,
       "mimes": [
         "image/gif"
       ],
@@ -86,7 +89,38 @@
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    {
+      "id": "s.stdio.gif.standard.87a.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.gif.standard.87a.dialect.source",
+      "to": "s.stdio.gif.standard.87a.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.gif.87a.v1",
+        "artifact_kind": "s.stdio.gif",
+        "artifact_schema": "stdio.gif",
+        "extension": "gif",
+        "pack_schema_hash": "8153c839b3d18595c3de0997cb9b3ed9762d28f02d2539cafea2e01695f8e07f",
+        "runtime_capability_id": "s.stdio.gif.standard.87a.codec.codec-stdio-gif-extension-gif.v1"
+      }
+    },
+    {
+      "id": "s.stdio.gif.standard.89a.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.gif.standard.89a.dialect.source",
+      "to": "s.stdio.gif.standard.89a.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.gif.89a.v1",
+        "artifact_kind": "s.stdio.gif",
+        "artifact_schema": "stdio.gif.89a",
+        "extension": "gif",
+        "pack_schema_hash": "a599ebc7a40f24e96e2da48d4b6e78713736c32be12694301b3436fde084f75b",
+        "runtime_capability_id": "s.stdio.gif.standard.89a.codec.codec-stdio-gif-89a-extension-gif.v1"
+      }
+    }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [
@@ -187,7 +221,7 @@
       ]
     },
     {
-      "id": "s.stdio.gif.standard.87a.codec.codec-stdio-gif-89a-extension-gif.v1",
+      "id": "s.stdio.gif.standard.89a.codec.codec-stdio-gif-89a-extension-gif.v1",
       "category": "codec",
       "descriptor": "runtime-capability:codec:codec-extension:13:stdio.gif.89a:gif|codec:stdio.gif.89a",
       "claims": [

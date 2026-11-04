@@ -18,7 +18,7 @@ pub use semio_framework_os_host_workflow as workflow;
 pub use crate::space::*;
 pub use crate::workflow::{
     apply_flow_host_snapshot_to_os_workflow, apply_workflow_operation, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, export_os_app_instance_media_kind, import_os_app_instance_media_kind,
-    negotiate_media_contract, os_media_export_extension_for_format_kind, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_host_snapshot_json, os_workflow_to_node_graph_payload, patch_workflow_parameter,
+    negotiate_media_contract, os_media_export_extension_for_format_kind, sanitize_export_file_stem, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_host_snapshot_json, os_workflow_to_node_graph_payload, patch_workflow_parameter,
     placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports, validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot, workflow_node_for_app, workflow_parameter_id,
     workflow_parameter_id_from_port_id, workflow_parameter_name, workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, OsMediaCapability, OsWorkflowCamera, OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, Workflow,
     WorkflowDelivery, WorkflowEdge, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode, WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch,
@@ -28,7 +28,7 @@ pub use crate::workflow::{
 pub use backbone::{open_file_space_backbone, open_folder_space_backbone};
 pub use host::{
     create_backbone_document, create_os_space, decode_backbone_payload, delete_os_space, encode_backbone_payload, export_backbone_dsl, export_backbone_pack, export_os_space_dsl, export_os_space_pack, import_os_space_from_dsl,
-    import_os_space_from_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, seed_os_space_catalog_if_empty, BackboneDocument, LoadedProgram, OsBackbonePort, OsBackbonePorts, OsCollectionDocument,
+    import_os_space_from_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, seed_os_space_catalog_if_empty, BackboneDocument, BackboneExport, LoadedProgram, OsBackbonePort, OsBackbonePorts, OsCollectionDocument,
     OsSpaceCatalogEntry, OsSpaceDocument, OsSpaceStore, OsWorkflowArtifactDocument, OsWorkflowStore, PluginHost, ProgramHotSwapEvent, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX,
 };
 pub use instance::{

@@ -297,11 +297,11 @@ pub mod artifact_items_7 {
 pub use crate::standards::v1::subsets::any::schema::snapshot::ShootingSnapshot;
 
 //#region 🔖️Composition
-/// 🧩️ Composed `s.stdio.semio.image` child slot for the scene's emblem overlay (ticket
+/// 🧩️ Composed `stdio.semio.image` child slot for the scene's emblem overlay (ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`, `📓️design-full-plan.md` §4:
 /// `shooting→C:video,image,audio,table`). Of that four-subset menu, ONLY `image` maps onto real
 /// duplicated content in this plugin — the former `ShootingSceneLighting.emblem_base64:
-/// Option<String>` (a raw base64 PNG overlay) duplicated exactly what `s.stdio.semio.image` already
+/// Option<String>` (a raw base64 PNG overlay) duplicated exactly what `stdio.semio.image` already
 /// generalizes.
 ///
 /// `video`/`audio` are deliberately NOT composed: an exhaustive grep of every `.rs` file in this
@@ -334,7 +334,7 @@ use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioColorspace, Semi
 //#region 🔖️Composition
 pub type ShootingEmblemChild = store::os_store::artifact_child::ArtifactChild<SemioImageSnapshot>;
 
-/// 🪪️ Mint a deterministic, content-addressed `s.stdio.semio.image` CHILD HANDLE from `content` —
+/// 🪪️ Mint a deterministic, content-addressed `stdio.semio.image` CHILD HANDLE from `content` —
 /// same `store::os_store::artifact_child::ArtifactChild::new`/`ArtifactDialect` shape as every other wave-4 exemplar
 /// (`process3d::brep_child_handle`, `gismap::gis_map_drawing_child_handle`). Two callers with
 /// byte-identical content mint the same handle.

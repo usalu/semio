@@ -1,7 +1,7 @@
 {
   "schema": "stdio.semio",
   "subset": {
-    "schema": "s.stdio.semio.image",
+    "schema": "stdio.semio.image",
     "width": 195,
     "height": 85,
     "colorspace": "indexed",

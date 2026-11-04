@@ -24,7 +24,7 @@
     {
       "id": "full",
       "sourceSnapshot": {
-        "schema": "s.stdio.semio.document",
+        "schema": "stdio.semio.document",
         "styles": [
           {
             "id": "",
@@ -171,7 +171,7 @@
     {
       "id": "metadataRetainingEmpty",
       "sourceSnapshot": {
-        "schema": "s.stdio.semio.document",
+        "schema": "stdio.semio.document",
         "styles": [],
         "images": [],
         "blocks": []

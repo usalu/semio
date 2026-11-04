@@ -42,7 +42,7 @@
       "standard": "s.stdio.html.standard.5",
       "representation": "document",
       "mimes": ["text/html"],
-      "extensions": [".html"],
+      "extensions": [".html", ".htm"],
       "is_binary": false,
       "aliases": [],
       "neutral": true,
@@ -97,6 +97,25 @@
         {
           "namespace": "codec-extension",
           "value": "10:stdio.html:html"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.html.standard.5.representation.mime-text-html-extension-html",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:text/html|extension:.html|extension:.htm",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "text/html"
+        },
+        {
+          "namespace": "extension",
+          "value": ".html"
+        },
+        {
+          "namespace": "extension",
+          "value": ".htm"
         }
       ]
     },

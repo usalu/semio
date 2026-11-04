@@ -1,7 +1,7 @@
 {
   "schema": "stdio.semio",
   "subset": {
-    "schema": "s.stdio.semio.table",
+    "schema": "stdio.semio.table",
     "columns": [
       {
         "name": "ID",

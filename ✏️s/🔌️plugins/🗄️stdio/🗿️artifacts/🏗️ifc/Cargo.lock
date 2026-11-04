@@ -7119,6 +7119,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-os-kernel",
  "semio-framework-pack",
+ "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-ui-contract",
  "semio-framework-ui-locale",
@@ -7929,7 +7930,6 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-ifc-declarations",
  "semio-s-artifact-stdio-ifc-geometry",
- "semio-s-artifact-stdio-ifc2x3-catalog",
 ]
 
 [[package]]
@@ -8125,8 +8125,6 @@ dependencies = [
  "semio-framework-value-paged-list",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-ifc-declarations",
- "semio-s-artifact-stdio-ifc-geometry",
- "semio-s-artifact-stdio-ifc4-catalog",
 ]
 
 [[package]]
@@ -10885,6 +10883,7 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-pdf-diff",
+ "semio-s-artifact-stdio-pdf-graph-projection",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-base",
  "semio-s-artifact-stdio-pdf-mut-base-2",

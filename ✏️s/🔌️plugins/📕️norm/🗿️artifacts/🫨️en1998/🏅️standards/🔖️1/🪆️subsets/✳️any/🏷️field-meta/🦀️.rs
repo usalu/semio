@@ -113,6 +113,13 @@ const LIMIT_STATE: &[NormFieldChoice] = &[
     NormFieldChoice { value: "sd", label_en: "Significant damage (SD)", label_de: "Bedeutende Schädigung (SD)" },
     NormFieldChoice { value: "dl", label_en: "Damage limitation (DL)", label_de: "Schadensbegrenzung (DL)" },
 ];
+const ANALYSIS_METHOD_CHOICE: &[NormFieldChoice] = &[
+    NormFieldChoice { value: "derived", label_en: "Derived from the model", label_de: "Aus dem Modell abgeleitet" },
+    NormFieldChoice { value: "lf", label_en: "Lateral force", label_de: "Ersatzkraftverfahren" },
+    NormFieldChoice { value: "mrs", label_en: "Modal response spectrum", label_de: "Modales Antwortspektrenverfahren" },
+    NormFieldChoice { value: "pushover", label_en: "Nonlinear static (pushover)", label_de: "Nichtlinear statisch (Pushover)" },
+    NormFieldChoice { value: "nlth", label_en: "Nonlinear time history", label_de: "Nichtlineare Zeitverlaufsberechnung" },
+];
 
 const TABLE: &[(&str, FieldSpec)] = &[
     ("annex", m!("National annex", "Nationaler Anhang", choices ANNEX)),
@@ -274,6 +281,7 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("assessments[].shearCrackingBeforeYield", m!("Shear cracking before flexural yielding a_V (1 = yes, 0 = no)", "Schubrisse vor dem Biegefließen a_V (1 = ja, 0 = nein)")),
     ("assessments[].shearForceDemandN", m!("Shear force demand V_Ed of the brittle shear mechanism (0 = not given)", "Querkraftbeanspruchung V_Ed des spröden Schubmechanismus (0 = nicht angegeben)", UnitId::Newton)),
     ("assessments[].intermediateSteelAreaM2", m!("Intermediate longitudinal steel area A_s,int (0 = none)", "Fläche der mittleren Längsbewehrung A_s,int (0 = keine)", UnitId::SquareMetre)),
+    ("assessments[].analysisMethod", m!("Analysis method", "Berechnungsverfahren", choices ANALYSIS_METHOD_CHOICE)),
     ("silos[].id", m!("Silo id", "Silo-ID")),
     ("silos[].heightM", m!("Silo height", "Silohöhe", UnitId::Metre)),
     ("silos[].radiusM", m!("Silo radius", "Siloradius", UnitId::Metre)),

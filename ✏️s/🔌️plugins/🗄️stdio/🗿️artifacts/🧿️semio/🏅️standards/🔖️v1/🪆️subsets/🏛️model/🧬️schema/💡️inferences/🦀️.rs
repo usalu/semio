@@ -17,7 +17,7 @@ use super::bounds::compute_semio_model_bounds;
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.model.inference")]
+#[artifact_schema(id = "stdio.semio.model.inference")]
 pub struct SemioModelInference {
     #[derived]
     pub bounds: SemioModelBounds,
@@ -46,24 +46,24 @@ impl Default for SemioModelInference {
 
 impl protocol::InferenceSpec<SemioModelSnapshot> for SemioModelInference {
     fn inference_schema_id() -> &'static str {
-        "s.stdio.semio.model.inference"
+        "stdio.semio.model.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.semio.model.inference.bounds", reads: &["spatial", "elements"] }]
+        &[protocol::InferenceFieldSpec { id: "stdio.semio.model.inference.bounds", reads: &["spatial", "elements"] }]
     }
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.stdio.semio.model.inference`'s facet leaves into the OS-wide inference catalog
+/// 💡️ Registers `stdio.semio.model.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_model_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_model_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.stdio.semio.model.inference",
+        id: "stdio.semio.model.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

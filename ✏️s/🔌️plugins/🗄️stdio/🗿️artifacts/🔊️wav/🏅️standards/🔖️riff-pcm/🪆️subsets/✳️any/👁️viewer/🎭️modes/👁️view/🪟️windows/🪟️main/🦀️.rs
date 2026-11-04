@@ -35,6 +35,7 @@ pub fn render(snapshot: &WavSnapshot, locale: Locale, resource: Option<MediaReso
         capability: MediaCapabilityStatus::Unsupported,
         capability_reason: Some(reason.into()),
         host_content_height: 88.0,
+        trim: None,
     })
 }
 

@@ -23,7 +23,7 @@ const fixture = JSON.parse(readFileSync(resolve(testDirectory, "../../🎬️med
 const identityFixtureDirectory = resolve(testDirectory, "../../../../📡️spr/🧵️channel/🧪️tests/🧫️fixtures/🪪️document-identity-wire");
 const handle = { app_instance_id: 17, parent_document_id: "document-7", operation_id: BigInt(fixture.operation), base_revision: BigInt(fixture.revision), generation: BigInt(fixture.generation) };
 function slot(token = "accepted:7"): PresentedMediaSlot {
-  return { token, windowId: "media:main", nodeId: "7", nodeKey: "transport", rect: { x: 20, y: 30, width: 300, height: 180 }, clip: { x: 25, y: 35, width: 290, height: 170 }, paintOrder: 2, occluded: false, pluginId: "stdio.mp4", controllerId: "stdio.mp4.editor", appInstanceId: 17, parentDocumentId: "document-7", props: { schemaVersion: 1, kind: "audio", mediaType: "audio/wav", revision: fixture.revision, durationMs: 1000, positionMs: 250, selectionStartMs: 100, selectionEndMs: 900, locale: "en", labels: mediaTransportLabels("en"), resource: { kind: "artifact-media-export", controllerId: "stdio.mp4.editor", appInstanceId: 17, parentDocumentId: "document-7", outputPort: "playback:out", revision: fixture.revision, generation: fixture.generation }, capability: { status: "ready", reason: null }, hostContentHeight: 180 } };
+  return { token, windowId: "media:main", nodeId: "7", nodeKey: "transport", rect: { x: 20, y: 30, width: 300, height: 180 }, clip: { x: 25, y: 35, width: 290, height: 170 }, paintOrder: 2, occluded: false, pluginId: "stdio.mp4", controllerId: "stdio.mp4.editor", appInstanceId: 17, parentDocumentId: "document-7", props: { schemaVersion: 1, kind: "audio", mediaType: "audio/wav", revision: fixture.revision, durationMs: 1000, positionMs: 250, selectionStartMs: 100, selectionEndMs: 900, locale: "en", labels: mediaTransportLabels("en"), resource: { kind: "artifact-media-export", controllerId: "stdio.mp4.editor", appInstanceId: 17, parentDocumentId: "document-7", outputPort: "playback:out", revision: fixture.revision, generation: fixture.generation }, capability: { status: "ready", reason: null }, hostContentHeight: 180, trim: null } };
 }
 function command(operation: BrowserMediaCommand["operation"], token = "accepted:7"): BrowserMediaCommand {
   return { kind: "media-command", lifecycle: 1, requestId: 1, slotToken: token, operation, ...(operation === "submit" ? {} : { handle }) } as BrowserMediaCommand;
@@ -96,6 +96,29 @@ describe("accepted browser media authority", () => {
     await expect(registry.execute(command("poll"))).rejects.toThrow("retired");
     await registry.close();
     expect(calls).toEqual(["submit", "poll", "take"]);
+  });
+  it("routes an accepted slot's apply operation to the dispatcher with the slot's own window and controller, and refuses everything else", async () => {
+    const dispatched: { windowId: string; controllerId: string; action: string; args: unknown }[] = [];
+    const registry = new BrowserMediaRegistry(() => port(), (accepted, action, args) => { dispatched.push({ windowId: accepted.windowId, controllerId: accepted.controllerId, action, args }); });
+    const apply = (token: string, extra: Record<string, unknown> = {}) => ({ kind: "media-command", lifecycle: 1, requestId: 2, slotToken: token, operation: "apply", action: "trim-audio", args: { revision: "r1", value: "0-5" }, ...extra }) as unknown as BrowserMediaCommand;
+    await expect(registry.execute(apply("accepted:7"))).rejects.toThrow("retired");
+    registry.accept([slot()]);
+    await expect(registry.execute(apply("accepted:7"))).resolves.toBeNull();
+    expect(dispatched).toEqual([{ windowId: "media:main", controllerId: slot().controllerId, action: "trim-audio", args: { revision: "r1", value: "0-5" } }]);
+    await expect(registry.execute(apply("accepted:other"))).rejects.toThrow("retired");
+    await expect(registry.execute(apply("accepted:7", { action: "" }))).rejects.toThrow("apply-action");
+    await expect(registry.execute(apply("accepted:7", { action: "x".repeat(129) }))).rejects.toThrow("apply-action");
+    await expect(registry.execute(apply("accepted:7", { args: { value: "x".repeat(2000) } }))).rejects.toThrow("apply-arguments");
+    await expect(registry.execute(apply("accepted:7", { args: [1] }))).rejects.toThrow("apply-arguments");
+    await expect(registry.execute(apply("accepted:7", { extra: true }))).rejects.toThrow("browser-media.command");
+    expect(dispatched).toHaveLength(1);
+    await registry.close();
+  });
+  it("refuses an apply operation when the worker offers no dispatcher", async () => {
+    const registry = new BrowserMediaRegistry(() => port());
+    registry.accept([slot()]);
+    await expect(registry.execute({ kind: "media-command", lifecycle: 1, requestId: 2, slotToken: "accepted:7", operation: "apply", action: "trim-audio", args: {} } as unknown as BrowserMediaCommand)).rejects.toThrow("apply-unavailable");
+    await registry.close();
   });
   it("never polls or cancels an export handle whose resource owner was refused", async () => {
     for (const field of ["app_instance_id", "parent_document_id", "base_revision", "generation"] as const) {

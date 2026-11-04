@@ -1,0 +1,673 @@
+{
+  "schema": "semio.ui.control-name-law/v1",
+  "rule": "An input, select, slider, stepper, icon select, ring or text-less toggle needs a non-blank accessibility label or a labelled Field parent.",
+  "cases": [
+    {
+      "case": "input-without-name",
+      "component": {
+        "type": "input",
+        "value": "x"
+      },
+      "parent": null,
+      "unnamed": true
+    },
+    {
+      "case": "input-blank-label",
+      "component": {
+        "type": "input",
+        "value": "x"
+      },
+      "label": "   ",
+      "parent": null,
+      "unnamed": true
+    },
+    {
+      "case": "input-labelled",
+      "component": {
+        "type": "input",
+        "value": "x"
+      },
+      "label": "Width",
+      "parent": null,
+      "unnamed": false
+    },
+    {
+      "case": "input-in-labelled-field",
+      "component": {
+        "type": "input",
+        "value": "x"
+      },
+      "parent": {
+        "role": "field",
+        "label": "Width"
+      },
+      "unnamed": false
+    },
+    {
+      "case": "input-in-unlabelled-field",
+      "component": {
+        "type": "input",
+        "value": "x"
+      },
+      "parent": {
+        "role": "field"
+      },
+      "unnamed": true
+    },
+    {
+      "case": "input-in-blank-field",
+      "component": {
+        "type": "input",
+        "value": "x"
+      },
+      "parent": {
+        "role": "field",
+        "label": " "
+      },
+      "unnamed": true
+    },
+    {
+      "case": "input-in-labelled-group-is-not-a-field",
+      "component": {
+        "type": "input",
+        "value": "x"
+      },
+      "parent": {
+        "role": "group",
+        "label": "Width"
+      },
+      "unnamed": true
+    },
+    {
+      "case": "select-without-name",
+      "component": {
+        "type": "select",
+        "value": "a",
+        "items": [
+          {
+            "value": "a",
+            "label": "A"
+          }
+        ]
+      },
+      "parent": null,
+      "unnamed": true
+    },
+    {
+      "case": "select-blank-label",
+      "component": {
+        "type": "select",
+        "value": "a",
+        "items": [
+          {
+            "value": "a",
+            "label": "A"
+          }
+        ]
+      },
+      "label": "   ",
+      "parent": null,
+      "unnamed": true
+    },
+    {
+      "case": "select-labelled",
+      "component": {
+        "type": "select",
+        "value": "a",
+        "items": [
+          {
+            "value": "a",
+            "label": "A"
+          }
+        ]
+      },
+      "label": "Width",
+      "parent": null,
+      "unnamed": false
+    },
+    {
+      "case": "select-in-labelled-field",
+      "component": {
+        "type": "select",
+        "value": "a",
+        "items": [
+          {
+            "value": "a",
+            "label": "A"
+          }
+        ]
+      },
+      "parent": {
+        "role": "field",
+        "label": "Width"
+      },
+      "unnamed": false
+    },
+    {
+      "case": "select-in-unlabelled-field",
+      "component": {
+        "type": "select",
+        "value": "a",
+        "items": [
+          {
+            "value": "a",
+            "label": "A"
+          }
+        ]
+      },
+      "parent": {
+        "role": "field"
+      },
+      "unnamed": true
+    },
+    {
+      "case": "select-in-blank-field",
+      "component": {
+        "type": "select",
+        "value": "a",
+        "items": [
+          {
+            "value": "a",
+            "label": "A"
+          }
+        ]
+      },
+      "parent": {
+        "role": "field",
+        "label": " "
+      },
+      "unnamed": true
+    },
+    {
+      "case": "select-in-labelled-group-is-not-a-field",
+      "component": {
+        "type": "select",
+        "value": "a",
+        "items": [
+          {
+            "value": "a",
+            "label": "A"
+          }
+        ]
+      },
+      "parent": {
+        "role": "group",
+        "label": "Width"
+      },
+      "unnamed": true
+    },
+    {
+      "case": "slider-without-name",
+      "component": {
+        "type": "slider",
+        "value": 0.4,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.1
+      },
+      "parent": null,
+      "unnamed": true
+    },
+    {
+      "case": "slider-blank-label",
+      "component": {
+        "type": "slider",
+        "value": 0.4,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.1
+      },
+      "label": "   ",
+      "parent": null,
+      "unnamed": true
+    },
+    {
+      "case": "slider-labelled",
+      "component": {
+        "type": "slider",
+        "value": 0.4,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.1
+      },
+      "label": "Width",
+      "parent": null,
+      "unnamed": false
+    },
+    {
+      "case": "slider-in-labelled-field",
+      "component": {
+        "type": "slider",
+        "value": 0.4,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.1
+      },
+      "parent": {
+        "role": "field",
+        "label": "Width"
+      },
+      "unnamed": false
+    },
+    {
+      "case": "slider-in-unlabelled-field",
+      "component": {
+        "type": "slider",
+        "value": 0.4,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.1
+      },
+      "parent": {
+        "role": "field"
+      },
+      "unnamed": true
+    },
+    {
+      "case": "slider-in-blank-field",
+      "component": {
+        "type": "slider",
+        "value": 0.4,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.1
+      },
+      "parent": {
+        "role": "field",
+        "label": " "
+      },
+      "unnamed": true
+    },
+    {
+      "case": "slider-in-labelled-group-is-not-a-field",
+      "component": {
+        "type": "slider",
+        "value": 0.4,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.1
+      },
+      "parent": {
+        "role": "group",
+        "label": "Width"
+      },
+      "unnamed": true
+    },
+    {
+      "case": "numberStepper-without-name",
+      "component": {
+        "type": "numberStepper",
+        "value": 2.0,
+        "step": 1.0,
+        "uniform": false
+      },
+      "parent": null,
+      "unnamed": true
+    },
+    {
+      "case": "numberStepper-blank-label",
+      "component": {
+        "type": "numberStepper",
+        "value": 2.0,
+        "step": 1.0,
+        "uniform": false
+      },
+      "label": "   ",
+      "parent": null,
+      "unnamed": true
+    },
+    {
+      "case": "numberStepper-labelled",
+      "component": {
+        "type": "numberStepper",
+        "value": 2.0,
+        "step": 1.0,
+        "uniform": false
+      },
+      "label": "Width",
+      "parent": null,
+      "unnamed": false
+    },
+    {
+      "case": "numberStepper-in-labelled-field",
+      "component": {
+        "type": "numberStepper",
+        "value": 2.0,
+        "step": 1.0,
+        "uniform": false
+      },
+      "parent": {
+        "role": "field",
+        "label": "Width"
+      },
+      "unnamed": false
+    },
+    {
+      "case": "numberStepper-in-unlabelled-field",
+      "component": {
+        "type": "numberStepper",
+        "value": 2.0,
+        "step": 1.0,
+        "uniform": false
+      },
+      "parent": {
+        "role": "field"
+      },
+      "unnamed": true
+    },
+    {
+      "case": "numberStepper-in-blank-field",
+      "component": {
+        "type": "numberStepper",
+        "value": 2.0,
+        "step": 1.0,
+        "uniform": false
+      },
+      "parent": {
+        "role": "field",
+        "label": " "
+      },
+      "unnamed": true
+    },
+    {
+      "case": "numberStepper-in-labelled-group-is-not-a-field",
+      "component": {
+        "type": "numberStepper",
+        "value": 2.0,
+        "step": 1.0,
+        "uniform": false
+      },
+      "parent": {
+        "role": "group",
+        "label": "Width"
+      },
+      "unnamed": true
+    },
+    {
+      "case": "iconSelect-without-name",
+      "component": {
+        "type": "iconSelect",
+        "value": "circle",
+        "uniform": true,
+        "classifierKind": "shape"
+      },
+      "parent": null,
+      "unnamed": true
+    },
+    {
+      "case": "iconSelect-blank-label",
+      "component": {
+        "type": "iconSelect",
+        "value": "circle",
+        "uniform": true,
+        "classifierKind": "shape"
+      },
+      "label": "   ",
+      "parent": null,
+      "unnamed": true
+    },
+    {
+      "case": "iconSelect-labelled",
+      "component": {
+        "type": "iconSelect",
+        "value": "circle",
+        "uniform": true,
+        "classifierKind": "shape"
+      },
+      "label": "Width",
+      "parent": null,
+      "unnamed": false
+    },
+    {
+      "case": "iconSelect-in-labelled-field",
+      "component": {
+        "type": "iconSelect",
+        "value": "circle",
+        "uniform": true,
+        "classifierKind": "shape"
+      },
+      "parent": {
+        "role": "field",
+        "label": "Width"
+      },
+      "unnamed": false
+    },
+    {
+      "case": "iconSelect-in-unlabelled-field",
+      "component": {
+        "type": "iconSelect",
+        "value": "circle",
+        "uniform": true,
+        "classifierKind": "shape"
+      },
+      "parent": {
+        "role": "field"
+      },
+      "unnamed": true
+    },
+    {
+      "case": "iconSelect-in-blank-field",
+      "component": {
+        "type": "iconSelect",
+        "value": "circle",
+        "uniform": true,
+        "classifierKind": "shape"
+      },
+      "parent": {
+        "role": "field",
+        "label": " "
+      },
+      "unnamed": true
+    },
+    {
+      "case": "iconSelect-in-labelled-group-is-not-a-field",
+      "component": {
+        "type": "iconSelect",
+        "value": "circle",
+        "uniform": true,
+        "classifierKind": "shape"
+      },
+      "parent": {
+        "role": "group",
+        "label": "Width"
+      },
+      "unnamed": true
+    },
+    {
+      "case": "ring-without-name",
+      "component": {
+        "type": "ring",
+        "orbId": "orb-1",
+        "t": 0.6
+      },
+      "parent": null,
+      "unnamed": true
+    },
+    {
+      "case": "ring-blank-label",
+      "component": {
+        "type": "ring",
+        "orbId": "orb-1",
+        "t": 0.6
+      },
+      "label": "   ",
+      "parent": null,
+      "unnamed": true
+    },
+    {
+      "case": "ring-labelled",
+      "component": {
+        "type": "ring",
+        "orbId": "orb-1",
+        "t": 0.6
+      },
+      "label": "Width",
+      "parent": null,
+      "unnamed": false
+    },
+    {
+      "case": "ring-in-labelled-field",
+      "component": {
+        "type": "ring",
+        "orbId": "orb-1",
+        "t": 0.6
+      },
+      "parent": {
+        "role": "field",
+        "label": "Width"
+      },
+      "unnamed": false
+    },
+    {
+      "case": "ring-in-unlabelled-field",
+      "component": {
+        "type": "ring",
+        "orbId": "orb-1",
+        "t": 0.6
+      },
+      "parent": {
+        "role": "field"
+      },
+      "unnamed": true
+    },
+    {
+      "case": "ring-in-blank-field",
+      "component": {
+        "type": "ring",
+        "orbId": "orb-1",
+        "t": 0.6
+      },
+      "parent": {
+        "role": "field",
+        "label": " "
+      },
+      "unnamed": true
+    },
+    {
+      "case": "ring-in-labelled-group-is-not-a-field",
+      "component": {
+        "type": "ring",
+        "orbId": "orb-1",
+        "t": 0.6
+      },
+      "parent": {
+        "role": "group",
+        "label": "Width"
+      },
+      "unnamed": true
+    },
+    {
+      "case": "toggleIconOnly-without-name",
+      "component": {
+        "type": "toggle",
+        "on": true,
+        "icon": "toggle"
+      },
+      "parent": null,
+      "unnamed": true
+    },
+    {
+      "case": "toggleIconOnly-blank-label",
+      "component": {
+        "type": "toggle",
+        "on": true,
+        "icon": "toggle"
+      },
+      "label": "   ",
+      "parent": null,
+      "unnamed": true
+    },
+    {
+      "case": "toggleIconOnly-labelled",
+      "component": {
+        "type": "toggle",
+        "on": true,
+        "icon": "toggle"
+      },
+      "label": "Width",
+      "parent": null,
+      "unnamed": false
+    },
+    {
+      "case": "toggleIconOnly-in-labelled-field",
+      "component": {
+        "type": "toggle",
+        "on": true,
+        "icon": "toggle"
+      },
+      "parent": {
+        "role": "field",
+        "label": "Width"
+      },
+      "unnamed": false
+    },
+    {
+      "case": "toggleIconOnly-in-unlabelled-field",
+      "component": {
+        "type": "toggle",
+        "on": true,
+        "icon": "toggle"
+      },
+      "parent": {
+        "role": "field"
+      },
+      "unnamed": true
+    },
+    {
+      "case": "toggleIconOnly-in-blank-field",
+      "component": {
+        "type": "toggle",
+        "on": true,
+        "icon": "toggle"
+      },
+      "parent": {
+        "role": "field",
+        "label": " "
+      },
+      "unnamed": true
+    },
+    {
+      "case": "toggleIconOnly-in-labelled-group-is-not-a-field",
+      "component": {
+        "type": "toggle",
+        "on": true,
+        "icon": "toggle"
+      },
+      "parent": {
+        "role": "group",
+        "label": "Width"
+      },
+      "unnamed": true
+    },
+    {
+      "case": "toggle-with-text-is-named",
+      "component": {
+        "type": "toggle",
+        "on": true,
+        "icon": "toggle",
+        "text": "Enabled"
+      },
+      "parent": null,
+      "unnamed": false
+    },
+    {
+      "case": "toggle-with-blank-text-is-unnamed",
+      "component": {
+        "type": "toggle",
+        "on": true,
+        "icon": "toggle",
+        "text": "  "
+      },
+      "parent": null,
+      "unnamed": true
+    },
+    {
+      "case": "separator-needs-no-name",
+      "component": {
+        "type": "separator"
+      },
+      "parent": null,
+      "unnamed": false
+    }
+  ]
+}

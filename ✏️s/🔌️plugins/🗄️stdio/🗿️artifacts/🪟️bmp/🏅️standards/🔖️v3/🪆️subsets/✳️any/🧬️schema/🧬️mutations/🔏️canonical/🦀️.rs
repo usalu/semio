@@ -11,6 +11,9 @@ impl store::ArtifactCanonicalJson for BmpMutation {
             Self::ReplaceSamples(v)=>("replace-samples",rect_parts(&v.region,&v.indices,&v.samples)),
             Self::PaintIndexedRegion(v)=>("paint-indexed-region",object([("revision",text(&v.revision)),("x",number(v.x)),("y",number(v.y)),("width",number(v.width)),("height",number(v.height)),("paletteIndex",number(v.palette_index))])),
             Self::PaintDirectRegion(v)=>("paint-direct-region",object([("revision",text(&v.revision)),("x",number(v.x)),("y",number(v.y)),("width",number(v.width)),("height",number(v.height)),("red",number(v.red)),("green",number(v.green)),("blue",number(v.blue)),("alpha",number(v.alpha))])),
+            Self::SetPaletteEntry(v)=>("set-palette-entry",object([("index",number(v.index)),("red",number(v.red)),("green",number(v.green)),("blue",number(v.blue)),("reserved",number(v.reserved))])),
+            Self::InsertPaletteEntry(v)=>("insert-palette-entry",object([("index",number(v.index)),("red",number(v.red)),("green",number(v.green)),("blue",number(v.blue)),("reserved",number(v.reserved)),("colorsUsed",number(v.colors_used))])),
+            Self::RemovePaletteEntry(v)=>("remove-palette-entry",object([("index",number(v.index)),("colorsUsed",number(v.colors_used))])),
         };Ok(Some(object([("mutation",text(kind)),("payload",payload)])))
     }
 }

@@ -167,7 +167,11 @@
       "resistanceSd": 30000.0,
       "actionDistribution": "normal",
       "actionMean": 150000.0,
-      "actionSd": 30000.0
+      "actionSd": 30000.0,
+      "secondActionDistribution": "normal",
+      "secondActionMean": 0.0,
+      "secondActionSd": 0.0,
+      "memberId": ""
     }
   ],
   "testSeries": [
@@ -182,7 +186,8 @@
       "conversionFactor": 0.9,
       "required": 40.0,
       "pairs": "",
-      "theoryVariation": 0.0
+      "theoryVariation": 0.0,
+      "theoryMean": 0.0
     }
   ],
   "placements": [

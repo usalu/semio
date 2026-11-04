@@ -191,6 +191,7 @@ message En1998Assessment {
   double shear_cracking_before_yield = 28;
   double shear_force_demand_n = 29;
   double intermediate_steel_area_m2 = 30;
+  AnalysisMethodChoice analysis_method = 31;
 }
 message En1998Silo {
   string id = 1;
@@ -378,4 +379,11 @@ message En1998Slope {
   double circle_centre_x = 8;
   double circle_centre_z = 9;
   double circle_radius = 10;
+}
+enum AnalysisMethodChoice {
+  ANALYSIS_METHOD_CHOICE_DERIVED = 0;
+  ANALYSIS_METHOD_CHOICE_LF = 1;
+  ANALYSIS_METHOD_CHOICE_MRS = 2;
+  ANALYSIS_METHOD_CHOICE_PUSHOVER = 3;
+  ANALYSIS_METHOD_CHOICE_NLTH = 4;
 }

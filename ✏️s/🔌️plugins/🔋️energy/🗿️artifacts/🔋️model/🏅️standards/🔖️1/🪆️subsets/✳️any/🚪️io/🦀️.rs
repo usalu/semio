@@ -76,7 +76,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(text) => text.as_bytes(),
                         AnalyzeSource::Binary(bytes) => bytes,
                     };
-                    let snapshot = crate::import::idf::deserialize_bytes(bytes).map_err(|message| ComposeError { message, diagnostics: Vec::new() })?;
+                    let snapshot = crate::import::idf::deserialize_bytes(bytes).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() })?;
                     return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                 }
                 if source.dialect == DEP_ZIP {

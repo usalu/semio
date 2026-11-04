@@ -1,0 +1,4 @@
+input RemovePaletteEntryInput {
+  index: Int!
+  colorsUsed: Int!
+}

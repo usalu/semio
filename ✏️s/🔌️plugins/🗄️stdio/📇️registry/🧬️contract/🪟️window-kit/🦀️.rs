@@ -5,6 +5,10 @@ use semio_framework_plugin::PluginAssemblyError;
 use semio_framework_value as value;
 use semio_s_artifact_stdio_contract_wire::{draft_splices_from_json, snapshot_edit_source, DraftSplice};
 
+#[path = "🧊️mesh-scene/🦀️.rs"]
+pub mod mesh_scene_kit;
+pub use mesh_scene_kit::{mesh_scene, mesh_scene_frame, MESH_SCENE_MAXIMUM_MARKERS};
+
 //#region 🎬️ExampleSwitch
 /// 🎬️ The verb the react/wgpu shells' navbar example picker dispatches
 /// (`SET_ACTIVE_EXAMPLE_ACTION_ID` in the renderer's own `🛠️ShellHelpers`). An app that does not
@@ -438,6 +442,31 @@ pub fn media_duration_ms(duration_seconds: f64) -> Option<u64> {
     const MAX_SAFE_INTEGER: f64 = 9_007_199_254_740_991.0;
     let milliseconds = duration_seconds * 1_000.0;
     (milliseconds.is_finite() && milliseconds > 0.0 && milliseconds <= MAX_SAFE_INTEGER).then(|| milliseconds.round().max(1.0) as u64)
+}
+
+/// 🎬️ The one media transport view every stdio media editor shares: ready exactly when a live revision-bound playback resource exists, otherwise unsupported with a localized reason.
+pub fn media_transport_view(duration_seconds: f64, kind: semio_framework_plugin::app::MediaKind, media_type: &str, host_content_height: f64, locale: semio_framework_ui_locale::Locale, resource: Option<semio_framework_plugin::app::MediaResource>, trim: Option<semio_framework_plugin::app::MediaTrim>) -> semio_framework_plugin::app::MediaView {
+    use semio_framework_plugin::app::MediaCapabilityStatus;
+    let ready = resource.is_some();
+    let reason = match locale {
+        semio_framework_ui_locale::Locale::En => "Playback waits for a revision-bound document resource.",
+        semio_framework_ui_locale::Locale::De => "Die Wiedergabe wartet auf eine revisionsgebundene Dokumentressource.",
+    };
+    semio_framework_plugin::app::MediaView {
+        duration_ms: media_duration_ms(duration_seconds),
+        position_ms: 0,
+        selection_start_ms: None,
+        selection_end_ms: None,
+        kind,
+        media_type: media_type.into(),
+        revision: resource.as_ref().map_or_else(|| "0".to_string(), |resource| resource.revision.clone()),
+        locale,
+        resource,
+        capability: if ready { MediaCapabilityStatus::Ready } else { MediaCapabilityStatus::Unsupported },
+        capability_reason: (!ready).then(|| reason.into()),
+        host_content_height,
+        trim,
+    }
 }
 
 /// 🧬️ The whole-document load an example switch hands the host. Whole-document replacement is not an

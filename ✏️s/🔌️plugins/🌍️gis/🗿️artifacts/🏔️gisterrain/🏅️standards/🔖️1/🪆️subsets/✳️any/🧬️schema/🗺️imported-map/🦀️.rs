@@ -94,7 +94,7 @@ pub fn gis_terrain_mesh_from_snapshot(document: &GisTerrainSnapshot) -> SemioMes
     let z = 0.0;
     let positions = vec![SemioPoint3 { x: min_x, y: min_y, z }, SemioPoint3 { x: max_x, y: min_y, z }, SemioPoint3 { x: max_x, y: max_y, z }, SemioPoint3 { x: min_x, y: max_y, z }];
     SemioMeshSnapshot {
-        schema: "s.stdio.semio.mesh".into(),
+        schema: "stdio.semio.mesh".into(),
         meshes: vec![SemioMesh {
             id: "gisterrain-surface".into(),
             primitives: vec![SemioPrimitive { id: "gisterrain-surface-quad".into(), topology: SemioTopology::Triangles, positions, normals: Vec::new(), uvs: Vec::new(), colors: Vec::new(), indices: vec![0, 1, 2, 0, 2, 3], material_id: None }],

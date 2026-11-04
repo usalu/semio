@@ -17,7 +17,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     locale: "de" as const,
     resource: { kind: "artifact-media-export" as const, controllerId: "stdio.mp4.editor", appInstanceId: 23, parentDocumentId: "document-mp4-1", outputPort: "playback:out" as const, revision: "9007199254740993", generation: "9007199254740995" },
     capability: { status: "loading" as const, reason: null },
-    hostContentHeight: 360,
+    hostContentHeight: 360, trim: null,
   };
 
   describe("media transport contract", () => {

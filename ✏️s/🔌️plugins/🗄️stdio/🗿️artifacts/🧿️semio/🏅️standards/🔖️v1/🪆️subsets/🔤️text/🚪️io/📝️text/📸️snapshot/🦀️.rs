@@ -143,7 +143,7 @@ impl pack::snapshot::ArtifactDsl for SemioTextSnapshot {
 }
 
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
-/// `s.stdio.semio.text` — the shape `🔤️mutate-semio-text` compares under `ordered-json-v1`, derived
+/// `stdio.semio.text` — the shape `🔤️mutate-semio-text` compares under `ordered-json-v1`, derived
 /// from the snapshot type itself rather than hand-written a second time in the adapter, where it
 /// could drift away from the type it claims to project. A thin `pack::to_json_string` wrapper
 /// (first-party, over `ToValue`/`DslValue`).
@@ -161,7 +161,7 @@ pub fn decode_semio_text_snapshot_json(text: &str) -> Result<SemioTextSnapshot, 
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
-/// 📝️ Parses `s.stdio.semio.text` DSL text into a [`SemioTextSnapshot`] — a named pass-through of this snapshot's own
+/// 📝️ Parses `stdio.semio.text` DSL text into a [`SemioTextSnapshot`] — a named pass-through of this snapshot's own
 /// `pack::snapshot::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
 /// crate, so `🔤️mutate-semio-text`'s `identity-round-trip` scenario reaches the real committed
 /// artifact (`../../🖼️assets/📃️note/🗣️.dsl.semio`) through this instead.
@@ -170,7 +170,7 @@ pub fn parse_semio_text_dsl(text: &str) -> Result<SemioTextSnapshot, String> {
     <SemioTextSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
-/// 📝️ Renders a [`SemioTextSnapshot`] back as `s.stdio.semio.text` DSL text — the inverse of
+/// 📝️ Renders a [`SemioTextSnapshot`] back as `stdio.semio.text` DSL text — the inverse of
 /// [`parse_semio_text_dsl`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_text_dsl(snapshot: &SemioTextSnapshot) -> String {

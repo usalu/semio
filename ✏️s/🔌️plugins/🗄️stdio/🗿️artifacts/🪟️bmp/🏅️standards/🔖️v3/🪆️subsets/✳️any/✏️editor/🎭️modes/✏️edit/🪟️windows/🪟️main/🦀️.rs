@@ -10,7 +10,9 @@ pub const WINDOW_KIND_ID: &str = ImageWindowKit::KIND_ID;
 pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
 
 pub fn definition() -> WindowKindDefinition {
-    ImageWindowKit::window_kind()
+    let mut definition = ImageWindowKit::editable_window_kind();
+    definition.actions.extend([crate::editor::bmp::paint_region::indexed_action(), crate::editor::bmp::paint_region::direct_action()]);
+    definition
 }
 
 pub fn render(snapshot: &BmpSnapshot, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {

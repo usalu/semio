@@ -333,6 +333,7 @@ message En1998AssessmentPatch {
   optional double shear_cracking_before_yield = 27;
   optional double shear_force_demand_n = 28;
   optional double intermediate_steel_area_m2 = 29;
+  optional string analysis_method = 30;
 }
 message En1998SiloDelta {
   repeated En1998SiloRemoval removed = 1;

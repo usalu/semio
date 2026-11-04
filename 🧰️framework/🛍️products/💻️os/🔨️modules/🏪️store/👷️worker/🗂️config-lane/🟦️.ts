@@ -11,9 +11,9 @@ import { IDENTITY_CONFIG_SCHEMA } from "@semio-tech/framework/backbone/config-la
 import { LOCAL_CATALOG_CONFIG_SCHEMA, applyIdentityDiff, applyLocalCatalogDiff, decodeIdentityDiff, decodeIdentityValue, decodeLocalCatalogDiff, decodeLocalCatalogValue } from "@semio-tech/framework/config/mutations";
 import type { MutationEnvelope } from "@semio-tech/framework-replication";
 import { decodeDocumentArchiveBytes, decodePackValue, encodeDocumentArchiveBytes, encodePackValue, localCommandRejectionV1, type PackValue } from "../../../../🟦️";
-import { folderBinding, setStatus } from "../🎭️actor-lifecycle/🟦️.ts";
-import { writeFolder } from "../📁️folder/✍️write/🟦️.ts";
-import { rejectLocally, releaseDocumentBackboneOwnership } from "../📮️hub-outbox/🟦️.ts";
+import { folderBinding } from "../🎭️actor-lifecycle/🟦️.ts";
+import { persistFolderArchive } from "../📁️folder/✍️write/🟦️.ts";
+import { rejectLocally } from "../📮️hub-outbox/🟦️.ts";
 
 //#region 🔖️ConfigLane
 /** 🎚️ Canonical `documentId`/`schema` for the OS-wide `os.config.opening` facet (contract freeze
@@ -177,11 +177,7 @@ export function foldConfigFacet(state: ArtifactState, envelopes: readonly Mutati
   state.facetValue = folded.value;
   const archive = configFacetArchiveV1(folded.value);
   if (folder !== null) {
-    void writeFolder(state, folder, Array.from(archive)).then(() => {
-      releaseDocumentBackboneOwnership(state, state.pendingMutations);
-      state.pendingMutations = [];
-      setStatus(state, { pendingMutations: 0 });
-    }, (error) => console.error("[backbone-worker] folder write failed", state.config.documentId, error));
+    void persistFolderArchive(state, folder, Array.from(archive));
   }
   emitEvent(state, { kind: "documentArchiveReplaced", archive: Array.from(archive) });
 }

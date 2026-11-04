@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, watch, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { backboneKindFromUri, decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
+import { appendArchive, eventLogPath, readLatestArchive } from "./📜️event-log/🟦️.ts";
 import { backboneDatabaseCtorLazy, type BackboneSqliteHandle } from "../🗃️sqlite-constructor/🟦️.ts";
 
 //#region BackboneVitePlugin
@@ -27,15 +28,14 @@ export async function backboneDbHandleFor(dbPath: string): Promise<BackboneSqlit
   if (existing) return existing;
   const Database = await backboneDatabaseCtorLazy();
   const db = new Database(dbPath);
-  db.run("CREATE TABLE IF NOT EXISTS document_archive (id TEXT PRIMARY KEY, schema TEXT, archive BLOB NOT NULL, updated_at INTEGER NOT NULL)");
   db.run("CREATE TABLE IF NOT EXISTS canonical_bootstrap_owner (document_id TEXT PRIMARY KEY, epoch INTEGER NOT NULL, capability TEXT NOT NULL, state TEXT NOT NULL CHECK (state IN ('reserved', 'published', 'retired', 'generic')), artifact_schema TEXT NOT NULL, descriptor_digest_v1 TEXT NOT NULL, aggregate_sha256 TEXT NOT NULL, baseline_frontier_json TEXT NOT NULL, updated_at INTEGER NOT NULL)");
   db.run("CREATE TABLE IF NOT EXISTS canonical_bootstrap_archive_stage (document_id TEXT NOT NULL, epoch INTEGER NOT NULL, archive BLOB NOT NULL, aggregate_sha256 TEXT NOT NULL, PRIMARY KEY (document_id, epoch))");
   backboneDbHandles.set(dbPath, db);
   return db;
 }
 
-/** 🗂️ Same `.semio/documents.db` convention as `vcs::FolderSqliteStorage` so a folder-bound studio opened by the browser dev path and a
- * native (wgpu) reader agree on the same file. `documentId` defaults to the studio's own
+/** 🗂️ Folder documents live in the one canonical event log `.semio/events.semio` (see `📜️event-log`), the same file the native
+ * (wgpu) actor reads and writes; only the canonical bootstrap owner state stays in `.semio/canonical-bootstrap.db`. `documentId` defaults to the studio's own
  * single-document convention (mirrors os-core's `SPACE_FOLDER_DOCUMENT_ID`) when the caller doesn't
  * pass one — app documents (per `OsDocumentRef`) always pass their own id explicitly. */
 const SPACE_FOLDER_DOCUMENT_ID = "studio";
@@ -49,8 +49,9 @@ export async function readBackbonePayload(uri: string, documentId: string | null
   }
   if (kind === "folder") {
     const folder = uri.slice("folder://".length);
-    const dbPath = join(folder, ".semio", "documents.db");
-    if (!existsSync(dbPath)) return null;
+    const dbPath = join(folder, ".semio", "canonical-bootstrap.db");
+    const id = documentId ?? SPACE_FOLDER_DOCUMENT_ID;
+    if (!existsSync(dbPath)) return readLatestArchive(eventLogPath(folder), id);
     const db = await backboneDbHandleFor(dbPath);
     const canonical = db
       .query("SELECT owner.state, owner.aggregate_sha256 AS expectedAggregate, stage.aggregate_sha256 AS stagedAggregate, stage.archive FROM canonical_bootstrap_owner owner LEFT JOIN canonical_bootstrap_archive_stage stage ON stage.document_id = owner.document_id AND stage.epoch = owner.epoch WHERE owner.document_id = ?1")
@@ -63,10 +64,8 @@ export async function readBackbonePayload(uri: string, documentId: string | null
       if (canonical.stagedAggregate !== canonical.expectedAggregate || createHash("sha256").update(pack).update(spr).digest("hex") !== canonical.expectedAggregate) return null;
       return bytes;
     }
-    const row = db.query("SELECT archive FROM document_archive WHERE id = ?1").get(documentId ?? SPACE_FOLDER_DOCUMENT_ID) as { archive?: Uint8Array } | null;
-    if (!row?.archive) return null;
-    const bytes = row.archive instanceof Uint8Array ? row.archive : new Uint8Array(row.archive as ArrayBuffer);
-    decodeDocumentArchiveBytes(bytes);
+    const bytes = readLatestArchive(eventLogPath(folder), id);
+    if (bytes !== null) decodeDocumentArchiveBytes(bytes);
     return bytes;
   }
   return null;
@@ -83,7 +82,7 @@ export async function writeBackbonePayload(uri: string, documentId: string | nul
   }
   if (kind === "folder") {
     const folder = uri.slice("folder://".length);
-    const dbPath = join(folder, ".semio", "documents.db");
+    const dbPath = join(folder, ".semio", "canonical-bootstrap.db");
     mkdirSync(dirname(dbPath), { recursive: true });
     const db = await backboneDbHandleFor(dbPath);
     const id = documentId ?? SPACE_FOLDER_DOCUMENT_ID;
@@ -94,9 +93,9 @@ export async function writeBackbonePayload(uri: string, documentId: string | nul
         db.run("DELETE FROM canonical_bootstrap_archive_stage WHERE document_id = ?1", [id]);
         db.run("UPDATE canonical_bootstrap_owner SET state = 'generic', updated_at = ?2 WHERE document_id = ?1 AND state = 'retired'", [id, Date.now()]);
       }
-      db.run("INSERT INTO document_archive (id, schema, archive, updated_at) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, archive = excluded.archive, updated_at = excluded.updated_at", [id, schema ?? "", payload, Date.now()]);
     });
     write();
+    appendArchive(eventLogPath(folder), id, schema ?? "", payload);
     return;
   }
   throw new Error(`unsupported backbone uri: ${uri}`);

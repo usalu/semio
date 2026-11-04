@@ -55,6 +55,24 @@ fn natural_file_route_exports_json_and_reopens_the_same_document() {
     assert_eq!(reopened, edited);
 }
 
+#[test]
+fn natural_file_import_refuses_malformed_json_and_invalid_utf8() {
+    for bytes in [&b"{\"a\":"[..], &b"[1,]"[..], &b"{'a':1}"[..], &[0x7b, 0xff, 0x7d][..]] {
+        assert!(<JsonAnyEditor as ArtifactEditor>::decode_natural_file(bytes).is_err(), "{bytes:?}");
+        assert!(serde_json::from_slice::<serde_json::Value>(bytes).is_err(), "serde_json agrees on {bytes:?}");
+    }
+}
+
+#[test]
+fn leading_whitespace_and_nested_values_survive_the_dsl_round_trip() {
+    let source = "  \n{\"a\":[1,2.5,null,true],\"b\":{\"c\":\"d\"}}";
+    let edited = JsonSnapshot::from_value(crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(source).expect("JSON fixture"));
+    let printed = <JsonSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&edited);
+    assert_eq!(<JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).expect("DSL reopens"), edited);
+    let bytes = <JsonAnyEditor as ArtifactEditor>::encode_natural_file(&edited).expect("JSON natural bytes");
+    assert_eq!(serde_json::from_slice::<serde_json::Value>(&bytes).expect("serde_json reads"), serde_json::from_str::<serde_json::Value>(source).expect("serde_json reads source"));
+}
+
 #[semio_framework_async_macros::async_test]
 async fn decode_path_id_roundtrips_root_and_nested() {
     assert!(decode_path_id("").is_err());

@@ -1,4 +1,4 @@
-/** 📝️ Text representation for `s.stdio.semio.brep.inference`. */
+/** 📝️ Text representation for `stdio.semio.brep.inference`. */
 export type SemioBrepInferenceText = string;
 
 //#region 🚪️Parsers

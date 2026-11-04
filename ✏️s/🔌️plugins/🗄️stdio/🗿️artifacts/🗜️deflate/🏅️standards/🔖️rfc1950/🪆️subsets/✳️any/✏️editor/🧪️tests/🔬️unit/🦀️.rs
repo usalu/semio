@@ -111,3 +111,20 @@ fn compression_params_reject_header_fields_outside_their_four_bits() {
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::deflate::DeflateEditor, || semio_framework_plugin::App { definition: crate::editor::deflate::create_deflate_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️rfc1950/🪆️subsets/✳️any");
+
+#[semio_framework_async_macros::async_test]
+async fn natural_zlib_files_round_trip_and_agree_with_the_independent_zlib_codec() {
+    let codec = <DeflateEditor as ArtifactEditor>::natural_file_codec().expect("deflate declares its natural file");
+    assert_eq!((codec.extension, codec.media_type, codec.binary), (".zz", "application/zlib", true));
+    let payload = b"hello hello hello hello, natural zlib".to_vec();
+    let snapshot = DeflateSnapshot { payload: payload.clone(), ..DeflateSnapshot::default() };
+    let bytes = <DeflateEditor as ArtifactEditor>::encode_natural_file(&snapshot).expect("encode");
+    assert_eq!(miniz_oxide::inflate::decompress_to_vec_zlib(&bytes).expect("independent inflate"), payload);
+    assert_eq!(<DeflateEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("decode"), snapshot);
+    let foreign = miniz_oxide::deflate::compress_to_vec_zlib(&payload, 6);
+    assert_eq!(<DeflateEditor as ArtifactEditor>::decode_natural_file(&foreign).expect("foreign stream").payload, payload);
+    let mut corrupt = bytes.clone();
+    *corrupt.last_mut().expect("adler") ^= 0xFF;
+    assert!(<DeflateEditor as ArtifactEditor>::decode_natural_file(&corrupt).is_err());
+    assert!(<DeflateEditor as ArtifactEditor>::decode_natural_file(&bytes[..3]).is_err());
+}

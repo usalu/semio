@@ -1,4 +1,4 @@
-/** 📝️ Text representation for `s.stdio.semio.video.inference`. */
+/** 📝️ Text representation for `stdio.semio.video.inference`. */
 export type SemioVideoInferenceText = string;
 
 //#region 🚪️Parsers

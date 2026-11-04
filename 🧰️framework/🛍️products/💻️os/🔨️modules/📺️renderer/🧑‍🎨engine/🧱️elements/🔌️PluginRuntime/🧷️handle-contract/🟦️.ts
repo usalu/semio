@@ -231,6 +231,14 @@ export type PluginWasmHandle = {
    * `AppChannelClient.readConflicts`. */
   readonly readConflicts: (instanceId: number) => Promise<readonly Conflict[]>;
   //#endregion 🔖️Merge
+  //#region 🔖️Opening
+  /** 📂️ Notifies the instance that `artifactRef` was opened in `role` (`AppCommand::OpenArtifact`); throws on an `AppFrame::Error` reply. */
+  readonly openArtifact: (instanceId: number, artifactRef: string, role: number, pluginId?: string, appId?: string) => Promise<void>;
+  /** 📌️ Pins a default viewer or editor surface (`AppCommand::SetDefaultApp`) into the instance's opening preferences; throws on an `AppFrame::Error` reply. */
+  readonly setDefaultApp: (instanceId: number, artifactKind: string, standard: string, subset: string, role: number, pluginId: string, appId: string) => Promise<void>;
+  /** 🧽️ Clears a pinned default (`AppCommand::ClearDefaultApp`); throws on an `AppFrame::Error` reply. */
+  readonly clearDefaultApp: (instanceId: number, artifactKind: string, standard: string, subset: string, role: number) => Promise<void>;
+  //#endregion 🔖️Opening
   /** 🏠️ Reads one exact retained local-interaction capture and ACKs every native-owned page. */
   readonly readLocalInteraction: (instanceId: number, signal?: AbortSignal) => Promise<LocalInteractionCapture>;
   /** 🏁️ Subscribes to this instance's typed-operation completions (`AppFrame::OperationCompleted`).

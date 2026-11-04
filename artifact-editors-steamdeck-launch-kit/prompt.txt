@@ -1,0 +1,82 @@
+Get every well-known artifact editor in this repository running end to end. Solve the problems encountered along the way and deliver working, verified editor workflows.
+
+Determine "well-known artifact editors" from the repository's canonical artifact/type registries, schemas, editor registrations, capability declarations, application routes, documentation, and tests. Use the project's actual scope and terminology. Implement the result in the existing application and its real backing services.
+
+1. MAIN COORDINATOR AND ALL 20 PARALLEL WORKERS
+
+Use the main chat with claude-opus-5-5 at medium effort for planning, shared decisions, coordination, integration, and final acceptance. Use all 20 named background worker profiles supplied through --agents and described in this kit's fleet.md:
+- 14 claude-sonnet-5-5 workers at medium effort for medium/high-complexity implementation.
+- Four claude-haiku-5-5 workers at medium effort for read-only discovery and audits.
+- Two claude-haiku-5-5 workers at medium effort for bounded low-complexity updates.
+
+The main coordinator is additional to the 20 workers. Actually dispatch all 20 profiles through the Agent tool in the initial parallel wave, before serially waiting for individual results. Give each worker a concrete assignment, logical ownership, dependencies, and required evidence. During initial discovery, implementation workers can inspect their assigned subsystem and propose changes while the registry inventory is assembled.
+
+Maintain the full 20-worker fleet while useful work remains; refill completed slots with substantive implementation, inspection, or verification work. Use the named subagent types without per-call model overrides or conversation forks that would replace their configured models. Workers must not spawn further agents or launch additional Claude sessions. Listing 20 roles is not evidence of running 20 workers.
+
+Keep a coordinator-owned task board with actual task IDs, assignments, dependencies, progress, and observed concurrency. Distinguish configured model/effort from runtime values you can verify. If account, policy, installation, or runtime restrictions prevent the requested models or concurrency, report the exact limitation, continue with available capacity, and never claim an unobserved fleet count.
+
+Other agents are working on other logical parts, potentially in the same files. Continue in conjunction with them. Read applicable repository instructions, inspect existing changes, establish ownership at the component/function/section level, reread current content before editing, and reconcile overlaps through narrow patches. Preserve unrelated edits. A dirty working tree or a changed shared file is not a reason to stop. Coordinate incompatible contract changes and keep independent work moving; never reset or overwrite another agent's work to simplify integration.
+
+2. DISCOVER THE COMPLETE EDITOR SCOPE
+
+Inspect the canonical well-known artifact/type definitions, MIME and extension mappings, aliases, registries, manifests, loaders, routes, commands, menus, editor hosts, schemas, storage adapters, import/export implementations, docs, fixtures, and tests. Follow actual registrations and references rather than assuming particular editor names or technologies.
+
+Build a complete coverage matrix with canonical artifact type, aliases/formats, editor implementation, entry points, declared capabilities, required dependencies, persistence path, import/export formats, current failures, assigned owner, and acceptance evidence.
+
+Include unfinished or broken editors that the repository registers or promises. Preserve intentional read-only viewers where that is the established contract, and label them accurately; do not relabel a broken editor as a viewer, hide its menu entry, remove its registration, or weaken its capability declaration to manufacture completion. Identify genuine gaps in documentation or contracts from repository evidence and resolve them consistently.
+
+Allocate eight disjoint editor implementation batches from this inventory. A batch may contain several related editors. If fewer than eight distinct editors exist, divide genuinely independent work or verification tasks without inventing new editor types. Reassign slots as the actual scope becomes clear.
+
+3. ESTABLISH A WORKING LOCAL RUNTIME
+
+Identify the intended app, frontend/backend processes, package manager, lockfiles, environment configuration, local storage/database services, assets, and startup commands. Start the real application and reproduce failures before repairing them. Fix the dependency, build, routing, worker, parser, serializer, asset, font, WASM, service, and initialization issues that block editor workflows.
+
+Use the repository's supported toolchain and dependency versions. Assign one owner for dependency/lockfile and shared setup changes. Prefer existing user-space tools and project-local configuration. Keep startup reproducible; avoid system-wide changes for project-local failures.
+
+The execution host is a Steam Deck/Linux environment. Check Linux path casing, file URLs, spaces and non-ASCII filenames, browser/native integration, and compact viewport behavior where relevant. Bound local build and browser resource use without reducing the 20-agent work fleet. Give the validation/integration owner one shared heavy verification queue: one full build/test/render/export job, or one shared development-server/browser verification session, at a time initially. Other workers continue discovery, editing, review, and preparing targeted checks. Share healthy services, avoid duplicate installations or conflicting writes to caches/output directories, and adjust resource use from measured evidence. Manage only task-owned processes.
+
+4. MAKE EVERY EDITOR RESOLVE AND OPEN CORRECTLY
+
+Verify dispatch from the application's real artifact explorer/list, create actions, open/import commands, links, and deep routes where supported. Apply the repository's canonical type identifiers, aliases, MIME/extension precedence, and explicit editor selection rules. Correct lazy loading, dependency initialization, content decoding, and empty/new-document creation.
+
+Opening a supported artifact must select the proper editor, load its actual content and linked assets, expose its declared capabilities, and provide accurate loading/error states. Fix blank panels, indefinite spinners, stale previews, incorrect fallback viewers, missing controls, and route-only demos disconnected from the real host.
+
+Preserve artifact identity, ownership/context, name, metadata, schema version, relationships, and fields the editor must retain even if it does not edit them. Dispose of document-specific workers, listeners, URLs, subscriptions, and render resources correctly when switching or closing artifacts.
+
+5. COMPLETE MEANINGFUL EDITING AND DOCUMENT LIFECYCLE
+
+For each editor, derive representative operations from its existing capability contract and implement them through the canonical document model. Cover the applicable content, structure, formatting, selection, manipulation, inspector, command, and keyboard workflows. A static preview, a toolbar that changes no data, or a generic text area for a specialized document does not satisfy the editor's promised behavior.
+
+Examples only when those types and capabilities actually exist: text/structured-data edits, table values and formula semantics, vector/diagram geometry and connections, image operations, page/layout changes, media timeline controls, or model/component transformations. Do not use these examples as an invented feature backlog.
+
+Verify supported undo/redo, copy/paste, selection, focus, document switching, cancellation, and recovery. Keep editor state, canonical content, history, and dirty status consistent. Protect against stale asynchronous loads, delayed saves, or worker responses being applied to the wrong document. Ensure enabled commands perform their declared action; give unavailable operations an accurate reason.
+
+Preserve the project's interaction language and accessibility. Check usable controls at compact and normal viewport sizes, keyboard focus/shortcuts, pointer interactions, readable errors, and applicable touch behavior. Resolve problems in the existing architecture rather than replacing whole editors without a concrete need.
+
+6. PROVE DURABLE SAVING AND FORMAT CORRECTNESS
+
+For every editable type, exercise the full supported lifecycle: create or open -> make a meaningful edit -> save/autosave acknowledgment -> close -> reopen from the real artifact entry point -> verify the change. Also reload or restart the relevant app/service where appropriate to prove persistence beyond transient component state.
+
+Use the actual configured development/test storage adapter and serialization path. Verify correct IDs, locations, names, metadata, references, revisions, and preserved fields. Handle write failures, in-flight saves, retries, dirty navigation, and concurrent/stale updates according to the storage contract. Display saved status only after the required persistence acknowledgment. Never discard unsaved or unrelated content silently.
+
+Exercise the import and export formats each editor declares. Export real files with correct formats, names, encodings, MIME types, and linked resources. Reopen or independently inspect representative outputs using the appropriate parser/viewer. Verify type-specific semantics such as text structure, formulas, geometry, units, relationships, media timing, or layout when applicable. Distinguish legitimate conversion losses from defects and communicate documented limitations accurately.
+
+Provide representative valid fixtures and relevant invalid/unsupported cases. Invalid input, missing assets, rejected writes, unavailable dependencies, and unsupported operations must produce accurate, recoverable behavior. End-to-end evidence must exercise the real editor host, parser, model, serialization, and backing service; isolated component demos or mocked persistence alone are insufficient.
+
+7. VERIFY EVERY EDITOR THROUGH THE ACTUAL APPLICATION
+
+Build a repeatable acceptance flow for each matrix entry. Use the repository's browser/native test harness and available automation. Test real entry points, meaningful interactions, save/reopen behavior, declared import/export, lifecycle/history, and important failure paths. Inspect runtime/browser errors, failed requests, and generated outputs as well as visible UI.
+
+Run the applicable project gates and focused regression tests. Add tests that catch the actual repaired failure modes and protect shared dispatch, state, persistence, and format contracts. Fix failing workflows; do not delete tests, loosen assertions, hide broken editors, substitute fake services, or remove features to get a green result.
+
+Record commands, environment assumptions, artifacts/fixtures, results, and evidence per editor. Coordinate verification with active edits and rerun affected checks after relevant integration changes. Keep unrelated failures distinguishable from failures that block these editor workflows.
+
+If a real external dependency, unavailable host capability, account permission, license, or credential prevents completion, finish every unblocked part and identify the exact remaining requirement with reproducible evidence. Do not invent access or mark the blocked editor complete. Continue until the repository-defined scope works or only concrete external blockers remain.
+
+8. DELIVER THE WORKING RESULT
+
+The acceptance criterion for every editor in scope is: correct resolution in the real application, successful loading, meaningful type-appropriate editing, durable save/reopen, valid declared import/export behavior, and reproducible verification evidence. Respect documented intentional capability limits without using them to conceal defects.
+
+Finish with the completed coverage matrix; concise descriptions of fixes and shared contract changes; exact startup/build/test commands and local URLs or application entry points; representative fixtures and output evidence; required local configuration; actual verification results; remaining concrete blockers; and the observed fleet/model/concurrency record.
+
+Implement, integrate, start, and verify the editors. Do not end with an implementation plan, a dependency checklist, or an untested claim that the application should now work.

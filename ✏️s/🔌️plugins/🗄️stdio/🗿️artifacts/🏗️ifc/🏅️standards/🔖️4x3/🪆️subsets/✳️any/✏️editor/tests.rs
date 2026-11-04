@@ -1092,3 +1092,26 @@ fn constituent_domains_validate_prepared_context_without_rejecting_structural_re
         }
     }
 }
+
+const NATURAL_WALL: &str = include_str!("../🧪️fixtures/official/wall-extruded-solid.ifc");
+
+#[test]
+fn natural_file_open_edit_save_reopen_keeps_ids_and_unedited_entities() {
+    let codec = <Ifc4x3AnyEditor as ArtifactEditor>::natural_file_codec().expect("the 4x3 editor declares its natural file");
+    assert_eq!((codec.format_kind, codec.extension), ("s.stdio.ifc@4x3", ".ifc"));
+    let opened = <Ifc4x3AnyEditor as ArtifactEditor>::decode_natural_file(NATURAL_WALL.as_bytes()).expect("an official IFC4X3_ADD2 file opens");
+    let source_ids: Vec<u64> = NATURAL_WALL.lines().filter_map(|line| line.strip_prefix('#')?.split('=').next()?.trim().parse().ok()).collect();
+    assert_eq!(opened.entities.iter().map(|entity| entity.id).collect::<Vec<_>>(), source_ids);
+    let project = opened.entities.iter().find(|entity| entity.name.eq_ignore_ascii_case("IFCPROJECT")).expect("a project").id;
+    let mut edited = opened.clone();
+    semio_s_artifact_stdio_contract::apply_mutation(&mut edited, &IfcMutation::SetEntityArg(semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::set_entity_arg::SetEntityArg { id: project, index: 2, value: IfcValue::String("Renamed Project".into()) }));
+    let saved = <Ifc4x3AnyEditor as ArtifactEditor>::encode_natural_file(&edited).expect("save");
+    let reopened = <Ifc4x3AnyEditor as ArtifactEditor>::decode_natural_file(&saved).expect("reopen");
+    assert_eq!(reopened.entities.iter().map(|entity| entity.id).collect::<Vec<_>>(), source_ids);
+    for (before, after) in opened.entities.iter().zip(&reopened.entities) {
+        if before.id != project {
+            assert_eq!(before, after, "entity #{} was not edited", before.id);
+        }
+    }
+    assert!(<Ifc4x3AnyEditor as ArtifactEditor>::decode_natural_file(&[0xff]).is_err());
+}

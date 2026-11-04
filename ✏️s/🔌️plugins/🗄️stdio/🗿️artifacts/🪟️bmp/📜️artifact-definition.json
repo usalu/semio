@@ -48,7 +48,23 @@
       "status": "declared"
     }
   ],
-  "codecs": [],
+  "codecs": [
+    {
+      "id": "s.stdio.bmp.standard.v3.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.bmp.standard.v3.dialect.source",
+      "to": "s.stdio.bmp.standard.v3.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.bmp.v1",
+        "artifact_kind": "s.stdio.bmp",
+        "artifact_schema": "stdio.bmp",
+        "extension": "bmp",
+        "pack_schema_hash": "2a06f793b2efde7a3cce95eacb152fe562bc4ce3e7ad4ebb7e41c624a5c56f78",
+        "runtime_capability_id": "s.stdio.bmp.standard.v3.codec.codec-stdio-bmp-extension-bmp.v1"
+      }
+    }
+  ],
   "mutations": [],
   "inferences": [],
   "resources": [

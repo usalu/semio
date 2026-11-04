@@ -19,7 +19,7 @@ use super::kind::compute_semio_kind;
 /// `💡️inferences/` (currently: `kind`, backed by the `🏷️kind/` slug dir).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.inference")]
+#[artifact_schema(id = "stdio.semio.inference")]
 pub struct SemioInference {
     #[derived]
     pub kind: SemioKind,
@@ -47,24 +47,24 @@ impl Default for SemioInference {
 
 impl protocol::InferenceSpec<SemioSnapshot> for SemioInference {
     fn inference_schema_id() -> &'static str {
-        "s.stdio.semio.inference"
+        "stdio.semio.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.semio.inference.kind", reads: &["subset"] }]
+        &[protocol::InferenceFieldSpec { id: "stdio.semio.inference.kind", reads: &["subset"] }]
     }
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.stdio.semio.inference`'s facet leaves into the OS-wide inference catalog —
+/// 💡️ Registers `stdio.semio.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `semio_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.stdio.semio.inference",
+        id: "stdio.semio.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

@@ -16,7 +16,7 @@ use super::duration::compute_semio_video_duration;
 /// `💡️inferences/` (currently: `duration`, backed by the `⏱️duration/` slug dir).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.video.inference")]
+#[artifact_schema(id = "stdio.semio.video.inference")]
 pub struct SemioVideoInference {
     #[derived]
     pub duration: SemioVideoDuration,
@@ -45,24 +45,24 @@ impl Default for SemioVideoInference {
 
 impl protocol::InferenceSpec<SemioVideoSnapshot> for SemioVideoInference {
     fn inference_schema_id() -> &'static str {
-        "s.stdio.semio.video.inference"
+        "stdio.semio.video.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.semio.video.inference.duration", reads: &["streams"] }]
+        &[protocol::InferenceFieldSpec { id: "stdio.semio.video.inference.duration", reads: &["streams"] }]
     }
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.stdio.semio.video.inference`'s facet leaves into the OS-wide inference catalog
+/// 💡️ Registers `stdio.semio.video.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_video_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_video_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.stdio.semio.video.inference",
+        id: "stdio.semio.video.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

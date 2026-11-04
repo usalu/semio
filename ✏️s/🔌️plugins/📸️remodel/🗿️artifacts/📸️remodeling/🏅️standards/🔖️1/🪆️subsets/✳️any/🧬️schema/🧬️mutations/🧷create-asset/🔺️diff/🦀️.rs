@@ -2,7 +2,7 @@
 //! (see `🔺️diff/📝️text/🦀️.rs`'s `MutationDiff::apply`), so this clones `base.assets` and
 //! inserts the one key rather than emitting a single-entry map. `payload.asset` (real `ImageAsset`
 //! bytes, the mutation-payload shape — UNCHANGED per ticket
-//! `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`) is minted into a composed `s.stdio.semio.image`
+//! `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`) is minted into a composed `stdio.semio.image`
 //! CHILD handle via `store_remodeling_asset` (real content, working-scene cache) — that handle, not the
 //! raw asset, is what lands in the document's `assets` map. Deliberately NOT `mutation.duplicate-id`
 //! on an existing key: this is the only asset write path in the app and import handlers rely on

@@ -76,7 +76,8 @@
           "conversionFactor": 1.0,
           "required": 1.0,
           "pairs": "",
-          "theoryVariation": 0.0
+          "theoryVariation": 0.0,
+          "theoryMean": 0.0
         }
       }
     ],

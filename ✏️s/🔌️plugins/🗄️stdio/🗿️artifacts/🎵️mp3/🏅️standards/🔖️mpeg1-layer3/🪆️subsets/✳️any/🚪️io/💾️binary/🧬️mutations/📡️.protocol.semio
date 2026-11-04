@@ -17,3 +17,9 @@ record set-frames tag=2
 field payload bytes
 record set-id3v1 tag=3
 field payload bytes
+record patch-frames tag=4
+field payload bytes
+record set-id3-frame tag=5
+field payload bytes
+record remove-id3-frame tag=6
+field payload bytes

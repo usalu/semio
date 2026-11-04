@@ -83,7 +83,7 @@ def properties(entries):
 
 def validate_child(child):
     exact(child, ("schema", "nodes", "edges"))
-    if child["schema"] != "s.stdio.semio.graph" or not isinstance(child["nodes"], list) or not isinstance(child["edges"], list):
+    if child["schema"] != "stdio.semio.graph" or not isinstance(child["nodes"], list) or not isinstance(child["edges"], list):
         raise AssertionError("full declared Semio child required")
     for node in child["nodes"]:
         exact(node, ("id", "kind", "label", "position", "width", "height", "ports", "properties"))

@@ -20,7 +20,7 @@ fn repository_root_is_refused_as_a_workspace_folder() {
 #[test]
 fn an_agent_session_beats_presence_once_per_hub_connection_and_claims_no_identity() {
     use store::sync::{ArtifactEvent, ArtifactSyncStatus, RemoteState};
-    let status = |remote| ArtifactEvent::Status(ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote, acknowledged_head: None });
+    let status = |remote| ArtifactEvent::Status(ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote, acknowledged_head: None, write_failure: None });
     assert!(agent_presence_moment(&ArtifactEvent::Session { actor: "hub.v1.agent".to_string(), color: 3 }));
     assert!(agent_presence_moment(&status(RemoteState::Live { peer_count: 1 })));
     for quiet in [status(RemoteState::Connecting), status(RemoteState::Detached), status(RemoteState::Backoff { retry_in_ms: 500 }), ArtifactEvent::Presence { peers: Vec::new() }, ArtifactEvent::DocumentBackbone { message: Vec::new() }] {
@@ -68,7 +68,7 @@ fn a_relay_queues_deliveries_in_order_and_withholds_them_while_a_transaction_fin
     relay.restore_inbound(vec![HubInbound::Backbone(b"2".to_vec())]);
     assert_eq!(relay.take_inbound(), vec![HubInbound::Backbone(b"2".to_vec()), HubInbound::Backbone(b"3".to_vec())]);
     assert!(!relay.await_live(0));
-    relay.record(Some(ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote: RemoteState::Live { peer_count: 1 }, acknowledged_head: None }), None);
+    relay.record(Some(ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote: RemoteState::Live { peer_count: 1 }, acknowledged_head: None, write_failure: None }), None);
     assert!(relay.await_live(0));
 }
 

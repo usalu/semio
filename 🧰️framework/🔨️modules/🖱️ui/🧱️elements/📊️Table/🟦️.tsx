@@ -18,6 +18,7 @@ import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { interactiveActiveFillClass, interactiveControlTransitionClass, interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { useUiDriverDragSurface, useNativeDragArm } from "../🚗️UiDriver/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
+import { ContextMenuTriggerButton } from "../🖱️ContextMenu/🔘️trigger/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🛎️Table
@@ -38,6 +39,11 @@ export type SortDirection = "asc" | "desc";
 /** 🔀️ The direction a header click requests: an unsorted or descending column sorts ascending, an ascending one flips to descending. */
 export function tableSortNextDirectionV1(columnId: string, sortColumn: string | undefined, sortDirection: SortDirection | undefined): SortDirection {
   return sortColumn === columnId && sortDirection === "asc" ? "desc" : "asc";
+}
+
+/** ⌨️ Whether a key press activates a focused row: Enter or Space pressed on the row itself, never on a control inside one of its cells (those keep their own keys). A row is a table row, not a button, so the row's own menu trigger is never a nested interactive control. */
+export function rowActivationKeyV1(key: string, onRow: boolean): boolean {
+  return onRow && (key === "Enter" || key === " ");
 }
 
 /** ♿️ The `aria-sort` a header announces for the table's active sort. */
@@ -207,8 +213,8 @@ function TableHtml5DragRow<T>({
       }}
       onMouseEnter={() => onRowMouseEnter?.(row, index)}
       onMouseLeave={() => onRowMouseLeave?.(row, index)}
-      role={onRowClick ? "button" : undefined}
       tabIndex={onRowClick ? 0 : undefined}
+      onKeyDown={onRowClick ? (event) => { if (rowActivationKeyV1(event.key, event.target === event.currentTarget)) { event.preventDefault(); onRowClick(row, index, event as unknown as React.MouseEvent<HTMLTableRowElement>); } } : undefined}
       data-row-id={rowId}
     >
       {visibleColumns.map((column, columnIndex) => (
@@ -218,6 +224,7 @@ function TableHtml5DragRow<T>({
               <DragHandle labelId="ui.tree.drag.transfer" iconKind="move" onPointerDown={arm} onClick={(event) => event.stopPropagation()} />
             ) : null}
             {column.accessor(row)}
+            {onRowContextMenu !== undefined && columnIndex === visibleColumns.length - 1 ? <ContextMenuTriggerButton className="ml-auto" resolveTarget={(button) => button.closest("tr")} /> : null}
           </div>
         </td>
       ))}
@@ -268,8 +275,8 @@ function TableDraggableRow<T>({ row, rowId, index, isSelected, customRowClassNam
       }}
       onMouseEnter={() => onRowMouseEnter?.(row, index)}
       onMouseLeave={() => onRowMouseLeave?.(row, index)}
-      role={onRowClick ? "button" : undefined}
       tabIndex={onRowClick ? 0 : undefined}
+      onKeyDown={onRowClick ? (event) => { if (rowActivationKeyV1(event.key, event.target === event.currentTarget)) { event.preventDefault(); onRowClick(row, index, event as unknown as React.MouseEvent<HTMLTableRowElement>); } } : undefined}
       data-row-id={rowId}
     >
       {visibleColumns.map((column, columnIndex) => (
@@ -279,6 +286,7 @@ function TableDraggableRow<T>({ row, rowId, index, isSelected, customRowClassNam
               <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} />
             ) : null}
             {column.accessor(row)}
+            {onRowContextMenu !== undefined && columnIndex === visibleColumns.length - 1 ? <ContextMenuTriggerButton className="ml-auto" resolveTarget={(button) => button.closest("tr")} /> : null}
           </div>
         </td>
       ))}

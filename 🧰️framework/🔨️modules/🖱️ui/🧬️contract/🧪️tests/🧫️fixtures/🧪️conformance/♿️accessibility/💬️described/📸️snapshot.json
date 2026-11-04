@@ -22,7 +22,8 @@
       "style": {},
       "activity": "idle",
       "accessibility": {
-        "description": "Playback volume, zero to one hundred percent."
+        "description": "Playback volume, zero to one hundred percent.",
+        "label": "Volume"
       }
     }
   ],

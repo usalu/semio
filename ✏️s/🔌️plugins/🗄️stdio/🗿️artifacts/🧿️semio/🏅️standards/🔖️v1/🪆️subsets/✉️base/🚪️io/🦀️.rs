@@ -148,7 +148,7 @@ pub mod derived_composition {
             .inferences([crate::schema::inferences::semio_artifact_inference_descriptor()])
     }
 
-    /// 💡️ Registers `s.stdio.semio.inference`'s facet leaves into the OS-wide inference catalog —
+    /// 💡️ Registers `stdio.semio.inference`'s facet leaves into the OS-wide inference catalog —
     /// sibling to `register_artifact_schema_descriptor` above (separate registry, ticket
     /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

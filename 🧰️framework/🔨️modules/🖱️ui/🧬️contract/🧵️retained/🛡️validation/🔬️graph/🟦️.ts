@@ -2,11 +2,11 @@
 import type { Component, UiContractViolation, UiDocumentLimits, UiNodeRecord } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import type { RetainedUiComponent, RetainedUiNodeRecord } from "../../📦️wire/🧾️typed/🟦️.ts";
 import type { RetainedUiNumericTable, RetainedUiSiblingKeys } from "../../🧮️tables/🟦️.ts";
-import { numberLimitValues, numberRangeIsValid, snapsAreValid } from "../../../🛡️limits/🟦️.ts";
+import { controlIsUnnamed, numberLimitValues, numberRangeIsValid, snapsAreValid } from "../../../🛡️limits/🟦️.ts";
 
 type Program<T> = Generator<number, T, void>;
 type Record = UiNodeRecord | RetainedUiNodeRecord;
-type Walk = { readonly kind: "enter" | "exit"; readonly id: number; readonly depth: number; readonly section: boolean };
+type Walk = { readonly kind: "enter" | "exit"; readonly id: number; readonly depth: number; readonly section: boolean; readonly parent?: Record | null };
 type Link = { value: Walk | null; next: Link | null };
 export type RetainedUiGraphFrontier = { stack: Link | null; count: number };
 export type RetainedUiGraphNodes = { readonly size: number; lookup(id: number): Program<Record | undefined>; entries(): Generator<number | readonly [number, Record], void, void> };
@@ -93,6 +93,7 @@ export function* retainedUiGraphValidation(nodes: RetainedUiGraphNodes, root: nu
     if (!record) continue;
     const section = record.component.type === "container" && record.component.role === "section";
     if (frame.section && section) yield* violation({ type: "sectionNested", node: frame.id }, frontier, violations);
+    if (controlIsUnnamed(record as never, (frame.parent ?? null) as never)) yield* violation({ type: "unnamedControl", node: frame.id }, frontier, violations);
     if (!finite(record.component)) yield* violation({ type: "nonFiniteNumber", node: frame.id }, frontier, violations);
     else if (!validSnaps(record.component)) yield* violation({ type: "invalidSnaps", node: frame.id }, frontier, violations);
     else if (!validNumberRange(record.component)) yield* violation({ type: "invalidNumberRange", node: frame.id }, frontier, violations);
@@ -107,7 +108,7 @@ export function* retainedUiGraphValidation(nodes: RetainedUiGraphNodes, root: nu
       const child = yield* nodes.lookup(childId);
       if (!child) { yield* violation({ type: "orphanChild", parent: frame.id, child: childId }, frontier, violations); continue; }
       if (yield* keys.insert(child.key)) yield* violation({ type: "duplicateSiblingKey", parent: frame.id, key: child.key }, frontier, violations);
-      frontier.stack = { value: { kind: "enter", id: childId, depth: frame.depth + 1, section: frame.section || section }, next: frontier.stack }; yield 64;
+      frontier.stack = { value: { kind: "enter", id: childId, depth: frame.depth + 1, section: frame.section || section, parent: record }, next: frontier.stack }; yield 64;
     }
     yield* keys.clear();
   }
@@ -143,6 +144,16 @@ export function* retainedUiGraphTouchedValidation(nodes: RetainedUiGraphNodes, t
     else if (record && !validSnaps(record.component)) yield* violation({ type: "invalidSnaps", node: entry[0] }, frontier, violations);
     else if (record && !validNumberRange(record.component)) yield* violation({ type: "invalidNumberRange", node: entry[0] }, frontier, violations);
     if (record && !validRowTarget(record)) yield* violation({ type: "invalidRowTarget", node: entry[0] }, frontier, violations);
+    if (record && controlIsUnnamed(record as never, null)) {
+      let parent: Record | undefined;
+      const all = nodes.entries();
+      for (;;) {
+        const step = all.next(); if (step.done) break;
+        if (typeof step.value === "number") { yield step.value; continue; }
+        if ((step.value[1].children ?? []).includes(entry[0])) { parent = step.value[1]; break; }
+      }
+      if (controlIsUnnamed(record as never, (parent ?? null) as never)) yield* violation({ type: "unnamedControl", node: entry[0] }, frontier, violations);
+    }
   }
 }
 //#endregion 🚶️GraphTraversal

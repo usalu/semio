@@ -26,7 +26,7 @@ fn retained_text_envelope_preserves_original_body_and_bounds_resume_cancel_and_r
     let expected=wrap_text(&SemioEnvelope::from_envelope_id(id,Component::Dsl,version).unwrap(),&body);
     let grant=fixture["retained"]["retirementBytes"].as_u64().unwrap() as usize;
     let declared=&fixture["retained"]["callerGrant"];let caller=semio_framework_value::RetainedCloneGrant{maximum_items:declared["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:declared["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:declared["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:declared["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:declared["maximumDepth"].as_u64().unwrap()as usize};
-    let depth=fixture["retained"]["maximumRetirementDepth"].as_u64().unwrap()as usize;let ownership=&fixture["retained"]["ownership"];assert_eq!(ownership["copy"],"bounded-original-payload");assert_eq!(ownership["capacity"],"exact-natural-birth");assert_eq!(ownership["release"],"exact-physical-allocation");assert_eq!(ownership["depth"],"exact-original-frontier");assert_eq!(ownership["refusal"],"original-owner-kept");
+    assert!(fixture["retained"]["maximumRetirementDepth"].as_u64().unwrap()>0);let ownership=&fixture["retained"]["ownership"];assert_eq!(ownership["copy"],"bounded-original-payload");assert_eq!(ownership["capacity"],"exact-natural-birth");assert_eq!(ownership["release"],"exact-physical-allocation");assert_eq!(ownership["depth"],"exact-original-frontier");assert_eq!(ownership["refusal"],"original-owner-kept");
     for budget in fixture["retained"]["budgets"].as_array().unwrap() {
         let source=body.clone(); let pointer=source.as_ptr();
         let mut cursor=RetainedTextEnvelope::new(id.into(),Component::Dsl,version,source,caller);
@@ -79,6 +79,94 @@ fn text_preamble_round_trip() {
     let (parsed, body) = split_text_preamble(&wrapped).unwrap();
     assert_eq!(parsed, env);
     assert!(body.starts_with("positions"));
+}
+
+#[test]
+fn text_body_round_trips_exactly_including_bom_and_leading_whitespace() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📜️text-framing/🔣️.json")).unwrap();
+    let env = SemioEnvelope { plugin: "gis".into(), artifact: "gismap".into(), component: Component::Dsl, version: 1 };
+    assert_eq!(format!("{}\n", env.preamble_line()), fixture["preamble"].as_str().unwrap());
+    for row in fixture["framing"].as_array().unwrap() {
+        let body = row["body"].as_str().unwrap();
+        let wire: Vec<u8> = (0..row["wireHex"].as_str().unwrap().len() / 2).map(|index| u8::from_str_radix(&row["wireHex"].as_str().unwrap()[index * 2..index * 2 + 2], 16).unwrap()).collect();
+        let wrapped = wrap_text(&env, body);
+        assert_eq!(wrapped.as_bytes(), wire.as_slice(), "{body:?}: bytes equal the independent Python codecs encoding");
+        let (parsed, rest) = split_text_preamble(&wrapped).unwrap();
+        assert_eq!(parsed, env);
+        assert_eq!(rest, body, "{body:?}");
+        let crlf = wrapped.replacen('\n', "\r\n", 1);
+        assert_eq!(split_text_preamble(&crlf).unwrap().1, body, "{body:?} behind a CRLF preamble");
+        let with_file_bom = format!("\u{feff}{wrapped}");
+        assert_eq!(split_text_preamble(&with_file_bom).unwrap().1, body, "{body:?} behind a file BOM");
+    }
+}
+
+#[test]
+fn dispatcher_routes_a_natural_file_to_the_handler_of_its_exact_version() {
+    fn brep_v1(_: &[u8]) -> Result<(), String> { Ok(()) }
+    fn brep_v2(_: &[u8]) -> Result<(), String> { Err("brep v2".into()) }
+    static BREP_V1: SemioFormat = SemioFormat { token: "dispatch.brep.v1", verify: brep_v1 };
+    static BREP_V2: SemioFormat = SemioFormat { token: "dispatch.brep.v2", verify: brep_v2 };
+    let one = SemioEnvelope { plugin: "dispatch".into(), artifact: "brep".into(), component: Component::Dsl, version: 1 };
+    let two = SemioEnvelope { version: 2, ..one.clone() };
+    register_format(one.clone(), &BREP_V1).unwrap();
+    register_format(two.clone(), &BREP_V2).unwrap();
+    for (envelope, expected) in [(&one, Ok(())), (&two, Err("brep v2".to_string()))] {
+        let text = wrap_text(envelope, "\u{feff}  body");
+        let (found, handler) = dispatch(text.as_bytes()).unwrap();
+        assert_eq!(&found, envelope);
+        assert_eq!((handler.verify)(text.as_bytes()), expected);
+        let binary = wrap_binary(&SemioEnvelope { component: Component::Pack, ..envelope.clone() }, b"x");
+        assert!(matches!(dispatch(&binary), Err(SemioError::UnknownEnvelope(_))), "an unregistered component never reaches a handler");
+    }
+    assert!(matches!(dispatch(wrap_text(&SemioEnvelope { version: 9, ..one.clone() }, "x").as_bytes()), Err(SemioError::UnknownEnvelope(_))));
+    assert!(matches!(dispatch(b"plain text"), Err(SemioError::InvalidPreamble(_))));
+    assert!(registered_envelope_keys().unwrap().contains(&"dispatch.brep.dsl v2".to_string()));
+    assert_eq!(NATURAL_FILE_EXTENSION, ".semio");
+}
+
+#[test]
+fn one_parser_reads_every_envelope_identity_the_same_way() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📜️text-framing/🔣️.json")).unwrap();
+    for row in fixture["envelopeIds"].as_array().unwrap() {
+        let component = Component::parse(row["component"].as_str().unwrap()).unwrap();
+        let version = row["version"].as_u64().unwrap() as u16;
+        let from_id = SemioEnvelope::from_envelope_id(row["id"].as_str().unwrap(), component, version).unwrap();
+        let from_line = parse_preamble_line(row["line"].as_str().unwrap()).unwrap();
+        assert_eq!(from_id, from_line, "{row}");
+        assert_eq!((from_id.plugin.as_str(), from_id.artifact.as_str()), (row["plugin"].as_str().unwrap(), row["artifact"].as_str().unwrap()), "{row}");
+        assert_eq!(from_id.preamble_line(), row["line"].as_str().unwrap());
+        assert!(from_id.matches_identity(row["id"].as_str().unwrap(), component, version));
+    }
+    assert!(SemioEnvelope::from_envelope_id("nodot", Component::Dsl, 1).is_err());
+}
+
+#[test]
+fn wrap_text_never_interprets_a_body_that_looks_like_a_preamble() {
+    let env = SemioEnvelope { plugin: "gis".into(), artifact: "gismap".into(), component: Component::Dsl, version: 1 };
+    for body in ["semio foreign.doc.dsl v9\nrest", "semio broken preamble\nrest", "semio gis.gismap.dsl v1\nnested"] {
+        let wrapped = wrap_text(&env, body);
+        assert_eq!(split_text_preamble(&wrapped).unwrap().1, body, "{body:?}");
+    }
+}
+
+#[test]
+fn registry_resolves_envelopes_by_identity_and_version() {
+    fn verify_one(_: &[u8]) -> Result<(), String> { Ok(()) }
+    fn verify_two(_: &[u8]) -> Result<(), String> { Err("version two handler".into()) }
+    static V1: SemioFormat = SemioFormat { token: "regtest.v1", verify: verify_one };
+    static V1_OTHER_OWNER: SemioFormat = SemioFormat { token: "regtest.other-owner", verify: verify_one };
+    static V2: SemioFormat = SemioFormat { token: "regtest.v2", verify: verify_two };
+    let one = SemioEnvelope { plugin: "regtest".into(), artifact: "doc".into(), component: Component::Dsl, version: 1 };
+    let two = SemioEnvelope { version: 2, ..one.clone() };
+    let three = SemioEnvelope { version: 3, ..one.clone() };
+    register_format(one.clone(), &V1).unwrap();
+    register_format(two.clone(), &V2).unwrap();
+    assert!(register_format(two.clone(), &V2).is_ok(), "registering the same token again is a no-op");
+    assert!(matches!(register_format(two.clone(), &V1_OTHER_OWNER), Err(SemioError::DuplicateEnvelope(_))), "a different owner of one identity is refused");
+    assert!(verify(wrap_text(&one, "x").as_bytes()).is_ok());
+    assert_eq!(verify(wrap_text(&two, "x").as_bytes()), Err(SemioError::InvalidPreamble("version two handler".into())));
+    assert!(matches!(verify(wrap_text(&three, "x").as_bytes()), Err(SemioError::UnknownEnvelope(_))));
 }
 
 #[test]

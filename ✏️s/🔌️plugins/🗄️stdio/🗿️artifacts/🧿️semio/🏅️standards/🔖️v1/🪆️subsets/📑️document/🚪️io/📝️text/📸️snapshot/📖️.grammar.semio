@@ -15,7 +15,7 @@ start document
 # `document` matches the fixture-honesty harness's own reconstructed body shape (mandatory `semio
 # stdio.semio.document.dsl v1` preamble stripped and replaced with the bare `envelope_id()` token —
 # `artifact-mark` below — before recognition, same convention `json.snapshot`'s own grammar uses).
-artifact-mark = "s.stdio.semio.document"
+artifact-mark = "stdio.semio.document"
 document = artifact-mark schema-line styles-line images-line blocks-line
 
 schema-line = "schema" "=" hex

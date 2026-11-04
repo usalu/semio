@@ -2,7 +2,7 @@
   "assets": {
     "entries": {
       "pixels-paint-73220632d9919abd": {
-        "schema": "s.stdio.semio.image",
+        "schema": "stdio.semio.image",
         "width": 6,
         "height": 4,
         "colorspace": "rgba",

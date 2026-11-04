@@ -44,6 +44,28 @@ message ReplaceSamples {
   repeated BmpNativeSample samples = 3;
 }
 
-message BmpMutation { oneof payload { ReplaceImage replace_image = 12; PaintIndexedRegion paint_indexed_region = 3; PaintDirectRegion paint_direct_region = 4; ReplaceSamples replace_samples = 13; } }
+message BmpMutation { oneof payload { ReplaceImage replace_image = 12; PaintIndexedRegion paint_indexed_region = 3; PaintDirectRegion paint_direct_region = 4; ReplaceSamples replace_samples = 13; SetPaletteEntry set_palette_entry = 14; InsertPaletteEntry insert_palette_entry = 15; RemovePaletteEntry remove_palette_entry = 16; } }
 
 message ReplaceImage { semio.s_stdio_bmp.snapshot.BmpImage image = 1; }
+
+message SetPaletteEntry {
+  uint32 index = 1;
+  uint32 red = 2;
+  uint32 green = 3;
+  uint32 blue = 4;
+  uint32 reserved = 5;
+}
+
+message InsertPaletteEntry {
+  uint32 index = 1;
+  uint32 red = 2;
+  uint32 green = 3;
+  uint32 blue = 4;
+  uint32 reserved = 5;
+  uint32 colors_used = 6;
+}
+
+message RemovePaletteEntry {
+  uint32 index = 1;
+  uint32 colors_used = 2;
+}

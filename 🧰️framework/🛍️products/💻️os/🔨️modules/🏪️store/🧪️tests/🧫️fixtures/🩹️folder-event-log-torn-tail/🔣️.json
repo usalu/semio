@@ -1,0 +1,10 @@
+{
+  "schema": "semio.fixture.folder-event-log-torn-tail/v1",
+  "law": "An interrupted final record is reported by torn_tail_bytes, is invisible to reads, and the next append truncates it so the new record starts on a record boundary and survives a reread.",
+  "cases": [
+    { "name": "partial-magic", "tail": "SEMIO" },
+    { "name": "partial-header", "tail": "SEMIOEL1\u0001\u0000\u0000" },
+    { "name": "partial-payload", "tail": "SEMIOEL1", "headerLength": 64, "payloadBytes": 3 },
+    { "name": "no-tail", "tail": "" }
+  ]
+}

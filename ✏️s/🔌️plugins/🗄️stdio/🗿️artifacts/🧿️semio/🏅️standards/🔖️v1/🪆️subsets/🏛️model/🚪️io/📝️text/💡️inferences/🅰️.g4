@@ -1,2 +1,2 @@
 grammar Stdio_semio_model_inference;
-DOCUMENT: 'schema' [ ]+ 's.stdio.semio.model.inference' ;
+DOCUMENT: 'schema' [ ]+ 'stdio.semio.model.inference' ;

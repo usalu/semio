@@ -1,4 +1,4 @@
-/** 📝️ Text-facet grammar mirror (descriptive) for s.stdio.semio.object.diff's DSL text encoding. */
+/** 📝️ Text-facet grammar mirror (descriptive) for stdio.semio.object.diff's DSL text encoding. */
 export interface SemioObjectDiffDsl { line: string; }
 
 //#region 🚪️Parsers

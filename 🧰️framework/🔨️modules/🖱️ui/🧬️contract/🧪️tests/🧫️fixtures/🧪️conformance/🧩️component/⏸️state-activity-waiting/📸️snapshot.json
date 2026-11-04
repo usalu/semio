@@ -18,7 +18,9 @@
       },
       "style": {},
       "activity": "waiting",
-      "accessibility": {}
+      "accessibility": {
+        "label": "Enabled toggle"
+      }
     }
   ],
   "layoutEpoch": 0

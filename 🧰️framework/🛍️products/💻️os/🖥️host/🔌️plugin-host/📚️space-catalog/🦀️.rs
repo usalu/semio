@@ -20,20 +20,46 @@ pub struct OsSpaceCatalogEntry {
     pub updated_at: String,
 }
 
-static SPACE_CATALOG_URIS: LazyLock<Mutex<HashMap<usize, HashSet<String>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
-
-fn port_key(port: &Arc<OsBackbonePorts>) -> usize {
-    Arc::as_ptr(port) as *const () as usize
-}
-
 fn track_os_space_backbone_uri(port: &Arc<OsBackbonePorts>, uri: &str) {
-    SPACE_CATALOG_URIS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).entry(port_key(port)).or_default().insert(uri.into());
+    port.with_catalog_uris(|uris| uris.insert(uri.into()));
 }
 
 fn untrack_os_space_backbone_uri(port: &Arc<OsBackbonePorts>, uri: &str) {
-    if let Some(uris) = SPACE_CATALOG_URIS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get_mut(&port_key(port)) {
-        uris.remove(uri);
+    port.with_catalog_uris(|uris| uris.remove(uri));
+}
+
+/// 🕰️ Reads one saved-at stamp as nanoseconds since the Unix epoch: `0` (never saved), epoch milliseconds, or RFC 3339 in UTC (`YYYY-MM-DDTHH:MM:SS[.fraction]Z`); anything else is refused instead of sorted as text.
+pub fn saved_at_nanoseconds(stamp: &str) -> Result<i128, VcsError> {
+    let refuse = || VcsError::Deserialize(format!("saved-at stamp {stamp:?} is neither epoch milliseconds nor RFC 3339 UTC"));
+    if !stamp.is_empty() && stamp.bytes().all(|byte| byte.is_ascii_digit()) {
+        return stamp.parse::<i128>().map(|millis| millis * 1_000_000).map_err(|_| refuse());
     }
+    let bytes = stamp.as_bytes();
+    let digits = |from: usize, to: usize| -> Option<i64> { bytes.get(from..to).filter(|part| part.iter().all(u8::is_ascii_digit)).and_then(|part| std::str::from_utf8(part).ok()).and_then(|part| part.parse().ok()) };
+    let (year, month, day, hour, minute, second) = (digits(0, 4).ok_or_else(refuse)?, digits(5, 7).ok_or_else(refuse)?, digits(8, 10).ok_or_else(refuse)?, digits(11, 13).ok_or_else(refuse)?, digits(14, 16).ok_or_else(refuse)?, digits(17, 19).ok_or_else(refuse)?);
+    if bytes.get(4) != Some(&b'-') || bytes.get(7) != Some(&b'-') || bytes.get(10) != Some(&b'T') || bytes.get(13) != Some(&b':') || bytes.get(16) != Some(&b':') || !(1..=12).contains(&month) || !(1..=31).contains(&day) || hour > 23 || minute > 59 || second > 60 {
+        return Err(refuse());
+    }
+    let (fraction, rest) = match bytes.get(19) {
+        Some(b'.') => {
+            let end = 20 + bytes[20..].iter().take_while(|byte| byte.is_ascii_digit()).count();
+            if end == 20 || end > 29 {
+                return Err(refuse());
+            }
+            (format!("{:0<9}", &stamp[20..end]).parse::<i128>().map_err(|_| refuse())?, &stamp[end..])
+        }
+        _ => (0, &stamp[19..]),
+    };
+    if rest != "Z" {
+        return Err(refuse());
+    }
+    let shifted_year = if month <= 2 { year - 1 } else { year };
+    let era = shifted_year.div_euclid(400);
+    let year_of_era = shifted_year - era * 400;
+    let day_of_year = (153 * (if month > 2 { month - 3 } else { month + 9 }) + 2) / 5 + day - 1;
+    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
+    let days = era * 146_097 + day_of_era - 719_468;
+    Ok(i128::from(days * 86_400 + hour * 3_600 + minute * 60 + second) * 1_000_000_000 + fraction)
 }
 
 /// 🔎️ Extracts a bare space id from a `space://<id>` uri — deliberately excludes the
@@ -57,22 +83,21 @@ fn os_space_catalog_entry_from_document(backbone_uri: &str, document: &OsSpaceDo
 /// 📚️ Lists persisted space manifests from the dev backbone namespace.
 pub fn list_os_space_catalog_entries(port: &Arc<OsBackbonePorts>) -> Result<Vec<OsSpaceCatalogEntry>, VcsError> {
     let mut entries = Vec::new();
-    let uris: Vec<String> = SPACE_CATALOG_URIS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&port_key(port)).cloned().unwrap_or_default().into_iter().collect();
+    let uris: Vec<String> = port.with_catalog_uris(|uris| uris.iter().cloned().collect());
     for uri in uris {
         if os_space_id_from_backbone_uri(&uri).is_none() {
             continue;
         }
-        let Ok(payload) = port.read(&uri) else {
-            continue;
-        };
+        let payload = port.read(&uri)?;
         if payload.is_empty() {
             continue;
         }
         let document: OsSpaceDocument = decode_backbone_payload(&payload, space::S_SPACE_SCHEMA)?;
         entries.push(os_space_catalog_entry_from_document(&uri, &document)?);
     }
-    entries.sort_by(|left, right| right.updated_at.cmp(&left.updated_at).then_with(|| left.name.cmp(&right.name)));
-    Ok(entries)
+    let mut keyed = entries.into_iter().map(|entry| saved_at_nanoseconds(&entry.updated_at).map(|key| (key, entry))).collect::<Result<Vec<_>, _>>()?;
+    keyed.sort_by(|(left_key, left), (right_key, right)| right_key.cmp(left_key).then_with(|| left.name.cmp(&right.name)));
+    Ok(keyed.into_iter().map(|(_, entry)| entry).collect())
 }
 
 /// 🆕️ Creates a space manifest PLUS one default "main" collection on the dev backbone — see
@@ -115,10 +140,13 @@ pub fn delete_os_space(space_id: &str, port: &Arc<OsBackbonePorts>) -> Result<()
 
 /// 🌉️ Admits one space document into the catalog of `port` under its own id and name — the shared tail of
 /// `import_os_space_from_dsl`/`import_os_space_from_pack` and of a studio newly bound to a file or folder backbone:
-/// mints a fresh id when the source carried none, syncs, and tracks the catalog uri.
+/// mints a fresh id when the source carried none, refuses an id that already holds a document, syncs, and tracks the catalog uri.
 pub fn admit_os_space_document(mut document: OsSpaceDocument, port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
     let space_id = if document.id.is_empty() { create_os_id("space") } else { document.id.clone() };
     let backbone_uri = space::space_backbone_uri(&space_id);
+    if port.read(&backbone_uri).is_ok_and(|payload| !payload.is_empty()) {
+        return Err(VcsError::Backbone(format!("os space {space_id} already exists; it is never overwritten by an import")));
+    }
     document.id = space_id;
     sync_backbone_document(&document, &backbone_uri, port)?;
     track_os_space_backbone_uri(port, &backbone_uri);
@@ -157,12 +185,12 @@ pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: &Arc<OsBackboneP
 }
 
 /// 📤️ Exports an already-loaded space manifest as pack bytes + ops text.
-pub fn export_os_space_pack(document: &OsSpaceDocument) -> Result<store::os_store::serialization::ArtifactPackFiles, VcsError> {
+pub fn export_os_space_pack(document: &OsSpaceDocument) -> Result<BackboneExport<store::os_store::serialization::ArtifactPackFiles>, VcsError> {
     export_backbone_pack(document)
 }
 
 /// 📤️ DSL-text counterpart of `export_os_space_pack`.
-pub fn export_os_space_dsl(document: &OsSpaceDocument) -> Result<store::os_store::text_format::ArtifactTextFiles, VcsError> {
+pub fn export_os_space_dsl(document: &OsSpaceDocument) -> Result<BackboneExport<store::os_store::text_format::ArtifactTextFiles>, VcsError> {
     export_backbone_dsl(document)
 }
 

@@ -15,7 +15,7 @@ use super::outline::compute_semio_presentation_outline;
 /// under `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.presentation.inference")]
+#[artifact_schema(id = "stdio.semio.presentation.inference")]
 pub struct SemioPresentationInference {
     #[derived]
     pub outline: SemioPresentationOutline,
@@ -44,25 +44,25 @@ impl Default for SemioPresentationInference {
 
 impl protocol::InferenceSpec<SemioPresentationSnapshot> for SemioPresentationInference {
     fn inference_schema_id() -> &'static str {
-        "s.stdio.semio.presentation.inference"
+        "stdio.semio.presentation.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.semio.presentation.inference.outline", reads: &["masters", "layouts", "slides"] }]
+        &[protocol::InferenceFieldSpec { id: "stdio.semio.presentation.inference.outline", reads: &["masters", "layouts", "slides"] }]
     }
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.stdio.semio.presentation.inference`'s facet leaves into the OS-wide inference
+/// 💡️ Registers `stdio.semio.presentation.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `semio_presentation_artifact_schema_descriptor`'s
 /// registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_presentation_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.stdio.semio.presentation.inference",
+        id: "stdio.semio.presentation.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

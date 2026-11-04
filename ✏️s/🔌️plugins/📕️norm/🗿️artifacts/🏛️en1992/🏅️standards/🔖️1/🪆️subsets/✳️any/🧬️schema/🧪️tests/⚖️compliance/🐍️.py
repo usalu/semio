@@ -260,7 +260,7 @@ def flexural_resistance_nm(f_ck: float, b: float, d: float, a_s: float, f_yk: fl
         t = am * st
         return fc - t, mc + t * (dm - h / 2.0)
 
-    n_c = -n_ed / 1.0e3
+    n_c = -n_ed
     x = optimize.brentq(lambda x: forces(x)[0] - n_c, 1e-3, 50.0 * h, xtol=1e-6)
     return forces(x)[1] / 1.0e3
 

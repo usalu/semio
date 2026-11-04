@@ -67,7 +67,7 @@ pub async fn demo_space_projection() -> WorkflowSnapshot {
 /// per port identity (`list_os_space_catalog_entries` keys them by the `Arc`) and `LocalStorageBackbonePort` keeps its
 /// fallback bytes per instance, so a port minted per call listed nothing a previous call admitted: a studio bound,
 /// persisted or imported was gone on the next listing, and every call re-parsed and re-seeded the demo studio.
-/// O1 — enum dispatch (`OsBackbonePorts::Store(store::os_store::backbone::BackbonePorts)`), no `dyn`. The demo seed is a `SpaceSnapshot`
+/// O1 — enum dispatch (`OsBackbonePorts::store(store::os_store::backbone::BackbonePorts)`), no `dyn`. The demo seed is a `SpaceSnapshot`
 /// manifest named after the bundled demo fixture and owned by the `"local"` guest sentinel: it runs before any user
 /// session exists, so there is no signed-in identity to attribute it to.
 /// @see ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📎️bind-space-file/🦀️.rs
@@ -76,7 +76,7 @@ async fn catalog_port_concrete() -> Arc<OsBackbonePorts> {
     if let Some(port) = PORT.get() {
         return port.clone();
     }
-    let port = Arc::new(OsBackbonePorts::Store(BackbonePorts::LocalStorage(LocalStorageBackbonePort::default())));
+    let port = Arc::new(OsBackbonePorts::store(BackbonePorts::LocalStorage(LocalStorageBackbonePort::default())));
     if list_os_space_catalog_entries(&port).map_or(true, |entries| entries.is_empty()) {
         let demo = parse_demo_space_document().await;
         let demo_name = if demo.name.trim().is_empty() { "Demo Studio".to_owned() } else { demo.name };
@@ -97,7 +97,7 @@ async fn catalog_port_concrete() -> Arc<OsBackbonePorts> {
 /// `::default()` (sync) is used over `::new()`.
 async fn temp_catalog_port_concrete() -> Arc<OsBackbonePorts> {
     static PORT: OnceLock<Arc<OsBackbonePorts>> = OnceLock::new();
-    PORT.get_or_init(|| Arc::new(OsBackbonePorts::Store(BackbonePorts::Memory(MemoryBackbonePort::default())))).clone()
+    PORT.get_or_init(|| Arc::new(OsBackbonePorts::store(BackbonePorts::Memory(MemoryBackbonePort::default())))).clone()
 }
 
 /// 🧬️ Independent in-memory singleton for draft byte storage — kept as a bare `Arc<store::os_store::backbone::BackbonePorts>`

@@ -7,6 +7,9 @@ pub use super::paint_direct_region::PaintDirectRegion;
 pub use super::paint_indexed_region::PaintIndexedRegion;
 pub use super::replace_image::ReplaceImage;
 pub use super::replace_samples::ReplaceSamples;
+pub use super::set_palette_entry::SetPaletteEntry;
+pub use super::insert_palette_entry::InsertPaletteEntry;
+pub use super::remove_palette_entry::RemovePaletteEntry;
 
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
@@ -18,6 +21,9 @@ pub enum BmpMutation {
     PaintIndexedRegion(PaintIndexedRegion),
     PaintDirectRegion(PaintDirectRegion),
     ReplaceSamples(ReplaceSamples),
+    SetPaletteEntry(SetPaletteEntry),
+    InsertPaletteEntry(InsertPaletteEntry),
+    RemovePaletteEntry(RemovePaletteEntry),
 }
 
 #[cfg(test)]
@@ -27,6 +33,9 @@ pub(crate) fn demo_mutation_cases() -> Vec<BmpMutation> {
         BmpMutation::PaintIndexedRegion(PaintIndexedRegion { revision: "stale".into(), x: 0, y: 0, width: 1, height: 1, palette_index: 0 }),
         BmpMutation::PaintDirectRegion(PaintDirectRegion { revision: "stale".into(), x: 0, y: 0, width: 1, height: 1, red: 0, green: 0, blue: 0, alpha: 255 }),
         BmpMutation::ReplaceSamples(ReplaceSamples { region: crate::schema::snapshot::BmpRegion { x: 0, y: 0, width: 1, height: 1 }, indices: Vec::new(), samples: vec![crate::schema::snapshot::BmpNativeSample::default()] }),
+        BmpMutation::SetPaletteEntry(SetPaletteEntry { index: 0, red: 0, green: 0, blue: 0, reserved: 0 }),
+        BmpMutation::InsertPaletteEntry(InsertPaletteEntry { index: 0, red: 0, green: 0, blue: 0, reserved: 0, colors_used: 0 }),
+        BmpMutation::RemovePaletteEntry(RemovePaletteEntry { index: 0, colors_used: 0 }),
     ]
 }
 

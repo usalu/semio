@@ -16,7 +16,7 @@ use super::shape::compute_semio_table_shape;
 /// `💡️inferences/` (currently: `shape`, backed by the `📐shape/` slug dir).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.table.inference")]
+#[artifact_schema(id = "stdio.semio.table.inference")]
 pub struct SemioTableInference {
     #[derived]
     pub shape: SemioTableShape,
@@ -45,24 +45,24 @@ impl Default for SemioTableInference {
 
 impl protocol::InferenceSpec<SemioTableSnapshot> for SemioTableInference {
     fn inference_schema_id() -> &'static str {
-        "s.stdio.semio.table.inference"
+        "stdio.semio.table.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.semio.table.inference.shape", reads: &["columns", "rows"] }]
+        &[protocol::InferenceFieldSpec { id: "stdio.semio.table.inference.shape", reads: &["columns", "rows"] }]
     }
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.stdio.semio.table.inference`'s facet leaves into the OS-wide inference catalog
+/// 💡️ Registers `stdio.semio.table.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_table_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_table_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.stdio.semio.table.inference",
+        id: "stdio.semio.table.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

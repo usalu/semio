@@ -167,3 +167,17 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_field() {
     assert_eq!(state.streams[0].chunks[0].fourcc, "01wb");
     assert_eq!(emit(editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).err().expect("no kind").code.0, "snapshot-edit.unsupported-path");
 }
+
+#[semio_framework_async_macros::async_test]
+async fn cut_range_plans_one_removal_run_at_a_stable_index_and_refuses_everything_else() {
+    use crate::standards::v1_0::subsets::any::schema::mutations::AviMutation;
+    let snapshot = crate::standards::v1_0::subsets::any::io::decode_avi(include_bytes!("../../../🧪️tests/🧫️fixtures/🎬️.avi")).expect("real AVI fixture decodes");
+    let chunks = snapshot.streams[0].chunks.len();
+    let planned = cut_range_mutations(&snapshot, " 3 - 8 ").expect("an in-range cut plans");
+    assert_eq!(planned.len(), 5);
+    assert!(planned.iter().all(|mutation| matches!(mutation, AviMutation::RemoveChunk(removal) if removal.stream_index == 0 && removal.index == 3)));
+    for refused in ["5-5", "9-3", "x", "+1-4", "4", &format!("0-{}", chunks + 1)] {
+        assert_eq!(cut_range_mutations(&snapshot, refused).expect_err("an invalid range is refused").code.0, "stdio.avi.cut-range", "{refused}");
+    }
+    assert_eq!(cut_frames_action().id, CUT_FRAMES_ACTION_ID);
+}

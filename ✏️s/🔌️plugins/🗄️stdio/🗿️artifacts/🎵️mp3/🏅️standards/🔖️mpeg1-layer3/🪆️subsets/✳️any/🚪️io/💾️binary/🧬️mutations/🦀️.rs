@@ -1,5 +1,4 @@
-//! 🚧 scaffolded by W1b — binary representation marker for `stdio.mp3.mutations`. Full field-layout
-//! parse/print lands in W2/W3.
+//! 🧬️ The `stdio.mp3.mutations` binary mutation op: format octet, variant tag varint, wire value (`📡️.protocol.semio`).
 pub const BINARY_MAGIC: &str = "stdio.mp3.mutations";
 
 #[allow(unused_imports)]

@@ -326,3 +326,63 @@ pub mod text {
     pub use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::diff;
 }
 
+//#region 🔖️SceneGeometry
+type Matrix4 = [f64; 16];
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn matrix_product(left: &Matrix4, right: &Matrix4) -> Matrix4 {
+    std::array::from_fn(|index| (0..4).map(|k| left[k * 4 + index % 4] * right[(index / 4) * 4 + k]).sum())
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn node_matrix(node: &crate::standards::v2_0::subsets::any::schema::snapshot::GltfNode) -> Matrix4 {
+    if let Some(matrix) = node.matrix {
+        return matrix;
+    }
+    let [qx, qy, qz, qw] = node.rotation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+    let [sx, sy, sz] = node.scale.unwrap_or([1.0; 3]);
+    let [tx, ty, tz] = node.translation.unwrap_or([0.0; 3]);
+    [
+        (1.0 - 2.0 * (qy * qy + qz * qz)) * sx, 2.0 * (qx * qy + qz * qw) * sx, 2.0 * (qx * qz - qy * qw) * sx, 0.0,
+        2.0 * (qx * qy - qz * qw) * sy, (1.0 - 2.0 * (qx * qx + qz * qz)) * sy, 2.0 * (qy * qz + qx * qw) * sy, 0.0,
+        2.0 * (qx * qz + qy * qw) * sz, 2.0 * (qy * qz - qx * qw) * sz, (1.0 - 2.0 * (qx * qx + qy * qy)) * sz, 0.0,
+        tx, ty, tz, 1.0,
+    ]
+}
+
+/// 🧊️ What the mesh windows draw: every triangle primitive of every mesh node reachable from the default scene (else every scene),
+/// positions placed by the node hierarchy's world matrices, indices read through the accessors. Unresolved buffers and non-triangle modes draw nothing.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn scene_geometry(document: &GltfDocument, buffers: &[Vec<u8>]) -> (Vec<[f64; 3]>, Vec<u32>, Vec<[f64; 3]>) {
+    let roots: Vec<usize> = match document.scene {
+        Some(index) => document.scenes.get(index).map(|scene| scene.nodes.clone()).unwrap_or_default(),
+        None => document.scenes.iter().flat_map(|scene| scene.nodes.iter().copied()).collect(),
+    };
+    let identity: Matrix4 = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+    let mut stack: Vec<(usize, Matrix4, usize)> = roots.into_iter().map(|root| (root, identity, 0)).collect();
+    let (mut positions, mut triangles) = (Vec::new(), Vec::new());
+    while let Some((index, parent, depth)) = stack.pop() {
+        let Some(node) = document.nodes.get(index) else { continue };
+        if depth > document.nodes.len() {
+            continue;
+        }
+        let world = matrix_product(&parent, &node_matrix(node));
+        stack.extend(node.children.iter().map(|child| (*child, world, depth + 1)));
+        let Some(mesh) = node.mesh.and_then(|mesh| document.meshes.get(mesh)) else { continue };
+        for primitive in mesh.primitives.iter().filter(|primitive| primitive.mode.unwrap_or(4) == 4) {
+            let Some(position) = primitive.attributes.iter().find(|(name, _)| name == "POSITION").map(|(_, accessor)| *accessor) else { continue };
+            let Ok(decoded) = decode_accessor(document, buffers, position) else { continue };
+            let base = positions.len() as u32;
+            let count = decoded.components.len() / 3;
+            positions.extend(decoded.components.chunks_exact(3).map(|point| std::array::from_fn(|row| world[row] * point[0] + world[4 + row] * point[1] + world[8 + row] * point[2] + world[12 + row])));
+            let indices: Vec<u32> = match primitive.indices.map(|accessor| decode_accessor(document, buffers, accessor)) {
+                Some(Ok(indices)) => indices.components.iter().map(|value| *value as u32).collect(),
+                Some(Err(_)) => continue,
+                None => (0..count as u32).collect(),
+            };
+            triangles.extend(indices.chunks_exact(3).filter(|face| face.iter().all(|index| (*index as usize) < count)).flatten().map(|index| base + index));
+        }
+    }
+    (positions, triangles, Vec::new())
+}
+//#endregion 🔖️SceneGeometry

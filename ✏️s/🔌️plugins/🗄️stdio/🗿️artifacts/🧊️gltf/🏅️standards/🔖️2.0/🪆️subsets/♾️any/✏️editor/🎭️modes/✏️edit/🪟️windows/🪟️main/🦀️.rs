@@ -1,19 +1,11 @@
-//! 🧊 glTF editor — the Main window: the SAME world-3d mesh scene shape as the sibling
-//! viewer window, built with the shared `MeshWindowKit`'s EDITABLE variant (contract §2.6, action id
-//! `set-vertex`). Render is identical to the viewer's read: both surfaces are pure reads of the same
-//! artifact-level `GltfSnapshot` — this window itself never mutates; mutation is the surface
-//! root's `handle()` responsibility.
+//! 🧊 glTF window — the document's own geometry on the shared `MeshWindowKit`; it never mutates (edits arrive through the Details pane and the transform gesture) and the viewer variant imports nothing from the sibling editor module (`policyViewerPurityBreaches`).
 
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
-use semio_framework_plugin::{world3d_camera_json, world3d_meshes_json_from_kinds, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::{BuiltNode, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
 pub const BODY_KEY: &str = MeshWindowKit::KIND_ID;
-const GLTF_ANY_EDIT_FALLBACK_MESH_KIND: &str = "box";
-const GLTF_ANY_EDIT_DEFAULT_CAMERA_POSITION: [f64; 3] = [8.0, -8.0, 6.0];
-const GLTF_ANY_EDIT_DEFAULT_CAMERA_TARGET: [f64; 3] = [0.0, 0.0, 0.0];
-const GLTF_ANY_EDIT_DEFAULT_CAMERA_FOV: f64 = 45.0;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -26,44 +18,11 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// ✏️ Same kind-agnostic content signal as the sibling viewer window (duplicated, not imported —
-/// `policyViewerPurityBreaches` is one-directional but the two surfaces still never reference each
-/// other by design).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entity_count(document: &GltfSnapshot) -> usize {
-    let value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(document));
-    value.as_object().map_or(0, |object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).clamp(1, 6)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn world_instances_json(document: &GltfSnapshot) -> String {
-    let count = entity_count(document);
-    let instances: Vec<semio_framework_pack_json::Value> = (0..count)
-        .map(|index| {
-            semio_framework_pack_json::json!({
-                "id": format!("gltf_any-{index}"),
-                "meshId": GLTF_ANY_EDIT_FALLBACK_MESH_KIND,
-                "position": [index as f64 * 2.0, 0.0, 0.0],
-                "rotation": [0.0, 0.0, 0.0, 1.0],
-                "scale": [1.0, 1.0, 1.0],
-                "label": format!("glTF {index}"),
-                "smoothShading": false,
-            })
-        })
-        .collect();
-    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(instances))
-}
-
+/// 🧊️ The document's own triangles on the shared mesh scene: accessor geometry placed by the node hierarchy, framed on its bounds, never a placeholder.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &GltfSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let meshes_json = world3d_meshes_json_from_kinds(&[GLTF_ANY_EDIT_FALLBACK_MESH_KIND.to_string()]);
-    let view = MeshView {
-        camera_json: world3d_camera_json(GLTF_ANY_EDIT_DEFAULT_CAMERA_POSITION, GLTF_ANY_EDIT_DEFAULT_CAMERA_TARGET, GLTF_ANY_EDIT_DEFAULT_CAMERA_FOV),
-        meshes_json,
-        instances_json: world_instances_json(document),
-        selection_json: world3d_selection_json("rectangle", &[], None),
-    };
-    MeshWindowKit::render(&view)
+    let (positions, triangles, markers) = semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::scene_geometry(&document.document, &document.buffers);
+    semio_s_artifact_stdio_contract::mesh_scene("glTF", &positions, &triangles, &markers)
 }
 //#endregion 🔖️Render
 

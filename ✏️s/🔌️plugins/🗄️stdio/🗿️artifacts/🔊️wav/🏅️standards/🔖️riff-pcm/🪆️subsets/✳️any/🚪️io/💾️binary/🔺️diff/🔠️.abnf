@@ -1,3 +1,14 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.wav.diff"
+; The binary WavDiff is the text diff line verbatim as UTF-8 (../../📝️text/🔺️diff/🔤️.ebnf).
+diff = [ clause *( SP clause ) ]
+clause = "fmt=" fmt / "data=" data / "data-splices=" splice *( ";" splice ) / "fmt-pad-byte=" number / "data-pad-byte=" number / "other-chunks=" chunk-list / "chunk-order=" order
+fmt = "[" number 5( "," number ) "," ext "]"
+ext = "[0]" / "[1," hex "]"
+data = kind ":" hex
+kind = "p16" / "p8" / "f32" / "raw"
+splice = number "," number "," data
+chunk-list = "[" [ chunk *( ";" chunk ) ] "]"
+chunk = "[" 4VCHAR "," hex "," number "]"
+order = "[" [ ref *( ";" ref ) ] "]"
+ref = "f" / "d" / "o" number
+number = 1*DIGIT
+hex = *( 2( DIGIT / %x61-66 ) )

@@ -17,7 +17,7 @@ use protocol::MutationDiff;
 //#region 🔖️Diff
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.object.diff")]
+#[artifact_schema(id = "stdio.semio.object.diff")]
 pub struct SemioObjectDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]

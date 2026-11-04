@@ -52,3 +52,23 @@ fn an_edit_below_an_argument_replaces_that_argument_and_an_unchanged_one_publish
     let refused = SnapshotEditEvent::SetValue { path: "/schema".into(), value: DslValue::String("other".into()) };
     assert_eq!(EDIT_RULES.resolve::<StepSnapshot, StepMutation>(&base(), &refused).unwrap_err().code, "snapshot-edit.unsupported-path");
 }
+
+#[test]
+fn a_transform_gesture_moves_cartesian_points_and_turns_directions_and_nothing_else() {
+    let aggregate = |values: &[f64]| StepValue::Aggregate(values.iter().map(|value| StepValue::Real(*value)).collect());
+    let snapshot = StepSnapshot { entities: vec![entity(1, "CARTESIAN_POINT", vec![StepValue::String(String::new()), aggregate(&[1.0, 2.0, 3.0])]), entity(2, "DIRECTION", vec![StepValue::String(String::new()), aggregate(&[1.0, 0.0, 0.0])]), entity(3, "LINE", vec![StepValue::Reference(1)])], ..Default::default() };
+    let gesture = |value: DslValue| SnapshotEditEvent::SetValue { path: semio_s_artifact_stdio_contract::editing::TRANSFORM_PATH.into(), value };
+    let request = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"translate":[10,0,0],"rotate":[0,0,90]}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
+    let mutations = special(&gesture(request), &snapshot).unwrap().expect("computed");
+    assert_eq!(mutations.len(), 2);
+    let mut next = snapshot.clone();
+    mutations.iter().for_each(|mutation| assert!(apply_step_mutation(&mut next, mutation).messages().is_empty()));
+    let read = |entity: &StepEntity| match &entity.args[1] { StepValue::Aggregate(items) => items.iter().map(|item| match item { StepValue::Real(real) => *real, other => panic!("{other:?}") }).collect::<Vec<f64>>(), other => panic!("{other:?}") };
+    let point = read(&next.entities[0]);
+    assert!((point[0] - 8.0).abs() < 1e-9 && (point[1] - 1.0).abs() < 1e-9 && (point[2] - 3.0).abs() < 1e-9);
+    let direction = read(&next.entities[1]);
+    assert!(direction[0].abs() < 1e-9 && (direction[1] - 1.0).abs() < 1e-9);
+    assert_eq!(next.entities[2], snapshot.entities[2]);
+    let none = StepSnapshot { entities: vec![snapshot.entities[2].clone()], ..Default::default() };
+    assert!(special(&gesture(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse("{}", semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())), &none).is_err());
+}

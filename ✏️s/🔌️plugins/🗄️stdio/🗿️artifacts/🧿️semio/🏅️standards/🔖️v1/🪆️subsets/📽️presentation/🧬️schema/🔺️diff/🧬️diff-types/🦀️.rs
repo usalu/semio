@@ -127,7 +127,7 @@ pub struct SlideDiff {
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.presentation.diff")]
+#[artifact_schema(id = "stdio.semio.presentation.diff")]
 pub struct SemioPresentationDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]

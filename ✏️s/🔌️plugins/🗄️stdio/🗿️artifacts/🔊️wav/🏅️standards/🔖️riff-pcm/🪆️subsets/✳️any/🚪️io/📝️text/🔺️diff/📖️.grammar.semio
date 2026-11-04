@@ -1,5 +1,32 @@
-dialect grammar stdio.wav.diff
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.wav.diff"
+dialect grammar
+grammar stdio.wav.diff
+start diff
+
+# The one-line form `print_diff`/`parse_diff` of `WavDiff` emit (../🦀️.rs `print_wav_diff`): one space-separated `name=value` clause per changed field, printed in this order; `parse_diff` accepts any order.
+comment none
+
+diff = fmt-clause? data-clause? splices-clause? fmt-pad-clause? data-pad-clause? chunks-clause? order-clause?
+
+# `WavFmt` prints as `[audioFormat,channels,sampleRate,byteRate,blockAlign,bitsPerSample,ext]`, the format extension tri-state being `[0]` (absent) or `[1,<hex>]`.
+fmt-clause = "fmt" "=" "[" INT "," INT "," INT "," INT "," INT "," INT "," ext-opt "]"
+ext-opt = "[" "0" "]" | "[" "1" "," hex "]"
+
+# `WavData` prints as `tag:hex` with the tag `p16`, `p8`, `f32` or `raw`.
+data-clause = "data" "=" data-value
+data-value = data-tag ":" hex
+data-tag = "p16" | "p8" | "f32" | "raw"
+
+# Sequential splices of the sample lane: `index,remove,data`, applied in order.
+splices-clause = "data-splices" "=" splice {";" splice}*
+splice = INT "," INT "," data-value
+
+fmt-pad-clause = "fmt-pad-byte" "=" INT
+data-pad-clause = "data-pad-byte" "=" INT
+
+# Auxiliary RIFF chunks `[fourcc,hex,pad]` and the chunk order `f` (format), `d` (samples), `o<index>` (other chunk).
+chunks-clause = "other-chunks" "=" "[" chunk-items? "]"
+chunk-items = chunk {";" chunk}*
+chunk = "[" IDENT "," hex "," INT "]"
+order-clause = "chunk-order" "=" "[" order-items? "]"
+order-items = order-ref {";" order-ref}*
+order-ref = IDENT

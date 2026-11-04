@@ -314,7 +314,7 @@
     "literal": "quote\" slash\\ \u0000 世界😀"
   },
   "childSnapshot": {
-    "schema": "s.stdio.semio.graph",
+    "schema": "stdio.semio.graph",
     "nodes": [
       {
         "id": {

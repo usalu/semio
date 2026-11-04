@@ -1,7 +1,7 @@
 dialect protocol
 protocol semio.brep.inference
 version 1
-schema s.stdio.semio.brep.inference
+schema stdio.semio.brep.inference
 start frame
 framing magic 0x8953f83f7d340d0b
 header fixed 32

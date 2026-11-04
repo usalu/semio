@@ -12,6 +12,15 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/mutation/set-id3v1/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/mutation/patch-frames/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/mutation/set-id3-frame/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/mutation/remove-id3-frame/schema.json"
     }
   ]
 }

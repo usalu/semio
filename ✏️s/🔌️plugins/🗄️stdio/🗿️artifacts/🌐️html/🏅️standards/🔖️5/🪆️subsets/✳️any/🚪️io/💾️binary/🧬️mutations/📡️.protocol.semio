@@ -27,3 +27,5 @@ record set-comment tag=7
 field payload bytes
 record set-raw-text tag=8
 field payload bytes
+record splice-source tag=9
+field payload bytes

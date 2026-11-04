@@ -132,7 +132,7 @@
         "folder",
         "file"
       ],
-      "description": "folder = a folder event log (`.semio/documents.db`), file = one document file"
+      "description": "folder = a folder event log (`.semio/events.semio`), file = one document file"
     },
     "LocalDocument": {
       "type": "object",

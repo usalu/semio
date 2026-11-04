@@ -1,0 +1,2 @@
+const tests = ["♿️control-names/🟦️.ts", "🧭️format-resolution/🟦️.ts", "♿️unnamed-control-reason/🟦️.ts", "🏷️localized-labels/🟦️.ts", "📐️panel-fit/🟦️.ts", "🔘️trigger/🟦️.ts", "🧩️row-menu/🟦️.tsx", "📐️panel-fold/🟦️.tsx", "📦️react-export-surface/🟦️.ts", "📦️react-package-export/🟦️.ts"];
+export default { test: { include: tests.map((name) => `**/🧪️tests/${name}`), root: process.env.HOST_TEST_ROOT, environment: "node" } };

@@ -1,10 +1,4 @@
-/** 🧬️ Semio_mp3_snapshot schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_mp3_snapshot
- * `🦀️.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_mp3_snapshotEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ Semio_mp3_snapshot: the facet carries the snapshot text as one UTF-8 string; the `🦀️.rs` sibling holds the codec. */
 export interface Semio_mp3_snapshot {
-  /** 📐️ @state artifact */ schema: string;
-  /** 📚️ @state artifact */ entries: Semio_mp3_snapshotEntry[];
+  readonly line: string;
 }

@@ -51,6 +51,7 @@ import { interpLabel } from "../🧷️interpreter-context/🟦️.ts";
 import { resolveControlIconNode, toUiValue, useContinuousTriggerLane } from "../⚡️action-dispatch/🟦️.tsx";
 import { controlDomId } from "../🪪️stable-dom-ids/🟦️.ts";
 import { dispatchControlTrigger as dispatchTrigger, type UiControlCompletion, type UiControlContext } from "../🎛️control-port/🟦️.ts";
+import { blurCommitsV1, restoreFocusAfterCommitV1 } from "../../🎯️focus-return/🟦️.ts";
 import { selectOptionDomId } from "../🎛️control-port/label-target.ts";
 
 //#region 🔖️UiInterpreter
@@ -195,6 +196,7 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
   const continuous = (component.kind === "number" || component.kind === "color") && !commitOnBlur;
   const picker = continuous && component.kind === "color";
   const pickerRef = usePickerRelease(picker, lane);
+  const committedByEnterRef = useRef<string | null>(null);
   const commitValue = (raw: string) => {
     const number = component.kind === "number" ? typedNumber(raw) : null;
     if (number !== null && typeof number !== "number") {
@@ -220,8 +222,10 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
     if (action === "revert") { event.preventDefault(); event.stopPropagation(); discardDraft(); setRefusal(null); return; }
     if (action !== "commit") return;
     event.preventDefault();
-    commitValue((event.target as HTMLInputElement | HTMLTextAreaElement).value);
-    (event.target as HTMLInputElement | HTMLTextAreaElement).blur();
+    const field = event.target as HTMLInputElement | HTMLTextAreaElement;
+    committedByEnterRef.current = field.value;
+    commitValue(field.value);
+    if (field.id !== "") restoreFocusAfterCommitV1(document, field.id);
   };
   /** 📌️ A number field's keys follow the shared keyboard law (design §18, `uiNumberFieldKey`): arrows one step (Shift: ten)
    * then the detent within tolerance, page keys the adjacent detent (`snaps`) else ten steps, Home/End a bound the field has —
@@ -253,7 +257,7 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
     return (<>
       <Textarea
         id={controlDomId(context, record)}
-        data-ui-node-id={record.id} data-ui-node-key={record.key}
+        data-ui-node-id={record.id} data-ui-node-key={record.key} data-draft-dirty={commitOnBlur && draft !== published ? "true" : undefined}
         aria-label={record.accessibility.label ?? undefined}
         aria-labelledby={context.field?.label}
         aria-required={context.field?.required || undefined}
@@ -266,7 +270,7 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
         placeholder={component.placeholder ?? undefined}
         onChange={commitOnBlur ? (event) => setDraft(event.target.value) : (event) => commitValue(event.target.value)}
         onKeyDown={commitOnBlur ? draftKey : undefined}
-        onBlur={commitOnBlur ? (event) => commitValue(event.target.value) : undefined}
+        onBlur={commitOnBlur ? (event) => { if (blurCommitsV1(committedByEnterRef.current, event.target.value)) commitValue(event.target.value); committedByEnterRef.current = null; } : undefined}
       />
       {recovery}
     </>);
@@ -277,7 +281,7 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
   const input = (
     <Input
       id={controlDomId(context, record)}
-      data-ui-node-id={record.id} data-ui-node-key={record.key}
+      data-ui-node-id={record.id} data-ui-node-key={record.key} data-draft-dirty={commitOnBlur && draft !== published ? "true" : undefined}
       aria-label={record.accessibility.label ?? undefined}
       aria-labelledby={context.field?.label}
       aria-required={context.field?.required || undefined}
@@ -295,7 +299,7 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
       accept={component.kind === "file" ? (component.accept ?? undefined) : undefined}
       onChange={commitOnBlur && component.kind !== "file" ? (event) => setDraft(event.target.value) : (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value)}
       onKeyDown={(event) => { if (!lawKey(event) && commitOnBlur) draftKey(event); }}
-      onBlur={commitOnBlur ? (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value) : continuous ? () => lane.commit() : undefined}
+      onBlur={commitOnBlur ? (event) => { const text = component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value; if (blurCommitsV1(committedByEnterRef.current, text)) commitValue(text); committedByEnterRef.current = null; } : continuous ? () => lane.commit() : undefined}
     />
   );
   const field = (
@@ -356,8 +360,8 @@ export function SelectView({ record, context }: { readonly record: UiNodeRecord;
 
 export function ToggleView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
   const component = record.component as Extract<Component, { type: "toggle" }>;
-  if (component.appearance === "checkbox") return <TreeCheckbox id={controlDomId(context, record)} checked={component.on} disabled={context.controls.disabled(record)} ariaLabel={record.accessibility.label ?? component.text ?? undefined} onCheckedChange={(checked) => dispatchTrigger(context, record, "change", toUiValue(checked))} />;
-  return <Toggle id={controlDomId(context, record)} data-ui-node-id={record.id} data-ui-node-key={record.key} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} disabled={context.controls.disabled(record)} aria-label={record.accessibility.label ?? component.text ?? undefined} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
+  if (component.appearance === "checkbox") return <TreeCheckbox id={controlDomId(context, record)} checked={component.on} disabled={context.controls.disabled(record)} ariaLabel={record.accessibility.label ?? component.text} onCheckedChange={(checked) => dispatchTrigger(context, record, "change", toUiValue(checked))} />;
+  return <Toggle id={controlDomId(context, record)} data-ui-node-id={record.id} data-ui-node-key={record.key} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} disabled={context.controls.disabled(record)} aria-label={record.accessibility.label ?? component.text} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
 }
 
 export function SliderView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {

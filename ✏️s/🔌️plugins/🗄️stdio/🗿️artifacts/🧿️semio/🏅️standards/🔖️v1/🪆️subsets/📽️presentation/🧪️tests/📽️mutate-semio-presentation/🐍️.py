@@ -1,4 +1,4 @@
-"""🐍️ Independent Python implementation of the `s.stdio.semio.presentation` carrier and its
+"""🐍️ Independent Python implementation of the `stdio.semio.presentation` carrier and its
 fifteen-verb mutation vocabulary — the differential ORACLE this case is measured against.
 
 Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. `.dsl.semio`/`.pack.semio` is a semio-native carrier

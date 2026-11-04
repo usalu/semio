@@ -409,6 +409,7 @@ semio-s-artifact-stdio-ifc-catalog = { path = "../✏️s/🔌️plugins/🗄️
 semio-s-artifact-stdio-ifc-4-descriptor = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-ifc-4-inferences = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-ifc-4-mutations = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-ifc-4x3 = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-ifc-4-model = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-ifc-4 = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-ifc-2x3-base-descriptor = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📇️descriptor/📦️packages/🦀️rust" }
@@ -529,6 +530,9 @@ semio-s-artifact-stdio-wav = { path = "../✏️s/🔌️plugins/🗄️stdio/�
 semio-s-artifact-stdio-epw = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-tsv = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-html = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-idml = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-idml-any = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🏅️standards/🔖️8.0/🪆️subsets/✳️any/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-idml-story = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/📖️story/📦️packages/🦀️rust" }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.149", features = ["raw_value"] }
 wasm-bindgen = "0.2.106"

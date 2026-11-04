@@ -12,30 +12,30 @@ use semio_s_artifact_stdio_contract::editing::{edited_subtree, EditRules, Snapsh
 /// 📚 No fixed pointer shape: see [`resolve`].
 pub const EDIT_RULES: EditRules = EditRules { entities: &[], inserts: &[], removes: &[] };
 
-fn fail(message: impl Into<String>) -> Fault {
+pub(crate) fn fail(message: impl Into<String>) -> Fault {
     Fault::from(message.into())
 }
 
-fn segments_of(pointer: &str) -> Result<Vec<String>, Fault> {
+pub(crate) fn segments_of(pointer: &str) -> Result<Vec<String>, Fault> {
     if pointer.is_empty() {
         return Ok(Vec::new());
     }
     pointer.strip_prefix('/').map(|rest| rest.split('/').map(|raw| raw.replace("~1", "/").replace("~0", "~")).collect()).ok_or_else(|| fail(format!("'{pointer}' is not a pointer")))
 }
 
-fn index_of(segment: &str, length: usize, insertion: bool) -> Result<usize, Fault> {
+pub(crate) fn index_of(segment: &str, length: usize, insertion: bool) -> Result<usize, Fault> {
     let index = if insertion && segment == "-" { length } else { segment.parse::<usize>().map_err(|error| fail(error.to_string()))? };
     (index < length || (insertion && index == length)).then_some(index).ok_or_else(|| fail(format!("index {index} is outside 0..{length}")))
 }
 
-struct Located<'a> {
-    path: Vec<JsonPathSegment>,
-    node: &'a JsonValue,
-    pointer: String,
-    consumed: usize,
+pub(crate) struct Located<'a> {
+    pub(crate) path: Vec<JsonPathSegment>,
+    pub(crate) node: &'a JsonValue,
+    pub(crate) pointer: String,
+    pub(crate) consumed: usize,
 }
 
-fn locate<'a>(root: &'a JsonValue, segments: &[String], container_edit: bool) -> Result<Located<'a>, Fault> {
+pub(crate) fn locate<'a>(root: &'a JsonValue, segments: &[String], container_edit: bool) -> Result<Located<'a>, Fault> {
     let mut located = Located { path: Vec::new(), node: root, pointer: "/value".to_string(), consumed: 0 };
     loop {
         let rest = &segments[located.consumed..];

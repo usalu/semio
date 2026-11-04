@@ -648,3 +648,5 @@ record change-pier-stiffness-basis tag=320
 field payload bytes
 record change-assessment-mid-steel-area-m2 tag=321
 field payload bytes
+record change-assessment-analysis-method tag=322
+field payload bytes

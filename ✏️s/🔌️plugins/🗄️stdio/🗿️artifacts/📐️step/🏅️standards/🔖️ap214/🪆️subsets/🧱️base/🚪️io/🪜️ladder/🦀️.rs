@@ -499,6 +499,86 @@ pub fn edit_restore_rows(event: &SnapshotEditEvent, snapshot: &StepSnapshot) -> 
         }
     }
 }
+
+/// 🏭️ The virtual pointer of the product identity chain: `/product` (the whole identity), `/product/productName`, `/product/formationId`, `/product/definitionId`.
+pub const PRODUCT_POINTER: &str = "/product";
+
+/// 🪪️ The identity an edit at [`PRODUCT_POINTER`] asks for: `Some(Some(identity))` to set it, `Some(None)` to remove the chain, `None` when the edit addresses something else.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn product_identity_edit(event: &SnapshotEditEvent, snapshot: &StepSnapshot) -> Result<Option<Option<ProductIdentity>>, SnapshotEditError> {
+    let path = match event {
+        SnapshotEditEvent::SetValue { path, .. } | SnapshotEditEvent::RemoveValue { path } => path.as_str(),
+        _ => return Ok(None),
+    };
+    if path != PRODUCT_POINTER && !path.starts_with("/product/") {
+        return Ok(None);
+    }
+    let refusal = |message: &str| SnapshotEditError::new("snapshot-edit.schema-invalid", path, message.to_string());
+    if let SnapshotEditEvent::RemoveValue { .. } = event {
+        return if path == PRODUCT_POINTER { Ok(Some(None)) } else { Err(refusal("only the whole product identity chain can be removed")) };
+    }
+    let current = product_identity(snapshot);
+    let base = match (&current, path == PRODUCT_POINTER) {
+        (Some(identity), _) => identity.to_value(),
+        (None, true) => ProductIdentity::default().to_value(),
+        (None, false) => return Err(refusal("the document has no product identity chain to edit")),
+    };
+    let edited = edited_subtree(&base, PRODUCT_POINTER, event)?;
+    let identity = ProductIdentity::from_value(edited).map_err(|error| refusal(&error.to_string()))?;
+    Ok(Some(if current.as_ref() == Some(&identity) { current } else { Some(identity) }))
+}
+
+/// 🪜️ One shape representation edit: the row at `/shapeRepresentations/<id>` replaced (or edited below), or removed.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ShapeRepresentationEdit {
+    Set { id: u64, row: ShapeRepresentationRow },
+    Remove { id: u64 },
+}
+
+/// 🪜️ The shape representation edit a `/shapeRepresentations/<id>[/…]` pointer asks for, `None` when the edit addresses something else.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn shape_representation_edit(event: &SnapshotEditEvent, snapshot: &StepSnapshot) -> Result<Option<ShapeRepresentationEdit>, SnapshotEditError> {
+    let path = match event {
+        SnapshotEditEvent::SetValue { path, .. } | SnapshotEditEvent::RemoveValue { path } => path.as_str(),
+        _ => return Ok(None),
+    };
+    let segments: Vec<&str> = path.split('/').skip(1).collect();
+    let ["shapeRepresentations", id, rest @ ..] = segments.as_slice() else { return Ok(None) };
+    let refusal = |message: String| SnapshotEditError::new("snapshot-edit.schema-invalid", path, message);
+    let id: u64 = id.parse().map_err(|_| refusal(format!("'{id}' is no entity id")))?;
+    if let (SnapshotEditEvent::RemoveValue { .. }, []) = (event, rest) {
+        return Ok(Some(ShapeRepresentationEdit::Remove { id }));
+    }
+    let current = shape_representation_row(snapshot, id).unwrap_or_default();
+    let edited = edited_subtree(&current.to_value(), &format!("/shapeRepresentations/{id}"), event)?;
+    let row = ShapeRepresentationRow::from_value(edited).map_err(|error| refusal(error.to_string()))?;
+    Ok(Some(ShapeRepresentationEdit::Set { id, row }))
+}
+
+/// 📐️ The transform gesture (`/transform`) as entity restores: every `CARTESIAN_POINT` coordinate list moved and every `DIRECTION` ratio list turned in its own entity row, nothing else touched.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn transform_restore_rows(event: &SnapshotEditEvent, snapshot: &StepSnapshot) -> Result<Option<Vec<EntityRestore>>, SnapshotEditError> {
+    let Some(transform) = semio_s_artifact_stdio_contract::editing::Transform::from_event(event) else { return Ok(None) };
+    let transform = transform.map_err(|fault| SnapshotEditError::new("snapshot-edit.transform-invalid", semio_s_artifact_stdio_contract::editing::TRANSFORM_PATH, fault.message.to_string()))?;
+    let mut rows = Vec::new();
+    for entity in &snapshot.entities {
+        let moves = match entity.name.as_str() { "CARTESIAN_POINT" => true, "DIRECTION" => false, _ => continue };
+        let Some(StepValue::Aggregate(items)) = entity.args.get(1) else { continue };
+        let Some(input) = items.iter().map(|item| match item { StepValue::Real(real) => Some(*real), StepValue::Integer(integer) => Some(*integer as f64), _ => None }).collect::<Option<Vec<f64>>>() else { continue };
+        if !(2..=3).contains(&input.len()) {
+            continue;
+        }
+        let padded = [input[0], input[1], input.get(2).copied().unwrap_or(0.0)];
+        let output = if moves { transform.point(padded) } else { transform.direction(padded) };
+        let mut next = entity.clone();
+        next.args[1] = StepValue::Aggregate(output.iter().take(input.len()).map(|coordinate| StepValue::Real(*coordinate)).collect());
+        rows.push(EntityRestore { id: entity.id, entity: Some(next), index: None });
+    }
+    if rows.is_empty() {
+        return Err(SnapshotEditError::new("snapshot-edit.transform-empty", semio_s_artifact_stdio_contract::editing::TRANSFORM_PATH, "the document holds no CARTESIAN_POINT or DIRECTION entity to transform"));
+    }
+    Ok(Some(rows))
+}
 //#endregion 🔖️EntityDiffs
 
 //#region 🧪️Tests

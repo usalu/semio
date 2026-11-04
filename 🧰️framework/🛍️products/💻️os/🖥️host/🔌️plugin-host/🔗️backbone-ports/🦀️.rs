@@ -36,30 +36,46 @@ impl<T: store::os_store::backbone::BackbonePort + Send + Sync> OsBackbonePort fo
     }
 }
 
-/// 🧬️ Enum dispatch over every `OsBackbonePort` implementor (O1 — dyn dispatch dropped in
-/// favor of enum/match dispatch, mirroring `🏪️store`'s `BackbonePorts` shape exactly —
-/// `📓️terra-store-dedyn-report.md`). `Store` covers every `store::os_store::backbone::BackbonePort`-shaped transport
-/// (in-memory, localStorage) via the blanket bridge above; `Space` covers the host-only
-/// file/folder-backed `backbone::SpaceBackbonePort`. These are the only two implementors in the
-/// tree (verified: one blanket impl over `store::os_store::backbone::BackbonePort`, one direct impl on
-/// `backbone::SpaceBackbonePort` — `📓️terra-os-backbone-report.md`).
-pub enum OsBackbonePorts {
+/// 🧬️ Enum dispatch over every `OsBackbonePort` implementor (no `dyn`): `Store` covers every `store::os_store::backbone::BackbonePort`-shaped transport (in-memory, localStorage) via the blanket bridge above; `Space` covers the host-only file/folder-backed `backbone::SpaceBackbonePort`.
+pub enum OsBackboneTransport {
     Store(store::os_store::backbone::BackbonePorts),
     Space(crate::backbone::SpaceBackbonePort),
 }
 
+/// 🔌️ One backbone port with the space catalog uris it tracks: the catalog state lives and dies with the port.
+pub struct OsBackbonePorts {
+    transport: OsBackboneTransport,
+    catalog_uris: Mutex<HashSet<String>>,
+}
+
+impl OsBackbonePorts {
+    /// 🏪️ Wraps a string-typed store transport.
+    pub fn store(port: store::os_store::backbone::BackbonePorts) -> Self {
+        Self { transport: OsBackboneTransport::Store(port), catalog_uris: Mutex::new(HashSet::new()) }
+    }
+
+    /// 🗃️ Wraps a host file or folder space transport.
+    pub fn space(port: crate::backbone::SpaceBackbonePort) -> Self {
+        Self { transport: OsBackboneTransport::Space(port), catalog_uris: Mutex::new(HashSet::new()) }
+    }
+
+    pub(super) fn with_catalog_uris<R>(&self, action: impl FnOnce(&mut HashSet<String>) -> R) -> R {
+        action(&mut self.catalog_uris.lock().unwrap_or_else(std::sync::PoisonError::into_inner))
+    }
+}
+
 impl OsBackbonePort for OsBackbonePorts {
     fn read(&self, uri: &str) -> Result<Vec<u8>, VcsError> {
-        match self {
-            Self::Store(port) => OsBackbonePort::read(port, uri),
-            Self::Space(port) => OsBackbonePort::read(port, uri),
+        match &self.transport {
+            OsBackboneTransport::Store(port) => OsBackbonePort::read(port, uri),
+            OsBackboneTransport::Space(port) => OsBackbonePort::read(port, uri),
         }
     }
 
     fn write(&self, uri: &str, payload: &[u8]) -> Result<(), VcsError> {
-        match self {
-            Self::Store(port) => OsBackbonePort::write(port, uri, payload),
-            Self::Space(port) => OsBackbonePort::write(port, uri, payload),
+        match &self.transport {
+            OsBackboneTransport::Store(port) => OsBackbonePort::write(port, uri, payload),
+            OsBackboneTransport::Space(port) => OsBackbonePort::write(port, uri, payload),
         }
     }
 }

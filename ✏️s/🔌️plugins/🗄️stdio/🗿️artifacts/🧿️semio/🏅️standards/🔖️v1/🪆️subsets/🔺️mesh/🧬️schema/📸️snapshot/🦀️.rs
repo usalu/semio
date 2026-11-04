@@ -121,7 +121,7 @@ pub const STDIO_SEMIOMESH_DOCUMENT_SCHEMA: &str = "stdio.semio.mesh";
 #[dsl(layout = "lines")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.mesh")]
+#[artifact_schema(id = "stdio.semio.mesh")]
 pub struct SemioMeshSnapshot {
     #[state(artifact)]
     pub schema: String,

@@ -12,7 +12,7 @@ use super::*;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn snapshot_a() -> SemioPresentationSnapshot {
     SemioPresentationSnapshot {
-        schema: "s.stdio.semio.presentation".into(),
+        schema: "stdio.semio.presentation".into(),
         masters: vec![
             SlideMaster { id: "keep".into(), shapes: vec![SlideShape::Placeholder { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 10.0, height: 10.0 }, kind: PlaceholderKind::Title }] },
             SlideMaster { id: "toRemove".into(), shapes: Vec::new() },
@@ -29,7 +29,7 @@ pub(crate) fn snapshot_a() -> SemioPresentationSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn snapshot_b() -> SemioPresentationSnapshot {
     SemioPresentationSnapshot {
-        schema: "s.stdio.semio.presentation".into(),
+        schema: "stdio.semio.presentation".into(),
         masters: vec![SlideMaster { id: "keep".into(), shapes: Vec::new() }, SlideMaster { id: "added".into(), shapes: Vec::new() }],
         layouts: vec![SlideLayout { id: "layout1".into(), master_id: "keep".into(), shapes: Vec::new() }],
         slides: vec![Slide {

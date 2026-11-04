@@ -37,7 +37,8 @@
     "s.stdio.wav",
     "s.stdio.epw",
     "s.stdio.tsv",
-    "s.stdio.html"
+    "s.stdio.html",
+    "s.stdio.idml"
   ],
   "dialectBindings": [
     {
@@ -332,7 +333,7 @@
       "kind": "s.stdio.semio",
       "standard": "v1",
       "subset": "animation",
-      "schema": "s.stdio.semio.animation"
+      "schema": "stdio.semio.animation"
     },
     {
       "kind": "s.stdio.semio",
@@ -356,7 +357,7 @@
       "kind": "s.stdio.semio",
       "standard": "v1",
       "subset": "document",
-      "schema": "s.stdio.semio.document"
+      "schema": "stdio.semio.document"
     },
     {
       "kind": "s.stdio.semio",
@@ -374,13 +375,13 @@
       "kind": "s.stdio.semio",
       "standard": "v1",
       "subset": "graph",
-      "schema": "s.stdio.semio.graph"
+      "schema": "stdio.semio.graph"
     },
     {
       "kind": "s.stdio.semio",
       "standard": "v1",
       "subset": "image",
-      "schema": "s.stdio.semio.image"
+      "schema": "stdio.semio.image"
     },
     {
       "kind": "s.stdio.semio",
@@ -410,19 +411,19 @@
       "kind": "s.stdio.semio",
       "standard": "v1",
       "subset": "presentation",
-      "schema": "s.stdio.semio.presentation"
+      "schema": "stdio.semio.presentation"
     },
     {
       "kind": "s.stdio.semio",
       "standard": "v1",
       "subset": "table",
-      "schema": "s.stdio.semio.table"
+      "schema": "stdio.semio.table"
     },
     {
       "kind": "s.stdio.semio",
       "standard": "v1",
       "subset": "text",
-      "schema": "s.stdio.semio.text"
+      "schema": "stdio.semio.text"
     },
     {
       "kind": "s.stdio.semio",
@@ -573,6 +574,12 @@
       "standard": "2.0",
       "subset": "iso21320",
       "schema": "stdio.zip"
+    },
+    {
+      "kind": "s.stdio.idml",
+      "standard": "8.0",
+      "subset": "*",
+      "schema": "stdio.idml"
     }
   ],
   "metadataOnly": "definitions-do-not-require-executable-codecs",

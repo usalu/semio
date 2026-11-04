@@ -13,7 +13,7 @@ pub fn handle(_payload: &ExportStudioDsl, _doc: &ArtifactView<'_, WorkflowSnapsh
     let space_id = semio_hub_space_operations::resolve_future(semio_hub_space_operations::config_space_id(cfg.snapshot));
     match semio_hub_space_operations::resolve_future(crate::resolve_studio_document(&space_id)) {
         Some(document) => match export_os_space_dsl(&document) {
-            Ok(text_files) => Ok(Emit::effect(Effect::DownloadMediaExport { filename: format!("{space_id}.os"), mime_type: "text/plain".into(), data: text_files.dsl, encoding: None })),
+            Ok(export) => Ok(Emit::effect(Effect::DownloadMediaExport { filename: format!("{}.os", export.file_stem(&space_id)), mime_type: "text/plain".into(), data: export.files.dsl, encoding: None })),
             Err(_) => Ok(Emit::default()),
         },
         None => Ok(Emit::default()),

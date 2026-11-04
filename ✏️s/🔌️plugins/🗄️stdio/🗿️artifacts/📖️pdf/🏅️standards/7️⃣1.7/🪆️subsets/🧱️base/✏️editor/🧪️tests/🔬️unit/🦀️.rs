@@ -189,3 +189,60 @@ async fn registered_pdf_page_edit_publishes_and_undoes_redoes() {
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", Pdf17Editor, || semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() }, "../..");
+
+fn qpdf_accepts(bytes: &[u8], name: &str) {
+    let path = std::env::temp_dir().join(format!("semio-{name}-{}.pdf", std::process::id()));
+    std::fs::write(&path, bytes).unwrap();
+    let output = std::process::Command::new("qpdf").arg("--check").arg(&path).output();
+    let _ = std::fs::remove_file(&path);
+    match output {
+        Ok(output) => assert!(output.status.success(), "qpdf --check refused the saved PDF: {}", String::from_utf8_lossy(&output.stderr)),
+        Err(error) => assert_eq!(error.kind(), std::io::ErrorKind::NotFound, "qpdf could not run: {error}"),
+    }
+}
+
+#[test]
+fn every_pdf_17_subset_editor_opens_and_saves_the_same_natural_file() {
+    use crate::editor::{pdf17a::Pdf17AEditor, pdf17e::Pdf17EEditor, pdf17h::Pdf17HEditor, pdf17ua::Pdf17UaEditor, pdf17vt::Pdf17VtEditor, pdf17x::Pdf17XEditor};
+    let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
+    let base = <Pdf17Editor as ArtifactEditor>::decode_natural_file(input).expect("natural PDF opens");
+    let expected = <Pdf17Editor as ArtifactEditor>::encode_natural_file(&base).unwrap();
+    macro_rules! assert_subset {
+        ($editor:ty, $kind:expr) => {{
+            let codec = <$editor as ArtifactEditor>::natural_file_codec().expect("every subset editor declares the natural PDF file");
+            assert_eq!((codec.format_kind, codec.extension, codec.media_type, codec.binary), ($kind, ".pdf", "application/pdf", true));
+            let opened = <$editor as ArtifactEditor>::decode_natural_file(input).expect("natural PDF opens");
+            let saved = <$editor as ArtifactEditor>::encode_natural_file(&opened).unwrap();
+            assert_eq!(saved, expected);
+            qpdf_accepts(&saved, stringify!($editor));
+            assert!(<$editor as ArtifactEditor>::decode_natural_file(b"%PDF-1.7 truncated").is_err());
+        }};
+    }
+    assert_subset!(Pdf17AEditor, "s.stdio.pdf@1.7/a");
+    assert_subset!(Pdf17EEditor, "s.stdio.pdf@1.7/e");
+    assert_subset!(Pdf17HEditor, "s.stdio.pdf@1.7/h");
+    assert_subset!(Pdf17UaEditor, "s.stdio.pdf@1.7/ua");
+    assert_subset!(Pdf17VtEditor, "s.stdio.pdf@1.7/vt");
+    assert_subset!(Pdf17XEditor, "s.stdio.pdf@1.7/x");
+}
+
+#[test]
+fn text_layer_lists_a_real_document_in_reading_order_with_localized_labels() {
+    use semio_framework_ui_locale::Locale;
+    let snapshot = <Pdf17Editor as ArtifactEditor>::decode_natural_file(fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf")).expect("natural PDF opens");
+    let english = crate::editor::page::text_layer_lines(&snapshot, Locale::En);
+    let german = crate::editor::page::text_layer_lines(&snapshot, Locale::De);
+    assert_eq!(english.len(), german.len());
+    let texts = |lines: &[(String, String)]| lines.iter().map(|(_, line)| line.clone()).collect::<Vec<_>>();
+    let english = texts(&english);
+    let german = texts(&german);
+    assert!(english.iter().any(|line| line.starts_with("Language: ")) && german.iter().any(|line| line.starts_with("Sprache: ")));
+    assert!(english.iter().any(|line| line.starts_with("Tagged PDF: ")) && german.iter().any(|line| line.starts_with("Getaggtes PDF: ")));
+    let first = english.iter().position(|line| line == "Page 1 / 2").expect("page one heading");
+    let second = english.iter().position(|line| line == "Page 2 / 2").expect("page two heading");
+    assert_eq!(german.iter().position(|line| line == "Seite 2 / 2"), Some(second));
+    let page_one_text = snapshot.pages[0].text();
+    let found = english.iter().position(|line| line.starts_with("Text: ") && page_one_text.contains(line.trim_start_matches("Text: "))).expect("page one text is listed");
+    assert!(first < found && found < second, "page one text sits between the page headings");
+    assert!(crate::editor::page::render_text_layer(&snapshot, Locale::De).is_ok());
+}

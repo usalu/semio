@@ -155,6 +155,8 @@ impl ArtifactOwnedToolJobFactory for SemioAudioEditorExampleFactory {
     type Owner = EditorApp<SemioAudioEditor>;
     const TOOL_IDS: &'static [&'static str] = SEMIO_AUDIO_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_AUDIO_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_semio_base::semio_natural_file!(SemioAudioSnapshot, "stdio.semio.audio");
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_AUDIO_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 #[path = "🧭️edit-rules/🦀️.rs"]

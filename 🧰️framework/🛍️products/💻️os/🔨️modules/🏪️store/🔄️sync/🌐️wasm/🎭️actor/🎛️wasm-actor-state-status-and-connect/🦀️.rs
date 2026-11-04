@@ -127,7 +127,7 @@ impl WasmActor {
     pub fn status(&self) -> ArtifactSyncStatus {
         let pending_mutations = self.pending_batches.values().map(Vec::len).sum();
         let acknowledged_head = if pending_mutations == 0 && self.outbox.is_empty() { self.server_frontier.as_ref().and_then(acknowledged_edited_head) } else { None };
-        ArtifactSyncStatus { persisted: self.server_frontier.is_some(), pending_mutations, remote: self.remote_state.clone(), acknowledged_head }
+        ArtifactSyncStatus { persisted: self.server_frontier.is_some() && pending_mutations == 0 && self.outbox.is_empty(), pending_mutations, remote: self.remote_state.clone(), acknowledged_head, write_failure: None }
     }
 
     pub fn set_remote_state(&mut self, state: RemoteState) {

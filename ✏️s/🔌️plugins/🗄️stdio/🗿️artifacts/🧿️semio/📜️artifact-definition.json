@@ -258,211 +258,211 @@
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-animation-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-animation-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.animation.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.animation.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.animation.inference"
+          "value": "stdio.semio.animation.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-audio-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-audio-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.audio.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.audio.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.audio.inference"
+          "value": "stdio.semio.audio.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-brep-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-brep-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.brep.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.brep.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.brep.inference"
+          "value": "stdio.semio.brep.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-cad-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-cad-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.cad.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.cad.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.cad.inference"
+          "value": "stdio.semio.cad.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-document-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-document-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.document.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.document.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.document.inference"
+          "value": "stdio.semio.document.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-drawing-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-drawing-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.drawing.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.drawing.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.drawing.inference"
+          "value": "stdio.semio.drawing.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-flow-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-flow-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.flow.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.flow.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.flow.inference"
+          "value": "stdio.semio.flow.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-graph-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-graph-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.graph.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.graph.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.graph.inference"
+          "value": "stdio.semio.graph.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-image-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-image-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.image.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.image.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.image.inference"
+          "value": "stdio.semio.image.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.inference"
+          "value": "stdio.semio.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-kit-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-kit-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.kit.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.kit.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.kit.inference"
+          "value": "stdio.semio.kit.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-mesh-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-mesh-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.mesh.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.mesh.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.mesh.inference"
+          "value": "stdio.semio.mesh.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-model-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-model-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.model.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.model.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.model.inference"
+          "value": "stdio.semio.model.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-object-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-object-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.object.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.object.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.object.inference"
+          "value": "stdio.semio.object.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-presentation-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-presentation-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.presentation.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.presentation.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.presentation.inference"
+          "value": "stdio.semio.presentation.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-table-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-table-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.table.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.table.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.table.inference"
+          "value": "stdio.semio.table.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-text-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-text-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.text.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.text.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.text.inference"
+          "value": "stdio.semio.text.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-value-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-value-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.value.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.value.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.value.inference"
+          "value": "stdio.semio.value.inference"
         }
       ]
     },
     {
-      "id": "s.stdio.semio.inference.schema-s-stdio-semio-video-inference.v1",
+      "id": "stdio.semio.inference.schema-s-stdio-semio-video-inference.v1",
       "category": "inference",
-      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.video.inference",
+      "descriptor": "runtime-capability:inference:schema:stdio.semio.video.inference",
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.video.inference"
+          "value": "stdio.semio.video.inference"
         }
       ]
     },
@@ -506,7 +506,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.animation"
+          "value": "stdio.semio.animation"
         }
       ]
     },
@@ -517,7 +517,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.audio"
+          "value": "stdio.semio.audio"
         }
       ]
     },
@@ -528,7 +528,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.brep"
+          "value": "stdio.semio.brep"
         }
       ]
     },
@@ -539,7 +539,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.cad"
+          "value": "stdio.semio.cad"
         }
       ]
     },
@@ -550,7 +550,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.document"
+          "value": "stdio.semio.document"
         }
       ]
     },
@@ -561,7 +561,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.drawing"
+          "value": "stdio.semio.drawing"
         }
       ]
     },
@@ -572,7 +572,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.flow"
+          "value": "stdio.semio.flow"
         }
       ]
     },
@@ -583,7 +583,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.graph"
+          "value": "stdio.semio.graph"
         }
       ]
     },
@@ -594,7 +594,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.image"
+          "value": "stdio.semio.image"
         }
       ]
     },
@@ -605,7 +605,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.kit"
+          "value": "stdio.semio.kit"
         }
       ]
     },
@@ -616,7 +616,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.mesh"
+          "value": "stdio.semio.mesh"
         }
       ]
     },
@@ -627,7 +627,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.model"
+          "value": "stdio.semio.model"
         }
       ]
     },
@@ -638,7 +638,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.object"
+          "value": "stdio.semio.object"
         }
       ]
     },
@@ -649,7 +649,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.presentation"
+          "value": "stdio.semio.presentation"
         }
       ]
     },
@@ -660,7 +660,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.table"
+          "value": "stdio.semio.table"
         }
       ]
     },
@@ -671,7 +671,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.text"
+          "value": "stdio.semio.text"
         }
       ]
     },
@@ -682,7 +682,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.value"
+          "value": "stdio.semio.value"
         }
       ]
     },
@@ -693,7 +693,7 @@
       "claims": [
         {
           "namespace": "schema",
-          "value": "s.stdio.semio.video"
+          "value": "stdio.semio.video"
         }
       ]
     },
@@ -715,7 +715,7 @@
       "claims": [
         {
           "namespace": "codec",
-          "value": "s.stdio.semio.animation"
+          "value": "stdio.semio.animation"
         },
         {
           "namespace": "codec-extension",
@@ -730,7 +730,7 @@
       "claims": [
         {
           "namespace": "codec",
-          "value": "s.stdio.semio.document"
+          "value": "stdio.semio.document"
         },
         {
           "namespace": "codec-extension",
@@ -745,7 +745,7 @@
       "claims": [
         {
           "namespace": "codec",
-          "value": "s.stdio.semio.graph"
+          "value": "stdio.semio.graph"
         },
         {
           "namespace": "codec-extension",
@@ -760,7 +760,7 @@
       "claims": [
         {
           "namespace": "codec",
-          "value": "s.stdio.semio.image"
+          "value": "stdio.semio.image"
         },
         {
           "namespace": "codec-extension",
@@ -775,7 +775,7 @@
       "claims": [
         {
           "namespace": "codec",
-          "value": "s.stdio.semio.presentation"
+          "value": "stdio.semio.presentation"
         },
         {
           "namespace": "codec-extension",
@@ -790,7 +790,7 @@
       "claims": [
         {
           "namespace": "codec",
-          "value": "s.stdio.semio.table"
+          "value": "stdio.semio.table"
         },
         {
           "namespace": "codec-extension",
@@ -805,7 +805,7 @@
       "claims": [
         {
           "namespace": "codec",
-          "value": "s.stdio.semio.text"
+          "value": "stdio.semio.text"
         },
         {
           "namespace": "codec-extension",

@@ -32,6 +32,7 @@ semio-s-artifact-stdio-ifc-2x3-sav = { workspace = true }
 semio-s-artifact-stdio-ifc-4 = { workspace = true }
 semio-s-artifact-stdio-ifc-4-model = { workspace = true }
 semio-s-artifact-stdio-ifc-4-mutations = { workspace = true }
+semio-s-artifact-stdio-ifc-4x3 = { workspace = true }
 semio-s-artifact-stdio-bcf = { workspace = true }
 # /🧩️ Composition Dependencies
 semio-s-artifact-stdio-contract = { workspace = true }

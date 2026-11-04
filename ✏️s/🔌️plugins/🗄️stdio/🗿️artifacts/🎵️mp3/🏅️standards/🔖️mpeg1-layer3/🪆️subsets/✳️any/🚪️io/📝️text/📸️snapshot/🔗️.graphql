@@ -1,9 +1,4 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_mp3_snapshotEntry {
-  key: String!
-  value: String!
-}
+# The facet carries the snapshot text as one UTF-8 string.
 type Semio_mp3_snapshot {
-  schema: String! @state(class: ARTIFACT)
-  entries: [Semio_mp3_snapshotEntry!]! @state(class: ARTIFACT)
+  line: String!
 }

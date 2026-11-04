@@ -323,6 +323,8 @@ async fn op_text_binary_roundtrip_law() {
         HtmlMutation::SetText(set_text::SetText { path: vec![0, 1], text: "hello world".into() }),
         HtmlMutation::SetComment(set_comment::SetComment { path: vec![0, 1], text: " comment ".into() }),
         HtmlMutation::SetRawText(set_raw_text::SetRawText { path: vec![0, 1], text: "console.log(1);".into() }),
+        HtmlMutation::SpliceSource(splice_source::SpliceSource { splices: vec![splice_source::SourceSplice { offset: 1, delete: 0, insert: "<!-- x y -->\n🌍".into() }, splice_source::SourceSplice { offset: 9, delete: 3, insert: String::new() }] }),
+        HtmlMutation::SpliceSource(splice_source::SpliceSource { splices: Vec::new() }),
     ];
     for mutation in mutations {
         let printed = mutation.print_op();
@@ -353,6 +355,7 @@ async fn kinds_const_matches_enum_variants_in_declaration_order() {
         HtmlMutation::SetText(set_text::SetText { path: vec![0, 0], text: "x".into() }),
         HtmlMutation::SetComment(set_comment::SetComment { path: vec![0, 0], text: "x".into() }),
         HtmlMutation::SetRawText(set_raw_text::SetRawText { path: vec![0, 0], text: "x".into() }),
+        HtmlMutation::SpliceSource(splice_source::SpliceSource { splices: vec![splice_source::SourceSplice { offset: 0, delete: 0, insert: "x".into() }] }),
     ];
     assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant must cover every KINDS entry exactly once");
     for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {

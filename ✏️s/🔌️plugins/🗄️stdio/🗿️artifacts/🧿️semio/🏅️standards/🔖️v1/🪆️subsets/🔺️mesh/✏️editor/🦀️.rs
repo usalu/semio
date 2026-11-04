@@ -265,6 +265,8 @@ impl ArtifactEditor for SemioMeshEditor {
     const DIALECT: Dialect = SEMIO_MESH_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_MESH_DOCUMENT_SCHEMA;
 
+    semio_s_artifact_stdio_semio_base::semio_natural_file!(SemioMeshSnapshot, "stdio.semio.mesh");
+
     semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
         owner_file: "semio/v1/mesh/editor",
         controller: "s.stdio.semio@v1/mesh#editor",

@@ -1,4 +1,4 @@
-"""🐍️ Independent Python implementation of the `s.stdio.semio.animation` carrier and its
+"""🐍️ Independent Python implementation of the `stdio.semio.animation` carrier and its
 thirteen-verb mutation vocabulary — the differential ORACLE this case is measured against.
 
 Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. `.dsl.semio` is a semio-native carrier that no
@@ -76,7 +76,7 @@ LETTER_PROPERTY = {letter: kind for kind, letter in PROPERTY_LETTER.items()}
 INTERPOLATION_LETTER = {"linear": "l", "step": "s", "cubicSpline": "c"}
 LETTER_INTERPOLATION = {letter: kind for kind, letter in INTERPOLATION_LETTER.items()}
 
-DOCUMENT_SCHEMA = "s.stdio.semio.animation"
+DOCUMENT_SCHEMA = "stdio.semio.animation"
 DSL_PREAMBLE = "semio s.stdio.semio.animation.dsl v1"
 
 WALK_DSL = "asset://🚶️walk/🗣️.dsl.semio"

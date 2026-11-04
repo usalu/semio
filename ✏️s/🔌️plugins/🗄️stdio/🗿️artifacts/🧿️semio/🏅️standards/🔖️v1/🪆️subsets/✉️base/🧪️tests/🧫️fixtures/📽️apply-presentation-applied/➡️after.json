@@ -1,7 +1,7 @@
 {
   "schema": "stdio.semio",
   "subset": {
-    "schema": "s.stdio.semio.presentation",
+    "schema": "stdio.semio.presentation",
     "masters": [
       {
         "id": "slideMaster1",

@@ -35,7 +35,7 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
     type Dependency = semio_framework_value::DslValue;
     type Key = String;
     type Value = Vec<BrepValidationDiagnostic>;
-    const FIELD_ID: &'static str = "s.stdio.semio.brep.inference.validationReport";
+    const FIELD_ID: &'static str = "stdio.semio.brep.inference.validationReport";
     const SCHEMA_VERSION: u32 = 1;
 
     fn reads() -> &'static [&'static str] {

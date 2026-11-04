@@ -16,7 +16,7 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
   named here rather than blurred.
 
   **`🐍️component.py` beside this file is the second IMPLEMENTATION, for the half no third party
-  speaks.** The `s.stdio.semio.image` carrier and its thirteen verbs are semio's own, so the second
+  speaks.** The `stdio.semio.image` carrier and its thirteen verbs are semio's own, so the second
   producer a differential comparison needs is a second implementation, written in Python from the
   committed specification documents alone: the DSL body from
   `../../🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`,

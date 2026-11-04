@@ -51,7 +51,23 @@
   "codecs": [
     { "id": "s.stdio.deflate.standard.rfc1950.codec.native-document.v1", "status": "implemented", "from": "s.stdio.deflate.standard.rfc1950.dialect.source", "to": "s.stdio.deflate.standard.rfc1950.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.deflate.v1", "artifact_kind": "s.stdio.deflate", "artifact_schema": "stdio.deflate", "extension": "zz", "pack_schema_hash": "8fb3ab47840a0b86ee612f4dae7b1922f080bb881d24fd691b1cb08b2bcd8035", "runtime_capability_id": "s.stdio.deflate.standard.rfc1950.codec.codec-stdio-deflate-extension-zz.v1" } }
   ],
-  "mutations": [],
+  "mutations": [
+    {
+      "id": "s.stdio.deflate.mutation.set-compression-params.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.deflate.mutation.set-preset-dictionary.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.deflate.mutation.set-payload.v1",
+      "status": "implemented",
+      "executable_registration": false
+    }
+  ],
   "inferences": [],
   "resources": [
     {
@@ -218,7 +234,11 @@
     "lossless": "unimplemented",
     "canonical": "unimplemented",
     "validators": [],
-    "mutations": [],
+    "mutations": [
+      "s.stdio.deflate.mutation.set-compression-params.v1",
+      "s.stdio.deflate.mutation.set-preset-dictionary.v1",
+      "s.stdio.deflate.mutation.set-payload.v1"
+    ],
     "inferences": [],
     "fixtures": []
   }

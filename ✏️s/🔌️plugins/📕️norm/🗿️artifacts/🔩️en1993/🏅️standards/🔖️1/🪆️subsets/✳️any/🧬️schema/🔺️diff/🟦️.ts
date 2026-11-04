@@ -2,7 +2,7 @@
  * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
 import { normWireAny, normWireArray, normWireInteger, normWireLiteral, normWireNullable, normWireNumber, normWireObject, normWireOptional, normWireRange, normWireRef, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
-import { type ActionKind, parseActionKind, type AnalysisKind, parseAnalysisKind, type BridgeFatigue, parseBridgeFatigue, type BuiltUpKind, parseBuiltUpKind, type BuiltUpMember, parseBuiltUpMember, type ChordShape, parseChordShape, type ColdFormedMember, parseColdFormedMember, type CraneRunway, parseCraneRunway, type DesignAction, parseDesignAction, type FabricationToleranceClass, parseFabricationToleranceClass, type FatigueBand, parseFatigueBand, type FatigueDetail, parseFatigueDetail, type FatigueMethod, parseFatigueMethod, type FireExposure, parseFireExposure, type FireRating, parseFireRating, type ForceAction, parseForceAction, type FoundationBlock, parseFoundationBlock, type FrameAction, parseFrameAction, type FrameBar, parseFrameBar, type FrameBarRelease, parseFrameBarRelease, type FrameMemberBasis, parseFrameMemberBasis, type FrameNode, parseFrameNode, type FrameNodeSupport, parseFrameNodeSupport, type HollowJoint, parseHollowJoint, type JointCategory, parseJointCategory, type JointForceAction, parseJointForceAction, type JointKind, parseJointKind, type JointPlate, parseJointPlate, type JointRow, parseJointRow, type JointRowType, parseJointRowType, type LatticeKind, parseLatticeKind, type LoadApplication, parseLoadApplication, type LoadCase, parseLoadCase, type MaterialKind, parseMaterialKind, type MemberAction, parseMemberAction, type MomentDiagram, parseMomentDiagram, type ParametricSection, parseParametricSection, type ParametricShape, parseParametricShape, type PatchLoadType, parsePatchLoadType, type Placement, parsePlacement, type PlatedPanel, parsePlatedPanel, type Restraint, parseRestraint, type RestraintDistribution, parseRestraintDistribution, type RestraintSupport, parseRestraintSupport, type SectionKind, parseSectionKind, type SheetPileEnvironment, parseSheetPileEnvironment, type SiloShell, parseSiloShell, type StainlessForming, parseStainlessForming, type SteelJoint, parseSteelJoint, type SteelMaterial, parseSteelMaterial, type SteelMember, parseSteelMember, type SteelMemberType, parseSteelMemberType, type SteelPile, parseSteelPile, type SteelSection, parseSteelSection, type StiffenerShape, parseStiffenerShape, type StiffnessClass, parseStiffnessClass, type Storey, parseStorey, type TensionComponent, parseTensionComponent, type TorsionLoad, parseTorsionLoad, type TowerLeg, parseTowerLeg, type WarpingSupport, parseWarpingSupport, type WeldGroup, parseWeldGroup, type WeldPattern, parseWeldPattern } from "../📸️snapshot/🟦️.ts";
+import { type ActionKind, parseActionKind, type AnalysisKind, parseAnalysisKind, type BridgeFatigue, parseBridgeFatigue, type BucklingLength, parseBucklingLength, type BuiltUpKind, parseBuiltUpKind, type BuiltUpMember, parseBuiltUpMember, type ChordShape, parseChordShape, type ColdFormedMember, parseColdFormedMember, type CraneRunway, parseCraneRunway, type DesignAction, parseDesignAction, type FabricationToleranceClass, parseFabricationToleranceClass, type FastenedJoint, parseFastenedJoint, type FatigueBand, parseFatigueBand, type FatigueDetail, parseFatigueDetail, type FatigueMethod, parseFatigueMethod, type FatigueStress, parseFatigueStress, type FireExposure, parseFireExposure, type FireRating, parseFireRating, type ForceAction, parseForceAction, type FoundationBlock, parseFoundationBlock, type FormingGain, parseFormingGain, type FrameAction, parseFrameAction, type FrameBar, parseFrameBar, type FrameBarRelease, parseFrameBarRelease, type FrameMemberBasis, parseFrameMemberBasis, type FrameNode, parseFrameNode, type FrameNodeSupport, parseFrameNodeSupport, type HollowJoint, parseHollowJoint, type JointCategory, parseJointCategory, type JointForceAction, parseJointForceAction, type JointKind, parseJointKind, type JointPlate, parseJointPlate, type JointRow, parseJointRow, type JointRowType, parseJointRowType, type LatticeKind, parseLatticeKind, type LoadApplication, parseLoadApplication, type LoadCase, parseLoadCase, type MaterialKind, parseMaterialKind, type MaterialDuctility, parseMaterialDuctility, type MemberAction, parseMemberAction, type MomentDiagram, parseMomentDiagram, type ParametricSection, parseParametricSection, type ParametricShape, parseParametricShape, type PatchLoadType, parsePatchLoadType, type Placement, parsePlacement, type PlatedPanel, parsePlatedPanel, type Restraint, parseRestraint, type RestraintDistribution, parseRestraintDistribution, type RestraintSupport, parseRestraintSupport, type SectionKind, parseSectionKind, type SheetPileEnvironment, parseSheetPileEnvironment, type SiloShell, parseSiloShell, type StainlessForming, parseStainlessForming, type SteelJoint, parseSteelJoint, type SteelMaterial, parseSteelMaterial, type SteelMember, parseSteelMember, type SteelMemberType, parseSteelMemberType, type SteelPile, parseSteelPile, type SteelSection, parseSteelSection, type StiffenerShape, parseStiffenerShape, type StiffnessClass, parseStiffnessClass, type Storey, parseStorey, type TensionComponent, parseTensionComponent, type TorsionLoad, parseTorsionLoad, type TowerLeg, parseTowerLeg, type WarpingSupport, parseWarpingSupport, type WeldGroup, parseWeldGroup, type WeldPattern, parseWeldPattern } from "../📸️snapshot/🟦️.ts";
 
 export interface En1993Diff {
   /** @state artifact */
@@ -62,13 +62,23 @@ export interface En1993Diff {
   /** @state artifact */
   reliabilityClass?: ("RC1" | "RC2" | "RC3") | null;
   /** @state artifact */
-  jointPlates?: En1993JointPlateDelta;
+  jointPlates: En1993JointPlateDelta;
   /** @state artifact */
-  foundationBlocks?: En1993FoundationBlockDelta;
+  foundationBlocks: En1993FoundationBlockDelta;
   /** @state artifact */
-  frameActions?: En1993FrameActionDelta;
+  materialDuctility: En1993MaterialDuctilityDelta;
   /** @state artifact */
-  frameMemberBases?: En1993FrameMemberBasisDelta;
+  formingGains: En1993FormingGainDelta;
+  /** @state artifact */
+  bucklingLengths: En1993BucklingLengthDelta;
+  /** @state artifact */
+  fatigueStresses: En1993FatigueStressDelta;
+  /** @state artifact */
+  frameActions: En1993FrameActionDelta;
+  /** @state artifact */
+  frameMemberBases: En1993FrameMemberBasisDelta;
+  /** @state artifact */
+  fastenedJoints: En1993FastenedJointDelta;
 }
 
 export interface En1993MaterialDelta {
@@ -1510,7 +1520,207 @@ export interface En1993FrameMemberBasisPatch {
   basis?: string | null;
 }
 
-export const parseEn1993Diff: NormWireReader<En1993Diff> = normWireObject<En1993Diff>({ annex: normWireOptional(normWireNullable(normWireLiteral("En", "De"))), materials: normWireRequired(normWireAny<[En1993MaterialDelta]>(normWireRef(() => parseEn1993MaterialDelta))), sections: normWireRequired(normWireAny<[En1993SectionDelta]>(normWireRef(() => parseEn1993SectionDelta))), members: normWireRequired(normWireAny<[En1993MemberDelta]>(normWireRef(() => parseEn1993MemberDelta))), loadCases: normWireRequired(normWireAny<[En1993LoadCaseDelta]>(normWireRef(() => parseEn1993LoadCaseDelta))), memberActions: normWireRequired(normWireAny<[En1993MemberActionDelta]>(normWireRef(() => parseEn1993MemberActionDelta))), joints: normWireRequired(normWireAny<[En1993JointDelta]>(normWireRef(() => parseEn1993JointDelta))), fatigueDetails: normWireRequired(normWireAny<[En1993FatigueDetailDelta]>(normWireRef(() => parseEn1993FatigueDetailDelta))), fireExposures: normWireRequired(normWireAny<[En1993FireExposureDelta]>(normWireRef(() => parseEn1993FireExposureDelta))), coldFormedMembers: normWireRequired(normWireAny<[En1993ColdFormedMemberDelta]>(normWireRef(() => parseEn1993ColdFormedMemberDelta))), platedPanels: normWireRequired(normWireAny<[En1993PlatedPanelDelta]>(normWireRef(() => parseEn1993PlatedPanelDelta))), siloShells: normWireRequired(normWireAny<[En1993SiloShellDelta]>(normWireRef(() => parseEn1993SiloShellDelta))), tensionComponents: normWireRequired(normWireAny<[En1993TensionComponentDelta]>(normWireRef(() => parseEn1993TensionComponentDelta))), bridgeFatigue: normWireRequired(normWireAny<[En1993BridgeFatigueDelta]>(normWireRef(() => parseEn1993BridgeFatigueDelta))), towerLegs: normWireRequired(normWireAny<[En1993TowerLegDelta]>(normWireRef(() => parseEn1993TowerLegDelta))), piles: normWireRequired(normWireAny<[En1993PileDelta]>(normWireRef(() => parseEn1993PileDelta))), craneRunways: normWireRequired(normWireAny<[En1993CraneRunwayDelta]>(normWireRef(() => parseEn1993CraneRunwayDelta))), storeys: normWireRequired(normWireAny<[En1993StoreyDelta]>(normWireRef(() => parseEn1993StoreyDelta))), restraints: normWireRequired(normWireAny<[En1993RestraintDelta]>(normWireRef(() => parseEn1993RestraintDelta))), builtUpMembers: normWireRequired(normWireAny<[En1993BuiltUpMemberDelta]>(normWireRef(() => parseEn1993BuiltUpMemberDelta))), weldGroups: normWireRequired(normWireAny<[En1993WeldGroupDelta]>(normWireRef(() => parseEn1993WeldGroupDelta))), parametricSections: normWireRequired(normWireAny<[En1993ParametricSectionDelta]>(normWireRef(() => parseEn1993ParametricSectionDelta))), hollowJoints: normWireRequired(normWireAny<[En1993HollowJointDelta]>(normWireRef(() => parseEn1993HollowJointDelta))), jointRows: normWireRequired(normWireAny<[En1993JointRowDelta]>(normWireRef(() => parseEn1993JointRowDelta))), frameNodes: normWireRequired(normWireAny<[En1993FrameNodeDelta]>(normWireRef(() => parseEn1993FrameNodeDelta))), frameBars: normWireRequired(normWireAny<[En1993FrameBarDelta]>(normWireRef(() => parseEn1993FrameBarDelta))), placements: normWireRequired(normWireAny<[En1993PlacementDelta]>(normWireRef(() => parseEn1993PlacementDelta))), reliabilityClass: normWireOptional(normWireNullable(normWireLiteral("RC1", "RC2", "RC3"))), jointPlates: normWireOptional(normWireAny<[En1993JointPlateDelta]>(normWireRef(() => parseEn1993JointPlateDelta))), foundationBlocks: normWireOptional(normWireAny<[En1993FoundationBlockDelta]>(normWireRef(() => parseEn1993FoundationBlockDelta))), frameActions: normWireOptional(normWireAny<[En1993FrameActionDelta]>(normWireRef(() => parseEn1993FrameActionDelta))), frameMemberBases: normWireOptional(normWireAny<[En1993FrameMemberBasisDelta]>(normWireRef(() => parseEn1993FrameMemberBasisDelta))) });
+export interface En1993MaterialDuctilityDelta {
+  removed: En1993MaterialDuctilityRemoval[];
+  inserted: En1993MaterialDuctilityInsertion[];
+  moved: En1993MaterialDuctilityRelocation[];
+  modified: En1993MaterialDuctilityModification[];
+}
+
+export interface En1993MaterialDuctilityRemoval {
+  id: string;
+  index: number;
+}
+
+export interface En1993MaterialDuctilityInsertion {
+  index: number;
+  row: MaterialDuctility;
+}
+
+export interface En1993MaterialDuctilityRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface En1993MaterialDuctilityModification {
+  id: string;
+  patch: En1993MaterialDuctilityPatch;
+}
+
+export interface En1993MaterialDuctilityPatch {
+  materialId?: string | null;
+  elongation?: string | null;
+  ultimateStrain?: string | null;
+}
+
+export interface En1993FormingGainDelta {
+  removed: En1993FormingGainRemoval[];
+  inserted: En1993FormingGainInsertion[];
+  moved: En1993FormingGainRelocation[];
+  modified: En1993FormingGainModification[];
+}
+
+export interface En1993FormingGainRemoval {
+  id: string;
+  index: number;
+}
+
+export interface En1993FormingGainInsertion {
+  index: number;
+  row: FormingGain;
+}
+
+export interface En1993FormingGainRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface En1993FormingGainModification {
+  id: string;
+  patch: En1993FormingGainPatch;
+}
+
+export interface En1993FormingGainPatch {
+  memberId?: string | null;
+  forming?: string | null;
+  ultimateStrength?: string | null;
+  grossArea?: string | null;
+  bends?: string | null;
+  usedYield?: string | null;
+}
+
+export interface En1993BucklingLengthDelta {
+  removed: En1993BucklingLengthRemoval[];
+  inserted: En1993BucklingLengthInsertion[];
+  moved: En1993BucklingLengthRelocation[];
+  modified: En1993BucklingLengthModification[];
+}
+
+export interface En1993BucklingLengthRemoval {
+  id: string;
+  index: number;
+}
+
+export interface En1993BucklingLengthInsertion {
+  index: number;
+  row: BucklingLength;
+}
+
+export interface En1993BucklingLengthRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface En1993BucklingLengthModification {
+  id: string;
+  patch: En1993BucklingLengthPatch;
+}
+
+export interface En1993BucklingLengthPatch {
+  memberId?: string | null;
+  plane?: string | null;
+  sway?: string | null;
+  restraintA?: string | null;
+  columnStiffnessA?: string | null;
+  beamStiffnessA?: string | null;
+  restraintB?: string | null;
+  columnStiffnessB?: string | null;
+  beamStiffnessB?: string | null;
+}
+
+export interface En1993FatigueStressDelta {
+  removed: En1993FatigueStressRemoval[];
+  inserted: En1993FatigueStressInsertion[];
+  moved: En1993FatigueStressRelocation[];
+  modified: En1993FatigueStressModification[];
+}
+
+export interface En1993FatigueStressRemoval {
+  id: string;
+  index: number;
+}
+
+export interface En1993FatigueStressInsertion {
+  index: number;
+  row: FatigueStress;
+}
+
+export interface En1993FatigueStressRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface En1993FatigueStressModification {
+  id: string;
+  patch: En1993FatigueStressPatch;
+}
+
+export interface En1993FatigueStressPatch {
+  detailId?: string | null;
+  maxCaseId?: string | null;
+  minCaseId?: string | null;
+  fibreZ?: string | null;
+  fibreY?: string | null;
+  relief?: string | null;
+  concentration?: string | null;
+  thickness?: string | null;
+  cycles?: string | null;
+}
+
+export interface En1993FastenedJointDelta {
+  removed: En1993FastenedJointRemoval[];
+  inserted: En1993FastenedJointInsertion[];
+  moved: En1993FastenedJointRelocation[];
+  modified: En1993FastenedJointModification[];
+}
+
+export interface En1993FastenedJointRemoval {
+  id: string;
+  index: number;
+}
+
+export interface En1993FastenedJointInsertion {
+  index: number;
+  row: FastenedJoint;
+}
+
+export interface En1993FastenedJointRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface En1993FastenedJointModification {
+  id: string;
+  patch: En1993FastenedJointPatch;
+}
+
+export interface En1993FastenedJointPatch {
+  memberId?: string | null;
+  kind?: string | null;
+  diameter?: string | null;
+  washerDiameter?: string | null;
+  count?: string | null;
+  perRow?: string | null;
+  headThickness?: string | null;
+  baseThickness?: string | null;
+  headStrength?: string | null;
+  baseStrength?: string | null;
+  endDistance?: string | null;
+  edgeDistance?: string | null;
+  pitch?: string | null;
+  gauge?: string | null;
+  sheetWidth?: string | null;
+  shearForce?: string | null;
+  tensionForce?: string | null;
+  shearResistance?: string | null;
+}
+
+export const parseEn1993Diff: NormWireReader<En1993Diff> = normWireObject<En1993Diff>({ annex: normWireOptional(normWireNullable(normWireLiteral("En", "De"))), materials: normWireRequired(normWireAny<[En1993MaterialDelta]>(normWireRef(() => parseEn1993MaterialDelta))), sections: normWireRequired(normWireAny<[En1993SectionDelta]>(normWireRef(() => parseEn1993SectionDelta))), members: normWireRequired(normWireAny<[En1993MemberDelta]>(normWireRef(() => parseEn1993MemberDelta))), loadCases: normWireRequired(normWireAny<[En1993LoadCaseDelta]>(normWireRef(() => parseEn1993LoadCaseDelta))), memberActions: normWireRequired(normWireAny<[En1993MemberActionDelta]>(normWireRef(() => parseEn1993MemberActionDelta))), joints: normWireRequired(normWireAny<[En1993JointDelta]>(normWireRef(() => parseEn1993JointDelta))), fatigueDetails: normWireRequired(normWireAny<[En1993FatigueDetailDelta]>(normWireRef(() => parseEn1993FatigueDetailDelta))), fireExposures: normWireRequired(normWireAny<[En1993FireExposureDelta]>(normWireRef(() => parseEn1993FireExposureDelta))), coldFormedMembers: normWireRequired(normWireAny<[En1993ColdFormedMemberDelta]>(normWireRef(() => parseEn1993ColdFormedMemberDelta))), platedPanels: normWireRequired(normWireAny<[En1993PlatedPanelDelta]>(normWireRef(() => parseEn1993PlatedPanelDelta))), siloShells: normWireRequired(normWireAny<[En1993SiloShellDelta]>(normWireRef(() => parseEn1993SiloShellDelta))), tensionComponents: normWireRequired(normWireAny<[En1993TensionComponentDelta]>(normWireRef(() => parseEn1993TensionComponentDelta))), bridgeFatigue: normWireRequired(normWireAny<[En1993BridgeFatigueDelta]>(normWireRef(() => parseEn1993BridgeFatigueDelta))), towerLegs: normWireRequired(normWireAny<[En1993TowerLegDelta]>(normWireRef(() => parseEn1993TowerLegDelta))), piles: normWireRequired(normWireAny<[En1993PileDelta]>(normWireRef(() => parseEn1993PileDelta))), craneRunways: normWireRequired(normWireAny<[En1993CraneRunwayDelta]>(normWireRef(() => parseEn1993CraneRunwayDelta))), storeys: normWireRequired(normWireAny<[En1993StoreyDelta]>(normWireRef(() => parseEn1993StoreyDelta))), restraints: normWireRequired(normWireAny<[En1993RestraintDelta]>(normWireRef(() => parseEn1993RestraintDelta))), builtUpMembers: normWireRequired(normWireAny<[En1993BuiltUpMemberDelta]>(normWireRef(() => parseEn1993BuiltUpMemberDelta))), weldGroups: normWireRequired(normWireAny<[En1993WeldGroupDelta]>(normWireRef(() => parseEn1993WeldGroupDelta))), parametricSections: normWireRequired(normWireAny<[En1993ParametricSectionDelta]>(normWireRef(() => parseEn1993ParametricSectionDelta))), hollowJoints: normWireRequired(normWireAny<[En1993HollowJointDelta]>(normWireRef(() => parseEn1993HollowJointDelta))), jointRows: normWireRequired(normWireAny<[En1993JointRowDelta]>(normWireRef(() => parseEn1993JointRowDelta))), frameNodes: normWireRequired(normWireAny<[En1993FrameNodeDelta]>(normWireRef(() => parseEn1993FrameNodeDelta))), frameBars: normWireRequired(normWireAny<[En1993FrameBarDelta]>(normWireRef(() => parseEn1993FrameBarDelta))), placements: normWireRequired(normWireAny<[En1993PlacementDelta]>(normWireRef(() => parseEn1993PlacementDelta))), reliabilityClass: normWireOptional(normWireNullable(normWireLiteral("RC1", "RC2", "RC3"))), jointPlates: normWireRequired(normWireAny<[En1993JointPlateDelta]>(normWireRef(() => parseEn1993JointPlateDelta))), foundationBlocks: normWireRequired(normWireAny<[En1993FoundationBlockDelta]>(normWireRef(() => parseEn1993FoundationBlockDelta))), materialDuctility: normWireRequired(normWireAny<[En1993MaterialDuctilityDelta]>(normWireRef(() => parseEn1993MaterialDuctilityDelta))), formingGains: normWireRequired(normWireAny<[En1993FormingGainDelta]>(normWireRef(() => parseEn1993FormingGainDelta))), bucklingLengths: normWireRequired(normWireAny<[En1993BucklingLengthDelta]>(normWireRef(() => parseEn1993BucklingLengthDelta))), fatigueStresses: normWireRequired(normWireAny<[En1993FatigueStressDelta]>(normWireRef(() => parseEn1993FatigueStressDelta))), frameActions: normWireRequired(normWireAny<[En1993FrameActionDelta]>(normWireRef(() => parseEn1993FrameActionDelta))), frameMemberBases: normWireRequired(normWireAny<[En1993FrameMemberBasisDelta]>(normWireRef(() => parseEn1993FrameMemberBasisDelta))), fastenedJoints: normWireRequired(normWireAny<[En1993FastenedJointDelta]>(normWireRef(() => parseEn1993FastenedJointDelta))) });
 export const parseEn1993MaterialDelta: NormWireReader<En1993MaterialDelta> = normWireObject<En1993MaterialDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseEn1993MaterialRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseEn1993MaterialInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseEn1993MaterialRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseEn1993MaterialModification))) });
 export const parseEn1993MaterialRemoval: NormWireReader<En1993MaterialRemoval> = normWireObject<En1993MaterialRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
 export const parseEn1993MaterialInsertion: NormWireReader<En1993MaterialInsertion> = normWireObject<En1993MaterialInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), row: normWireRequired(parseSteelMaterial) });
@@ -1691,3 +1901,33 @@ export const parseEn1993FrameMemberBasisInsertion: NormWireReader<En1993FrameMem
 export const parseEn1993FrameMemberBasisRelocation: NormWireReader<En1993FrameMemberBasisRelocation> = normWireObject<En1993FrameMemberBasisRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
 export const parseEn1993FrameMemberBasisModification: NormWireReader<En1993FrameMemberBasisModification> = normWireObject<En1993FrameMemberBasisModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1993FrameMemberBasisPatch)) });
 export const parseEn1993FrameMemberBasisPatch: NormWireReader<En1993FrameMemberBasisPatch> = normWireObject<En1993FrameMemberBasisPatch>({ memberId: normWireOptional(normWireNullable(normWireString)), basis: normWireOptional(normWireNullable(normWireString)) });
+export const parseEn1993MaterialDuctilityDelta: NormWireReader<En1993MaterialDuctilityDelta> = normWireObject<En1993MaterialDuctilityDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseEn1993MaterialDuctilityRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseEn1993MaterialDuctilityInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseEn1993MaterialDuctilityRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseEn1993MaterialDuctilityModification))) });
+export const parseEn1993MaterialDuctilityRemoval: NormWireReader<En1993MaterialDuctilityRemoval> = normWireObject<En1993MaterialDuctilityRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1993MaterialDuctilityInsertion: NormWireReader<En1993MaterialDuctilityInsertion> = normWireObject<En1993MaterialDuctilityInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), row: normWireRequired(parseMaterialDuctility) });
+export const parseEn1993MaterialDuctilityRelocation: NormWireReader<En1993MaterialDuctilityRelocation> = normWireObject<En1993MaterialDuctilityRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1993MaterialDuctilityModification: NormWireReader<En1993MaterialDuctilityModification> = normWireObject<En1993MaterialDuctilityModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1993MaterialDuctilityPatch)) });
+export const parseEn1993MaterialDuctilityPatch: NormWireReader<En1993MaterialDuctilityPatch> = normWireObject<En1993MaterialDuctilityPatch>({ materialId: normWireOptional(normWireNullable(normWireString)), elongation: normWireOptional(normWireNullable(normWireString)), ultimateStrain: normWireOptional(normWireNullable(normWireString)) });
+export const parseEn1993FormingGainDelta: NormWireReader<En1993FormingGainDelta> = normWireObject<En1993FormingGainDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseEn1993FormingGainRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseEn1993FormingGainInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseEn1993FormingGainRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseEn1993FormingGainModification))) });
+export const parseEn1993FormingGainRemoval: NormWireReader<En1993FormingGainRemoval> = normWireObject<En1993FormingGainRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1993FormingGainInsertion: NormWireReader<En1993FormingGainInsertion> = normWireObject<En1993FormingGainInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), row: normWireRequired(parseFormingGain) });
+export const parseEn1993FormingGainRelocation: NormWireReader<En1993FormingGainRelocation> = normWireObject<En1993FormingGainRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1993FormingGainModification: NormWireReader<En1993FormingGainModification> = normWireObject<En1993FormingGainModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1993FormingGainPatch)) });
+export const parseEn1993FormingGainPatch: NormWireReader<En1993FormingGainPatch> = normWireObject<En1993FormingGainPatch>({ memberId: normWireOptional(normWireNullable(normWireString)), forming: normWireOptional(normWireNullable(normWireString)), ultimateStrength: normWireOptional(normWireNullable(normWireString)), grossArea: normWireOptional(normWireNullable(normWireString)), bends: normWireOptional(normWireNullable(normWireString)), usedYield: normWireOptional(normWireNullable(normWireString)) });
+export const parseEn1993BucklingLengthDelta: NormWireReader<En1993BucklingLengthDelta> = normWireObject<En1993BucklingLengthDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseEn1993BucklingLengthRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseEn1993BucklingLengthInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseEn1993BucklingLengthRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseEn1993BucklingLengthModification))) });
+export const parseEn1993BucklingLengthRemoval: NormWireReader<En1993BucklingLengthRemoval> = normWireObject<En1993BucklingLengthRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1993BucklingLengthInsertion: NormWireReader<En1993BucklingLengthInsertion> = normWireObject<En1993BucklingLengthInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), row: normWireRequired(parseBucklingLength) });
+export const parseEn1993BucklingLengthRelocation: NormWireReader<En1993BucklingLengthRelocation> = normWireObject<En1993BucklingLengthRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1993BucklingLengthModification: NormWireReader<En1993BucklingLengthModification> = normWireObject<En1993BucklingLengthModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1993BucklingLengthPatch)) });
+export const parseEn1993BucklingLengthPatch: NormWireReader<En1993BucklingLengthPatch> = normWireObject<En1993BucklingLengthPatch>({ memberId: normWireOptional(normWireNullable(normWireString)), plane: normWireOptional(normWireNullable(normWireString)), sway: normWireOptional(normWireNullable(normWireString)), restraintA: normWireOptional(normWireNullable(normWireString)), columnStiffnessA: normWireOptional(normWireNullable(normWireString)), beamStiffnessA: normWireOptional(normWireNullable(normWireString)), restraintB: normWireOptional(normWireNullable(normWireString)), columnStiffnessB: normWireOptional(normWireNullable(normWireString)), beamStiffnessB: normWireOptional(normWireNullable(normWireString)) });
+export const parseEn1993FatigueStressDelta: NormWireReader<En1993FatigueStressDelta> = normWireObject<En1993FatigueStressDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseEn1993FatigueStressRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseEn1993FatigueStressInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseEn1993FatigueStressRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseEn1993FatigueStressModification))) });
+export const parseEn1993FatigueStressRemoval: NormWireReader<En1993FatigueStressRemoval> = normWireObject<En1993FatigueStressRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1993FatigueStressInsertion: NormWireReader<En1993FatigueStressInsertion> = normWireObject<En1993FatigueStressInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), row: normWireRequired(parseFatigueStress) });
+export const parseEn1993FatigueStressRelocation: NormWireReader<En1993FatigueStressRelocation> = normWireObject<En1993FatigueStressRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1993FatigueStressModification: NormWireReader<En1993FatigueStressModification> = normWireObject<En1993FatigueStressModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1993FatigueStressPatch)) });
+export const parseEn1993FatigueStressPatch: NormWireReader<En1993FatigueStressPatch> = normWireObject<En1993FatigueStressPatch>({ detailId: normWireOptional(normWireNullable(normWireString)), maxCaseId: normWireOptional(normWireNullable(normWireString)), minCaseId: normWireOptional(normWireNullable(normWireString)), fibreZ: normWireOptional(normWireNullable(normWireString)), fibreY: normWireOptional(normWireNullable(normWireString)), relief: normWireOptional(normWireNullable(normWireString)), concentration: normWireOptional(normWireNullable(normWireString)), thickness: normWireOptional(normWireNullable(normWireString)), cycles: normWireOptional(normWireNullable(normWireString)) });
+export const parseEn1993FastenedJointDelta: NormWireReader<En1993FastenedJointDelta> = normWireObject<En1993FastenedJointDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseEn1993FastenedJointRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseEn1993FastenedJointInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseEn1993FastenedJointRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseEn1993FastenedJointModification))) });
+export const parseEn1993FastenedJointRemoval: NormWireReader<En1993FastenedJointRemoval> = normWireObject<En1993FastenedJointRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1993FastenedJointInsertion: NormWireReader<En1993FastenedJointInsertion> = normWireObject<En1993FastenedJointInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), row: normWireRequired(parseFastenedJoint) });
+export const parseEn1993FastenedJointRelocation: NormWireReader<En1993FastenedJointRelocation> = normWireObject<En1993FastenedJointRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1993FastenedJointModification: NormWireReader<En1993FastenedJointModification> = normWireObject<En1993FastenedJointModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1993FastenedJointPatch)) });
+export const parseEn1993FastenedJointPatch: NormWireReader<En1993FastenedJointPatch> = normWireObject<En1993FastenedJointPatch>({ memberId: normWireOptional(normWireNullable(normWireString)), kind: normWireOptional(normWireNullable(normWireString)), diameter: normWireOptional(normWireNullable(normWireString)), washerDiameter: normWireOptional(normWireNullable(normWireString)), count: normWireOptional(normWireNullable(normWireString)), perRow: normWireOptional(normWireNullable(normWireString)), headThickness: normWireOptional(normWireNullable(normWireString)), baseThickness: normWireOptional(normWireNullable(normWireString)), headStrength: normWireOptional(normWireNullable(normWireString)), baseStrength: normWireOptional(normWireNullable(normWireString)), endDistance: normWireOptional(normWireNullable(normWireString)), edgeDistance: normWireOptional(normWireNullable(normWireString)), pitch: normWireOptional(normWireNullable(normWireString)), gauge: normWireOptional(normWireNullable(normWireString)), sheetWidth: normWireOptional(normWireNullable(normWireString)), shearForce: normWireOptional(normWireNullable(normWireString)), tensionForce: normWireOptional(normWireNullable(normWireString)), shearResistance: normWireOptional(normWireNullable(normWireString)) });

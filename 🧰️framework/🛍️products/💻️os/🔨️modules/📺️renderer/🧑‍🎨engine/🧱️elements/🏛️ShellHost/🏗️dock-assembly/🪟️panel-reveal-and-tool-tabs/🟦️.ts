@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, SET_ACTIVE_TOOL_ACTION_ID } from "@semio-tech/framework";
 import { spawnedIdOfWindowInstanceV1 } from "../../🪟️spawned-program/🟦️.ts";
-import { type Anchor, ANCHORS, findPanelTabInDock, findPanelTabPath, panelTabChildren, reconcileActivePath } from "@semio-tech/ui-react";
+import { type Anchor, ANCHORS, findPanelTabInDock, findPanelTabPath, panelFitV1, panelTabChildren, reconcileActivePath } from "@semio-tech/ui-react";
 import { leftoverWorldSelectionOverlayV1 } from "../../../🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 import { FRAMEWORK_CATEGORY_DISPLAY_ID, FRAMEWORK_CATEGORY_TOOL_ID } from "../../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import { flattenPanelTabLeaves } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
@@ -320,7 +320,8 @@ export function useToolTabSelectionEffects({ agentDeferredPlansRef, agentArtifac
       revealedToolIdRef.current = activeToolId;
       const value = findPanelTabPath(toolCategoryTabs, `tool.${activeToolId}`) ?? branchPath;
       dispatch(mobile ? { type: "SET_MOBILE_PANEL_PATH", value } : { type: "SET_PANEL_PATH", anchor: toolAnchor, value });
-      dispatch(mobile ? { type: "SET_MOBILE_PANEL_VISIBLE", value: true } : { type: "SET_PANEL_VISIBLE", anchor: toolAnchor, value: true });
+      const compact = !mobile && typeof window !== "undefined" && panelFitV1(window.innerWidth, 300).collapsed;
+      if (!compact) dispatch(mobile ? { type: "SET_MOBILE_PANEL_VISIBLE", value: true } : { type: "SET_PANEL_VISIBLE", anchor: toolAnchor, value: true });
       return;
     }
     if (!toolCategoryActive) return;

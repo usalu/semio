@@ -31,6 +31,11 @@ type En1993Snapshot {
   reliabilityClass: String!
   frameActions: [FrameAction!]!
   frameMemberBases: [FrameMemberBasis!]!
+  fatigueStresses: [FatigueStress!]!
+  bucklingLengths: [BucklingLength!]!
+  formingGains: [FormingGain!]!
+  materialDuctility: [MaterialDuctility!]!
+  fastenedJoints: [FastenedJoint!]!
 }
 enum MaterialKind {
   Carbon
@@ -252,6 +257,8 @@ type SteelJoint {
   baseLeverRight: Float!
   beamWebThickness: Float!
   beamWebFy: Float!
+  weldForceLongitudinal: Float!
+  weldForceTransverse: Float!
 }
 enum FatigueMethod {
   DamageTolerant
@@ -264,6 +271,7 @@ type FatigueDetail {
   method: FatigueMethod!
   spectrum: [FatigueBand!]!
   stressHistory: String!
+  consequence: FatigueConsequence!
 }
 enum FireRating {
   R30
@@ -375,6 +383,9 @@ type PlatedPanel {
   stiffenerFlangeThickness: Float!
   lateralPressure: Float!
   lateralPressureCoefficient: Float!
+  steelGrade: String!
+  steelSubgrade: String!
+  designTemperature: Float!
 }
 enum FabricationToleranceClass {
   Unset
@@ -462,6 +473,7 @@ type BridgeFatigue {
   surfacingThickness: Float!
   wheelLoad: Float!
   wheelPatch: Float!
+  consequence: FatigueConsequence!
 }
 enum LatticeKind {
   Unset
@@ -769,6 +781,7 @@ type JointPlate {
   weldThroat: Float!
   weldFu: Float!
   weldBetaW: Float!
+  groupMethod: BoltGroupMethod!
 }
 type FoundationBlock {
   id: String!
@@ -832,4 +845,104 @@ enum HollowFabrication {
   Unset
   HotFinished
   ColdFormed
+}
+
+enum FatigueConsequence {
+  Low
+  High
+}
+enum BoltGroupMethod {
+  Elastic
+  InstantaneousCentre
+}
+enum StressRelief {
+  AsWelded
+  StressRelieved
+  NonWelded
+}
+enum BucklingPlane {
+  MajorAxis
+  MinorAxis
+}
+enum FrameSway {
+  NonSway
+  Sway
+}
+enum NodeARestraint {
+  Framed
+  Fixed
+  Pinned
+}
+enum NodeBRestraint {
+  Framed
+  Fixed
+  Pinned
+}
+enum FormingProcess {
+  RollForming
+  OtherForming
+}
+enum FastenerKind {
+  SelfTappingScrew
+  BlindRivet
+}
+type FatigueStress {
+  id: String!
+  detailId: String!
+  maxCaseId: String!
+  minCaseId: String!
+  fibreZ: Float!
+  fibreY: Float!
+  relief: StressRelief!
+  concentration: Float!
+  thickness: Float!
+  cycles: Float!
+}
+type BucklingLength {
+  id: String!
+  memberId: String!
+  plane: BucklingPlane!
+  sway: FrameSway!
+  restraintA: NodeARestraint!
+  columnStiffnessA: Float!
+  beamStiffnessA: Float!
+  restraintB: NodeBRestraint!
+  columnStiffnessB: Float!
+  beamStiffnessB: Float!
+}
+type FormingGain {
+  id: String!
+  memberId: String!
+  forming: FormingProcess!
+  ultimateStrength: Float!
+  grossArea: Float!
+  bends: Int!
+  usedYield: Float!
+}
+type MaterialDuctility {
+  id: String!
+  materialId: String!
+  elongation: Float!
+  ultimateStrain: Float!
+}
+type FastenedJoint {
+  id: String!
+  memberId: String!
+  kind: FastenerKind!
+  diameter: Float!
+  washerDiameter: Float!
+  count: Int!
+  perRow: Int!
+  headThickness: Float!
+  baseThickness: Float!
+  headStrength: Float!
+  baseStrength: Float!
+  endDistance: Float!
+  edgeDistance: Float!
+  pitch: Float!
+  gauge: Float!
+  sheetWidth: Float!
+  shearForce: Float!
+  tensionForce: Float!
+  shearResistance: Float!
 }

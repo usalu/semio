@@ -182,6 +182,22 @@ impl ArtifactEditor for PlyAnyEditor {
     const DIALECT: Dialect = PLY_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PLY_ANY_DOCUMENT_SCHEMA;
 
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.ply@1.0", extension: ".ply", media_type: "model/ply", binary: true })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        crate::engine::encode_ply(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        crate::engine::decode_ply(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+    }
+
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
+    }
+
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<PlyAnyEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🦀️.rs",
@@ -263,6 +279,30 @@ impl editing::SnapshotEditingEditor for PlyAnyEditor {
     fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
         use crate::standards::v1_0::subsets::any::schema::mutations::{insert_comment, remove_comment, set_row_property};
         use crate::standards::v1_0::subsets::any::schema::snapshot::PlyValue;
+        if let Some(transform) = editing::Transform::from_event(event) {
+            let transform = transform?;
+            let Some(element) = snapshot.elements.iter().find(|element| element.name == "vertex") else { return Err(Fault::from("the file declares no vertex element to transform")) };
+            let column = |name: &str| element.properties.iter().position(|property| property.name() == name);
+            let number = |value: &PlyValue| match value { PlyValue::Float(float) => Some(f64::from(*float)), PlyValue::Double(double) => Some(*double), _ => None };
+            let write = |like: &PlyValue, number: f64| match like { PlyValue::Float(_) => PlyValue::Float(number as f32), _ => PlyValue::Double(number) };
+            let triple = |names: [&str; 3]| names.map(column).into_iter().collect::<Option<Vec<usize>>>();
+            let positions = triple(["x", "y", "z"]);
+            let normals = triple(["nx", "ny", "nz"]);
+            if positions.is_none() { return Err(Fault::from("the vertex element has no x, y, z properties")); }
+            let mut leaves = Vec::new();
+            for (row_index, row) in element.rows.iter().enumerate() {
+                for (columns, rotate) in [(positions.as_ref(), false), (normals.as_ref(), true)] {
+                    let Some(columns) = columns else { continue };
+                    let Some(input) = columns.iter().map(|column| row.values.get(*column).and_then(number)).collect::<Option<Vec<f64>>>() else { continue };
+                    let input = [input[0], input[1], input[2]];
+                    let output = if rotate { transform.direction(input) } else { transform.point(input) };
+                    for (axis, column) in columns.iter().enumerate() {
+                        leaves.push(PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name: element.name.clone(), row_index, property_name: element.properties[*column].name().to_string(), value: write(&row.values[*column], output[axis]) }));
+                    }
+                }
+            }
+            return Ok(Some(leaves));
+        }
         let editing::SnapshotEditEvent::SetValue { path, value } = event else { return Ok(None) };
         let segments: Vec<&str> = path.split('/').skip(1).collect();
         let fail = |message: String| Fault::from(message);
@@ -291,7 +331,7 @@ impl editing::SnapshotEditingEditor for PlyAnyEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_ply_any_editor() -> semio_framework_plugin::AppDefinition {
-    let builder = Editor::builder(PLY_ANY_DIALECT).document(["stdio", "ply"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::PLY_ANY_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
+    let builder = Editor::builder(PLY_ANY_DIALECT).document(["stdio", "ply"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::PLY_ANY_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Main")).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())

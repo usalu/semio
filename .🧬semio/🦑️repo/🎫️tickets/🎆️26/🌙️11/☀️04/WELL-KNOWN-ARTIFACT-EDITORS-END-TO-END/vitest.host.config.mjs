@@ -1,0 +1,3 @@
+const engine = ["🚪️replay-open-artifact/🟦️.ts", "📂️picked-file-opening/🟦️.ts", "📂️picked-file-opening/🌊️flow.ts", "🛰️framework-plugin-runtime/🟦️.ts", "♿️host-accessibility/🟦️.tsx", "💾️saved-state/🧮️derivation.ts", "💾️saved-state/🟦️.tsx", "💾️saved-state/🔑️runtime-key.ts", "🩺️window-fault/🟦️.ts", "⌨️tab-trap/🟦️.ts", "🎯️focus-return/🟦️.tsx", "⌨️history-chord/🟦️.tsx", "👆️touch-selection/🟦️.ts", "👆️long-press-suggestions/🟦️.ts", "🗄️stdio-details-tree/🟦️.tsx"].map((name) => `**/🧑‍🎨engine/🧪️tests/${name}`);
+const tree = ["⌨️roving-tabindex.tsx"].map((name) => `**/🌳️Tree/🧪️tests/${name}`);
+export default { test: { include: [...engine, ...(process.env.HOST_TEST_TREE === "1" ? tree : [])], root: process.env.HOST_TEST_ROOT, environment: process.env.HOST_TEST_ENV ?? "node" } };

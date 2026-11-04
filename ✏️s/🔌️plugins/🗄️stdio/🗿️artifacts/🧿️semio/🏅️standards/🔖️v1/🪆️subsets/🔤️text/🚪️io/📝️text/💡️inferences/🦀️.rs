@@ -1,4 +1,4 @@
-//! 📖️ s.stdio.semio.text.inference — the normative handcrafted text grammar for this facet. Inference
+//! 📖️ stdio.semio.text.inference — the normative handcrafted text grammar for this facet. Inference
 //! values are never authored via DSL text (they are always computed from a snapshot, never a
 //! source of truth), so — unlike `📸️snapshot/📝️text`'s live `parse_dsl`/`print_dsl` pair — this
 //! leaf declares the wire grammar only, matching the generic header/payload scaffold shape every

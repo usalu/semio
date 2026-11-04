@@ -21,6 +21,8 @@ export type MediaTransportOwnerV1 = {
   readonly controllerId: string;
   readonly windowId: string;
   readonly port: MediaTransportPort;
+  /** ✂️ Dispatches an editor action raised by the transport (a range cut) through the owner app's ordinary action path, so it runs, publishes and undoes through history like any other edit. */
+  readonly apply?: (action: string, args: Readonly<Record<string, unknown>>) => void;
 };
 
 export type MediaTransportOperation = {

@@ -71,7 +71,7 @@ impl store::InferredField<SemioTableSnapshot> for ColumnMoments {
     type Dependency = semio_framework_value::DslValue;
     type Key = String;
     type Value = SemioColumnMoments;
-    const FIELD_ID: &'static str = "s.stdio.semio.table.inference.moments";
+    const FIELD_ID: &'static str = "stdio.semio.table.inference.moments";
     const SCHEMA_VERSION: u32 = 1;
 
     fn reads() -> &'static [&'static str] {

@@ -1,3 +1,4 @@
+use crate::editor::bmp::modes::edit::windows::main;
 use crate::standards::v_v3::subsets::any::schema::mutations::BmpMutation;
 use crate::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
 use crate::BMP_DIALECT;
@@ -173,4 +174,57 @@ fn close_work(work: &mut paint_region::PaintRegionWork) -> Result<semio_framewor
     let step = semio_framework_plugin::retained_command::ArtifactCommandWork::<semio_framework_plugin::EditorApp<BmpEditor>>::close_step(work, scope.cx());
     scope.retire();
     step
+}
+
+#[test]
+fn schema_declares_the_bmp_native_codec_and_the_runtime_binds_it() {
+    let factories = crate::native_codecs();
+    assert_eq!(factories.iter().map(|factory| factory.id).collect::<Vec<_>>(), ["stdio.native.bmp.v1"]);
+    crate::definition().expect("the schema-declared BMP native codec binds to its factory, schema, extension and pack hash");
+}
+
+#[test]
+fn window_declares_the_paint_actions_as_editable_image_window_actions() {
+    let definition = main::definition();
+    for id in [paint_region::INDEXED_ACTION_ID, paint_region::DIRECT_ACTION_ID] {
+        let action = definition.actions.iter().find(|action| action.id == id).expect("paint action is a window action");
+        assert_eq!(action.kind, semio_framework_plugin::ActionKind::Mutation);
+    }
+}
+
+#[test]
+fn natural_file_decode_refuses_truncated_bmp_bytes_and_round_trips_whole_files() {
+    let snapshot = direct_snapshot();
+    let bytes = <BmpEditor as ArtifactEditor>::encode_natural_file(&snapshot).expect("BMP natural bytes");
+    assert_eq!(<BmpEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("natural bytes reopen"), snapshot);
+    for length in [0, 2, 14, 30, bytes.len() / 2] {
+        assert!(<BmpEditor as ArtifactEditor>::decode_natural_file(&bytes[..length]).is_err(), "truncated at {length}");
+    }
+}
+
+#[test]
+fn demo_example_bitmap_is_a_real_bmp_that_decodes_to_the_demo_document() {
+    let bytes = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🧪️example/🖼️.bmp");
+    let decoded = crate::standards::v_v3::subsets::any::io::decode_bmp(bytes).expect("the example bitmap is a valid BMP");
+    let demo = <BmpSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("demo fixture must parse");
+    assert_eq!(decoded, demo);
+}
+
+#[test]
+fn details_palette_gestures_raise_typed_palette_mutations() {
+    use crate::schema::mutations::{InsertPaletteEntry, RemovePaletteEntry, SetPaletteEntry};
+    use semio_framework_value::{DslValue, Number};
+    let snapshot = crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb4-duplicate-palette.bmp")).unwrap();
+    let length = snapshot.image.palette.len();
+    let special = |event: editing::SnapshotEditEvent| <BmpEditor as editing::SnapshotEditingEditor>::snapshot_edit_special(&event, &snapshot).expect("palette gesture is admitted").expect("palette gesture is typed");
+    let entry = snapshot.image.palette[0];
+    assert_eq!(
+        special(editing::SnapshotEditEvent::SetValue { path: "/image/palette/0/g".into(), value: DslValue::Number(Number::UInt(77)) }),
+        vec![BmpMutation::SetPaletteEntry(SetPaletteEntry { index: 0, red: entry.r, green: 77, blue: entry.b, reserved: entry.reserved })]
+    );
+    let object = DslValue::object([("r".into(), DslValue::Number(Number::UInt(1))), ("g".into(), DslValue::Number(Number::UInt(2))), ("b".into(), DslValue::Number(Number::UInt(3)))]);
+    let appended = special(editing::SnapshotEditEvent::InsertValue { path: "/image/palette/-".into(), value: object });
+    assert!(matches!(&appended[..], [BmpMutation::InsertPaletteEntry(InsertPaletteEntry { index, red: 1, green: 2, blue: 3, reserved: 0, .. })] if *index as usize == length));
+    assert_eq!(special(editing::SnapshotEditEvent::RemoveValue { path: "/image/palette/3".into() }), vec![BmpMutation::RemovePaletteEntry(RemovePaletteEntry { index: 3, colors_used: (length - 1) as u32 })]);
+    assert!(<BmpEditor as editing::SnapshotEditingEditor>::snapshot_edit_special(&editing::SnapshotEditEvent::SetValue { path: "/image/palette/0/g".into(), value: DslValue::String("x".into()) }, &snapshot).is_err());
 }

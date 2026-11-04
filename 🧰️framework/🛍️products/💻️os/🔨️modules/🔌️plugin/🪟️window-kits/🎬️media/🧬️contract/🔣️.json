@@ -17,7 +17,8 @@
     "labels",
     "resource",
     "capability",
-    "hostContentHeight"
+    "hostContentHeight",
+    "trim"
   ],
   "properties": {
     "schemaVersion": {
@@ -86,7 +87,15 @@
         "unsupported",
         "unknownDuration",
         "audio",
-        "video"
+        "video",
+        "cancelled",
+        "cutSelection",
+        "hourOne",
+        "hourOther",
+        "minuteOne",
+        "minuteOther",
+        "secondOne",
+        "secondOther"
       ],
       "properties": {
         "play": {
@@ -129,6 +138,30 @@
           "type": "string"
         },
         "video": {
+          "type": "string"
+        },
+        "cancelled": {
+          "type": "string"
+        },
+        "cutSelection": {
+          "type": "string"
+        },
+        "hourOne": {
+          "type": "string"
+        },
+        "hourOther": {
+          "type": "string"
+        },
+        "minuteOne": {
+          "type": "string"
+        },
+        "minuteOther": {
+          "type": "string"
+        },
+        "secondOne": {
+          "type": "string"
+        },
+        "secondOther": {
           "type": "string"
         }
       }
@@ -212,6 +245,58 @@
       "type": "number",
       "minimum": 0,
       "maximum": 4096
+    },
+    "trim": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "actionId",
+            "revision",
+            "unit",
+            "unitsPerSecondNumerator",
+            "unitsPerSecondDenominator",
+            "totalUnits"
+          ],
+          "properties": {
+            "actionId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "revision": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "unit": {
+              "enum": [
+                "frame",
+                "sample"
+              ]
+            },
+            "unitsPerSecondNumerator": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "unitsPerSecondDenominator": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "totalUnits": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        }
+      ]
     }
   },
   "allOf": [

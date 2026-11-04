@@ -71,7 +71,7 @@ Feature: Apply every typed SHOOTING mutation to the vocabulary's own committed r
 
   ⚖️ The projection is `(schema, assets, savedCameras, scene, shots, activeShotId, activeAssetId)`. The
   composed `emblem` child handle is deliberately NOT projected: it is a content address for an
-  `s.stdio.semio.image` child, no kind of this vocabulary addresses it, and the committed base document
+  `stdio.semio.image` child, no kind of this vocabulary addresses it, and the committed base document
   does not carry one.
 
   @id-mutate

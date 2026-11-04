@@ -58,6 +58,21 @@ fn natural_file_route_exports_xml_and_reopens_the_same_document() {
     assert_eq!(reopened, edited);
 }
 
+#[test]
+fn natural_file_import_refuses_malformed_xml_and_invalid_utf8() {
+    for bytes in [&b"<a><b></a>"[..], &b"<a"[..], &b""[..], &[0x3c, 0x61, 0xff, 0x2f, 0x3e][..]] {
+        assert!(<XmlAnyEditor as ArtifactEditor>::decode_natural_file(bytes).is_err(), "{bytes:?}");
+    }
+}
+
+#[test]
+fn leading_whitespace_text_survives_the_dsl_round_trip() {
+    let source = "<document>  <title>  padded  </title>\n</document>".as_bytes();
+    let edited = XmlSnapshot::import_utf8(source).expect("XML fixture");
+    let printed = <XmlSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&edited);
+    assert_eq!(<XmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).expect("DSL reopens"), edited);
+}
+
 #[semio_framework_async_macros::async_test]
 async fn decode_node_id_roundtrips_root_and_nested() {
     assert_eq!(decode_node_id(main::XML_ROOT_NODE_ID).unwrap(), Vec::<usize>::new());

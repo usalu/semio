@@ -26,8 +26,8 @@ pub fn media_transport_contract_valid(params_json: &str) -> bool {
 }
 
 fn media_transport_value_valid(value: &serde_json::Value) -> bool {
-    const ROOT_KEYS: &[&str] = &["schemaVersion", "kind", "mediaType", "revision", "durationMs", "positionMs", "selectionStartMs", "selectionEndMs", "locale", "labels", "resource", "capability", "hostContentHeight"];
-    const LABEL_KEYS: &[&str] = &["play", "pause", "seek", "position", "duration", "selectionStart", "selectionEnd", "loading", "progress", "cancel", "unsupported", "unknownDuration", "audio", "video"];
+    const ROOT_KEYS: &[&str] = &["schemaVersion", "kind", "mediaType", "revision", "durationMs", "positionMs", "selectionStartMs", "selectionEndMs", "locale", "labels", "resource", "capability", "hostContentHeight", "trim"];
+    const LABEL_KEYS: &[&str] = &["play", "pause", "seek", "position", "duration", "selectionStart", "selectionEnd", "loading", "progress", "cancel", "unsupported", "unknownDuration", "cancelled", "cutSelection", "hourOne", "hourOther", "minuteOne", "minuteOther", "secondOne", "secondOther", "audio", "video"];
     let Some(root) = value.as_object().filter(|root| json_object_has_exact_keys(root, ROOT_KEYS)) else { return false };
     if root.get("schemaVersion").and_then(serde_json::Value::as_u64) != Some(1)
         || !matches!(root.get("kind").and_then(serde_json::Value::as_str), Some("audio" | "video"))
@@ -98,8 +98,22 @@ fn media_transport_value_valid(value: &serde_json::Value) -> bool {
         Some(reason) => reason.as_str().is_some_and(|reason| reason.chars().count() <= 512),
         None => false,
     };
+    let trim_valid = match root.get("trim") {
+        Some(serde_json::Value::Null) => true,
+        Some(serde_json::Value::Object(trim)) => {
+            let units = |key: &str| trim.get(key).and_then(serde_json::Value::as_u64).is_some_and(|value| (1..=9_007_199_254_740_991).contains(&value));
+            json_object_has_exact_keys(trim, &["actionId", "revision", "unit", "unitsPerSecondNumerator", "unitsPerSecondDenominator", "totalUnits"])
+                && json_string_length(trim.get("actionId"), 1, 128)
+                && json_string_length(trim.get("revision"), 1, 128)
+                && matches!(trim.get("unit").and_then(serde_json::Value::as_str), Some("frame" | "sample"))
+                && units("unitsPerSecondNumerator")
+                && units("unitsPerSecondDenominator")
+                && units("totalUnits")
+        }
+        _ => false,
+    };
     let height_valid = root.get("hostContentHeight").and_then(serde_json::Value::as_f64).is_some_and(|height| height.is_finite() && (0.0..=4096.0).contains(&height));
-    reason_valid && height_valid && (capability_status != "ready" || root.get("resource").is_some_and(serde_json::Value::is_object))
+    reason_valid && height_valid && trim_valid && (capability_status != "ready" || root.get("resource").is_some_and(serde_json::Value::is_object))
 }
 
 fn media_transport_host_status(extension: &str, params_json: &str) -> Option<String> {

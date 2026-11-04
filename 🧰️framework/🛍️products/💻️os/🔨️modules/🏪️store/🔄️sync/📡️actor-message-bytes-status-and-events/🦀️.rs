@@ -154,6 +154,20 @@ pub enum RemoteState {
     Backoff { retry_in_ms: u64 },
 }
 
+/// 🧯️ Why a document is not saved: a stable machine `code` the shell words in every locale (`folder-write-failed`, `folder-unreadable`, `folder-diverged`) and an optional diagnostic `message`.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct SyncWriteFailure {
+    pub code: String,
+    pub message: Option<String>,
+}
+
+impl SyncWriteFailure {
+    pub fn new(code: &str) -> Self {
+        Self { code: code.into(), message: None }
+    }
+}
+
 /// 🚦️ Snapshot of a document's sync health for status badges.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
@@ -164,11 +178,13 @@ pub struct ArtifactSyncStatus {
     /// 📌️ The edited head the hub acknowledged, present only while nothing local is unacknowledged —
     /// the head a hub Check In names. `None` before the first edit and while mutations are in flight.
     pub acknowledged_head: Option<semio_framework_os_directory::EditedArtifactFrontierV1>,
+    /// 🧯️ The reason the document is unsaved, `None` while nothing failed.
+    pub write_failure: Option<SyncWriteFailure>,
 }
 
 impl Default for ArtifactSyncStatus {
     fn default() -> Self {
-        Self { persisted: false, pending_mutations: 0, remote: RemoteState::Detached, acknowledged_head: None }
+        Self { persisted: false, pending_mutations: 0, remote: RemoteState::Detached, acknowledged_head: None, write_failure: None }
     }
 }
 

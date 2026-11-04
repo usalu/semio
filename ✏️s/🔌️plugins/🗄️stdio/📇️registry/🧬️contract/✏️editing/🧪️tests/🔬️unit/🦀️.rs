@@ -149,6 +149,9 @@ impl fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparat
     fn begin_demand(&self,_mutation:&u8,_lane:fixture_store::os_store::store_schema::HistoryLane)->Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand,semio_framework_value::ValueError>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"preflight-only fixture has no preparation owner"))
     }
+    fn begin_copy_byte_demand(&self,_mutation:&u8,_lane:fixture_store::os_store::store_schema::HistoryLane)->Result<usize,semio_framework_value::ValueError>{
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"preflight-only fixture has no preparation owner"))
+    }
     fn begin(&self, request:fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<u8,u8,u8>,_grant:fixture_store::os_store::one_item::ArtifactStoreOneItemGrant)->Result<(Box<dyn fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<u8,u8>>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<u8,u8,u8>)>{
         Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"preflight-only fixture has no preparation owner"),request))
     }
@@ -162,7 +165,7 @@ struct ProbePreparation {
 }
 
 impl fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<u8, u8> for ProbePreparation {
-    fn advance(&mut self, grant: fixture_store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, _body: usize, grant: fixture_store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if !grant.permits_one() || self.cancelled || self.closing || self.remaining == 0 {
             return Ok(fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -231,16 +234,17 @@ fn retained_native_route_refuses_without_fallback_and_lifecycle_is_cancelable() 
     let cancel_after = lifecycle["cancelAfter"].as_u64().expect("cancel after") as usize;
     let mut preparation = ProbePreparation { remaining: units, checkpoint: Default::default(), cancelled: false, closing: false };
     let grant = fixture_store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items:1,maximum_copy_bytes:std::mem::size_of::<usize>(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1 };
+    let mut receiving = semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant());
     let mut progress = Vec::new();
     for _ in 0..cancel_after {
-        let fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(checkpoint, _) = fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::advance(&mut preparation, grant).expect("progress") else {
+        let fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(checkpoint, _) = receiving.receive(|control| fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::advance(&mut preparation, 0, grant, control)).expect("progress") else {
             panic!("retained preparation did not progress");
         };
         progress.push(checkpoint.cursor as u64);
     }
     assert_eq!(progress, lifecycle["expectedProgress"].as_array().expect("progress").iter().map(|value| value.as_u64().expect("cursor")).collect::<Vec<_>>());
     fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::cancel(&mut preparation);
-    assert_eq!(fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::advance(&mut preparation, grant).expect("cancel blocks"), fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
+    assert_eq!(receiving.receive(|control| fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::advance(&mut preparation, 0, grant, control)).expect("cancel blocks"), fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
     fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::begin_close(&mut preparation);
     let mut close_steps = 0usize;
     loop {

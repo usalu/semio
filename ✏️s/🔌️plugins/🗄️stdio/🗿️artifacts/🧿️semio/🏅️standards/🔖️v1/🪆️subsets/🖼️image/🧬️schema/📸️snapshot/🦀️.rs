@@ -18,7 +18,7 @@ use framework_schema::ArtifactSchema;
 /// master plan's "Schema descriptor ids `s.stdio.semio` + `s.stdio.semio.<subset>`" note, one per
 /// subset. Must stay repo-wide unique — `register_document_codec` duplicate-id detection is a
 /// static policy check.
-pub const STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA: &str = "s.stdio.semio.image";
+pub const STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA: &str = "stdio.semio.image";
 //#endregion 🔖️Ids
 
 //#region 🔖️Colorspace
@@ -70,7 +70,7 @@ pub struct SemioImageMetadataEntry {
 #[dsl(layout = "lines")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.image")]
+#[artifact_schema(id = "stdio.semio.image")]
 pub struct SemioImageSnapshot {
     #[state(artifact)]
     pub schema: String,
@@ -159,7 +159,7 @@ impl Default for SemioImageSnapshot {
 //#endregion 🌉️ExternalCodecBridge
 
 //#region 🔖️Demo
-/// 🌱 The demo `s.stdio.semio.image` document — one frame (16-byte RGBA8 pixel sweep across
+/// 🌱 The demo `stdio.semio.image` document — one frame (16-byte RGBA8 pixel sweep across
 /// red/green/blue/white), a non-default colorspace/bit-depth, a set ICC profile, and one metadata
 /// entry — exercising every leaf/collection shape at least once. Single source of truth for
 /// `📚️examples/…/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` and for the conformance-law

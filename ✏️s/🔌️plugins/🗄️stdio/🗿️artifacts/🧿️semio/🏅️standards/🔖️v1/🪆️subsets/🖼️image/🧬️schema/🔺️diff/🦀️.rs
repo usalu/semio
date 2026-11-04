@@ -355,7 +355,7 @@ fn metadata_absorb(d1: SemioImageMetadataDiff, d2: SemioImageMetadataDiff) -> Se
 //#region 🔖️Diff
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.image.diff")]
+#[artifact_schema(id = "stdio.semio.image.diff")]
 pub struct SemioImageDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]

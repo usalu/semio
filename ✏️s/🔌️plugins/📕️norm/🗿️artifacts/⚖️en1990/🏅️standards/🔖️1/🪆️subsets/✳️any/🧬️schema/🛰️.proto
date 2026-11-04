@@ -147,6 +147,10 @@ message ReliabilityAnalysis {
   string action_distribution = 5;
   double action_mean = 6;
   double action_sd = 7;
+  string second_action_distribution = 8;
+  double second_action_mean = 9;
+  double second_action_sd = 10;
+  string member_id = 11;
 }
 message TestSeries {
   string id = 1;
@@ -158,6 +162,9 @@ message TestSeries {
   double variation_known = 7;
   double conversion_factor = 8;
   double required = 9;
+  string pairs = 10;
+  double theory_variation = 11;
+  double theory_mean = 12;
 }
 message Placement {
   string id = 1;

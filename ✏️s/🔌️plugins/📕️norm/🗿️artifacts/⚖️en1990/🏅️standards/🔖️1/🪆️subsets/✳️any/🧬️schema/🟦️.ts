@@ -160,6 +160,10 @@ export interface ReliabilityAnalysis {
   actionDistribution: string;
   actionMean: number;
   actionSd: number;
+  secondActionDistribution: string;
+  secondActionMean: number;
+  secondActionSd: number;
+  memberId: string;
 }
 
 export interface TestSeries {
@@ -172,6 +176,9 @@ export interface TestSeries {
   variationKnown: number;
   conversionFactor: number;
   required: number;
+  pairs: string;
+  theoryVariation: number;
+  theoryMean: number;
 }
 
 export interface Placement {
@@ -224,8 +231,8 @@ export const parseMember: NormWireReader<Member> = normWireObject<Member>({ id: 
 export const parseMemberEffect: NormWireReader<MemberEffect> = normWireObject<MemberEffect>({ memberId: normWireRequired(normWireString), actionId: normWireRequired(normWireString), influence: normWireRequired(normWireNumber) });
 export const parseBridgeSls: NormWireReader<BridgeSls> = normWireObject<BridgeSls>({ id: normWireRequired(normWireString), memberId: normWireRequired(normWireString), deckAcceleration: normWireRequired(normWireNumber), deckAccelerationLimit: normWireRequired(normWireNumber), deckTwist: normWireRequired(normWireNumber), deckTwistLimit: normWireRequired(normWireNumber), bridgeDeflection: normWireRequired(normWireNumber), bridgeDeflectionLimit: normWireRequired(normWireNumber), trackGauge: normWireRequired(normWireNumber), lineSpeed: normWireRequired(normWireNumber), ballastDepth: normWireRequired(normWireNumber), deckMass: normWireRequired(normWireNumber), naturalFrequency: normWireRequired(normWireNumber), endRotation: normWireRequired(normWireNumber), basicWindSpeed: normWireRequired(normWireNumber), dampingRatio: normWireRequired(normWireNumber) });
 export const parseFatigueSpectrum: NormWireReader<FatigueSpectrum> = normWireObject<FatigueSpectrum>({ id: normWireRequired(normWireString), memberId: normWireRequired(normWireString), detailCategory: normWireRequired(normWireNumber), stressRange: normWireRequired(normWireNumber), cycles: normWireRequired(normWireNumber) });
-export const parseReliabilityAnalysis: NormWireReader<ReliabilityAnalysis> = normWireObject<ReliabilityAnalysis>({ id: normWireRequired(normWireString), resistanceDistribution: normWireRequired(normWireString), resistanceMean: normWireRequired(normWireNumber), resistanceSd: normWireRequired(normWireNumber), actionDistribution: normWireRequired(normWireString), actionMean: normWireRequired(normWireNumber), actionSd: normWireRequired(normWireNumber) });
-export const parseTestSeries: NormWireReader<TestSeries> = normWireObject<TestSeries>({ id: normWireRequired(normWireString), quantity: normWireRequired(normWireString), distribution: normWireRequired(normWireString), sampleSize: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), mean: normWireRequired(normWireNumber), stdDev: normWireRequired(normWireNumber), variationKnown: normWireRequired(normWireNumber), conversionFactor: normWireRequired(normWireNumber), required: normWireRequired(normWireNumber) });
+export const parseReliabilityAnalysis: NormWireReader<ReliabilityAnalysis> = normWireObject<ReliabilityAnalysis>({ id: normWireRequired(normWireString), resistanceDistribution: normWireRequired(normWireString), resistanceMean: normWireRequired(normWireNumber), resistanceSd: normWireRequired(normWireNumber), actionDistribution: normWireRequired(normWireString), actionMean: normWireRequired(normWireNumber), actionSd: normWireRequired(normWireNumber), secondActionDistribution: normWireRequired(normWireString), secondActionMean: normWireRequired(normWireNumber), secondActionSd: normWireRequired(normWireNumber), memberId: normWireRequired(normWireString) });
+export const parseTestSeries: NormWireReader<TestSeries> = normWireObject<TestSeries>({ id: normWireRequired(normWireString), quantity: normWireRequired(normWireString), distribution: normWireRequired(normWireString), sampleSize: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), mean: normWireRequired(normWireNumber), stdDev: normWireRequired(normWireNumber), variationKnown: normWireRequired(normWireNumber), conversionFactor: normWireRequired(normWireNumber), required: normWireRequired(normWireNumber), pairs: normWireRequired(normWireString), theoryVariation: normWireRequired(normWireNumber), theoryMean: normWireRequired(normWireNumber) });
 export const parsePlacement: NormWireReader<Placement> = normWireObject<Placement>({ id: normWireRequired(normWireString), x: normWireRequired(normWireNumber), y: normWireRequired(normWireNumber), z: normWireRequired(normWireNumber), yaw: normWireRequired(normWireNumber) });
 export const parseFactorOverride: NormWireReader<FactorOverride> = normWireObject<FactorOverride>({ id: normWireRequired(normWireString), factor: normWireRequired(normWireString), target: normWireRequired(normWireString), value: normWireRequired(normWireNumber), justification: normWireRequired(normWireString) });
 export const parseTrafficGroup: NormWireReader<TrafficGroup> = normWireObject<TrafficGroup>({ id: normWireRequired(normWireString), group: normWireRequired(normWireLiteral("GR1A", "GR1B", "GR2", "GR3", "GR4", "GR5", "GR6")), variableId: normWireRequired(normWireString) });

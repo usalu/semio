@@ -78,3 +78,25 @@ fn own14_typed_page_command_uses_the_own_mutation_codec() {
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio/Pdf14Editor", Pdf14Editor, || semio_framework_plugin::App { definition: create_pdf14_editor(), examples: Vec::new() }, "../..");
+
+#[semio_framework_async_macros::async_test]
+async fn natural_pdf_14_file_opens_its_own_output_and_refuses_files_the_page_model_would_degrade() {
+    let codec = <Pdf14Editor as ArtifactEditor>::natural_file_codec().expect("the PDF 1.4 editor declares a natural file");
+    assert_eq!((codec.format_kind, codec.extension, codec.media_type, codec.binary), ("s.stdio.pdf@1.4", ".pdf", "application/pdf", true));
+    let mut snapshot = PdfSnapshot::default();
+    snapshot.pages[0].text = "Hello".into();
+    let saved = <Pdf14Editor as ArtifactEditor>::encode_natural_file(&snapshot).expect("the page model saves");
+    let path = std::env::temp_dir().join(format!("semio-pdf14-{}.pdf", std::process::id()));
+    std::fs::write(&path, &saved).unwrap();
+    match std::process::Command::new("qpdf").arg("--check").arg(&path).output() {
+        Ok(output) => assert!(output.status.success(), "qpdf --check refused the saved PDF: {}", String::from_utf8_lossy(&output.stderr)),
+        Err(error) => assert_eq!(error.kind(), std::io::ErrorKind::NotFound, "qpdf could not run: {error}"),
+    }
+    let _ = std::fs::remove_file(&path);
+    let reopened = <Pdf14Editor as ArtifactEditor>::decode_natural_file(&saved).expect("a file this model wrote reopens");
+    assert_eq!(reopened.pages[0].text, "Hello");
+    let foreign = include_bytes!("../../../../../../7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
+    let refusal = <Pdf14Editor as ArtifactEditor>::decode_natural_file(foreign).err().expect("a foreign PDF would lose content");
+    assert!(refusal.to_string().contains("PDF 1.7 editor"), "{refusal}");
+    assert!(<Pdf14Editor as ArtifactEditor>::decode_natural_file(b"not a pdf").is_err());
+}

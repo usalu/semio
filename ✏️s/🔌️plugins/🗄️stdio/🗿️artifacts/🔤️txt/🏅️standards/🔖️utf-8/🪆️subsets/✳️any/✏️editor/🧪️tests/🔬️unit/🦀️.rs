@@ -65,6 +65,23 @@ fn natural_file_route_exports_utf8_and_reopens_the_same_document() {
     assert_eq!(reopened, edited);
 }
 
+#[test]
+fn bom_and_leading_whitespace_survive_the_dsl_and_natural_file_round_trips() {
+    for source in ["\u{feff}  indented\n\tTab\n", "   \n\nlate\n"] {
+        let edited = TxtSnapshot::from_body(source);
+        let printed = <TxtSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&edited);
+        assert_eq!(<TxtSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).expect("DSL reopens"), edited);
+        let bytes = <TxtEditor as ArtifactEditor>::encode_natural_file(&edited).expect("TXT natural bytes");
+        assert_eq!(bytes, source.as_bytes());
+        assert_eq!(<TxtEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("TXT reopens"), edited);
+    }
+}
+
+#[test]
+fn natural_file_import_refuses_invalid_utf8() {
+    assert!(<TxtEditor as ArtifactEditor>::decode_natural_file(&[0x66, 0xff, 0xfe]).is_err());
+}
+
 #[semio_framework_async_macros::async_test]
 async fn op_text_roundtrip() {
     let command = TxtEditorCommand::SpliceText { revision: "revision %20 Grüße 🌍".into(), splices: r#"[{"offset":0,"delete":1,"insert":"hello\r\nworld %20 Grüße 🌍"}]"#.into() };

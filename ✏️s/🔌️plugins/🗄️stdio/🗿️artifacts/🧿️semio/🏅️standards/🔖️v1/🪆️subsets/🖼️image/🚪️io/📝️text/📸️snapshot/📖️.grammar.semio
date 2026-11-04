@@ -14,7 +14,7 @@ start document
 # s.stdio.semio.image.dsl v1` preamble stripped and replaced with the bare `envelope_id()` token —
 # `artifact-mark` below — before recognition, same convention `json.snapshot`'s/`mesh.snapshot`'s
 # own grammars use).
-artifact-mark = "s.stdio.semio.image"
+artifact-mark = "stdio.semio.image"
 document = artifact-mark schema-line width-line height-line colorspace-line bit-depth-line icc-line frames-line metadata-line
 
 schema-line = "schema" "=" hex

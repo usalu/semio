@@ -1,20 +1,15 @@
 dialect grammar
-grammar semio.flow.snapshot
+grammar stdio.semio.flow.snapshot
 extension semio
 start document
 
-# P2 pilot (flow — the FIRST semio subset upgraded off the old hex-dump-of-JSON scaffold, per
-# ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION). Real grammar for
-# `SemioFlowSnapshot::print_dsl`/`parse_dsl` (📸️snapshot/🦀️.rs's `print_flow_
-# snapshot_body`/`parse_flow_snapshot_body`) — hand-rolled, NOT `#[derive(dsl::DslArtifact)]`:
-# `position: SemioPoint2` would need `SemioPoint2` (`engine::geometry`, outside this ticket's
-# `🌊️flow/`-only edit scope) to implement `dsl::DslField`/`DslRecord`, which it does not. Same
-# hex/bracket-encoded value convention as this subset's own `🔺️diff`/`🧬️mutations` facet grammars
-# (and `GifDiff`/`SvgDiff`/`DocxDiff`'s hand-rolled precedent repo-wide).
+# Grammar of `SemioFlowSnapshot::print_dsl`/`parse_dsl` (`🦀️.rs`: `print_flow_snapshot_body`/
+# `parse_flow_snapshot_body`). One `schema=`, `nodes=[...]` and `edges=[...]` line each; every string
+# leaf (`schema`, node and edge `id`/`kind`/`label`/`key`/`value`, port `node`/`port`) is lowercase-hex
+# UTF-8 bytes, matching this subset's `🔺️diff` and `🧬️mutations` grammars.
 #
-# `document` matches the fixture-honesty harness's own reconstructed body shape (mandatory `semio
-# stdio.semio.flow.dsl v1` preamble stripped and replaced with the bare `envelope_id()` token —
-# `artifact-mark` below — before recognition, same convention `json.snapshot`'s own grammar uses).
+# `document` is the body the preamble `semio stdio.semio.flow.dsl v1` introduces, with the preamble
+# replaced by the bare `artifact-mark` token before recognition.
 artifact-mark = "stdio.semio.flow"
 document = artifact-mark schema-line nodes-line edges-line
 

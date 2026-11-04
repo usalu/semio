@@ -1128,6 +1128,17 @@
           ]
         },
         {
+          "mutationId": "change-assessment-analysis-method",
+          "sourceMutationDirectoryName": "✏️change-assessment-analysis-method",
+          "mutationDirectoryName": "✏️change-assessment-analysis-method",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
           "mutationId": "change-assessment-supported-building-id",
           "sourceMutationDirectoryName": "✏️change-assessment-supported-building-id",
           "mutationDirectoryName": "✏️change-assessment-supported-building-id",
@@ -3899,6 +3910,7 @@
         "change-bridge-correlated-occupancy",
         "change-assessment-knowledge-level",
         "change-assessment-limit-state",
+        "change-assessment-analysis-method",
         "change-assessment-supported-building-id",
         "change-assessment-gamma-el",
         "change-tower-height-m",
@@ -5723,6 +5735,27 @@
             "operation": "change-assessment-limit-state",
             "bridgeVersion": 1,
             "variant": "ChangeAssessmentLimitState"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-assessment-analysis-method",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-assessment-analysis-method",
+            "bridgeVersion": 1,
+            "variant": "ChangeAssessmentAnalysisMethod"
           },
           "oracleRequirements": [
             {

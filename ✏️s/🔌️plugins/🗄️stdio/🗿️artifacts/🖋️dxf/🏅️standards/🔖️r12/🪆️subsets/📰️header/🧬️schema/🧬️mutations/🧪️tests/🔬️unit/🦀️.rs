@@ -7,7 +7,7 @@ use crate::{schema::diff::block_field_changes, schema::diff::diff_insert_block, 
 #[allow(unused_imports)]
 use crate::{schema::snapshot::DxfInsert, schema::snapshot::DxfOther, schema::snapshot::DxfPolyline, schema::snapshot::DxfSolid};
 #[allow(unused_imports)]
-use protocol::{ColdMutation, Mutation};
+use protocol::{ColdMutation, ColdMutationDiff, Mutation};
 #[allow(unused_imports)]
 use protocol::{OpBinary, OpText};
 use crate::apply_mutation;

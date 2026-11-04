@@ -44,6 +44,8 @@ export type ArtifactSyncStatus = {
   readonly persisted: boolean;
   readonly pendingMutations: number;
   readonly remote: RemoteState;
+  /** 🚫️ The typed reason the newest write was not acknowledged; absent while nothing failed. `code` is a stable machine key the shell words in en and de. */
+  readonly writeFailure?: { readonly code: string; readonly message?: string };
 };
 
 /** ⚠️ A structural sync conflict — `ArtifactEvent::Conflict` wraps a `MutationMessage` (contract

@@ -19,7 +19,7 @@
 
 // #region 🔌️Adapters
 import { useCallback, useSyncExternalStore } from "../⚛️react-port/🟦️.ts";
-import { DEFAULT_UI_DOCUMENT_LIMITS, numberLimitValues, numberRangeIsValid, snapsAreValid } from "@semio-tech/ui-contract/limits";
+import { controlIsUnnamed, DEFAULT_UI_DOCUMENT_LIMITS, numberLimitValues, numberRangeIsValid, snapsAreValid } from "@semio-tech/ui-contract/limits";
 export { DEFAULT_UI_DOCUMENT_LIMITS } from "@semio-tech/ui-contract/limits";
 import { RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, type RetainedUiTransaction, type RetainedUiState } from "@semio-tech/framework";
 import {
@@ -185,7 +185,7 @@ function isSection(component: Component): boolean {
 //#endregion 🔖️Limits
 
 //#region 🔖️Validate
-type WalkFrame = { readonly kind: "enter"; readonly id: UiNodeId; readonly depth: number; readonly parentInSection: boolean } | { readonly kind: "exit"; readonly id: UiNodeId };
+type WalkFrame = { readonly kind: "enter"; readonly id: UiNodeId; readonly depth: number; readonly parentInSection: boolean; readonly parentRecord: UiNodeRecord | null } | { readonly kind: "exit"; readonly id: UiNodeId };
 
 /** 🌲️ Mirrors `🦀️limits.rs`'s `validate_core` — same iterative preorder walk (explicit stack, never
  * recursive), same violation set, same short-circuit on an already-oversized node table. Generic over
@@ -202,14 +202,14 @@ export function validateUiDocumentCore(root: UiNodeId | null, nodes: ReadonlyMap
   const onPath = new Set<UiNodeId>();
 
   if (root !== null && nodes.has(root)) {
-    const stack: WalkFrame[] = [{ kind: "enter", id: root, depth: 0, parentInSection: false }];
+    const stack: WalkFrame[] = [{ kind: "enter", id: root, depth: 0, parentInSection: false, parentRecord: null }];
     while (stack.length > 0) {
       const frame = stack.pop()!;
       if (frame.kind === "exit") {
         onPath.delete(frame.id);
         continue;
       }
-      const { id, depth, parentInSection } = frame;
+      const { id, depth, parentInSection, parentRecord } = frame;
       if (onPath.has(id)) {
         violations.push({ type: "cycle", node: id });
         continue;
@@ -219,6 +219,7 @@ export function validateUiDocumentCore(root: UiNodeId | null, nodes: ReadonlyMap
       const record = nodes.get(id);
       if (!record) continue;
 
+      if (controlIsUnnamed(record, parentRecord)) violations.push({ type: "unnamedControl", node: id });
       const inSection = parentInSection || isSection(record.component);
       if (parentInSection && isSection(record.component)) violations.push({ type: "sectionNested", node: id });
       if (!componentIsFinite(record.component)) violations.push({ type: "nonFiniteNumber", node: id });
@@ -241,7 +242,7 @@ export function validateUiDocumentCore(root: UiNodeId | null, nodes: ReadonlyMap
         }
         if (seenKeys.has(child.key)) violations.push({ type: "duplicateSiblingKey", parent: id, key: child.key });
         else seenKeys.add(child.key);
-        stack.push({ kind: "enter", id: childId, depth: depth + 1, parentInSection: inSection });
+        stack.push({ kind: "enter", id: childId, depth: depth + 1, parentInSection: inSection, parentRecord: record });
       }
     }
   }

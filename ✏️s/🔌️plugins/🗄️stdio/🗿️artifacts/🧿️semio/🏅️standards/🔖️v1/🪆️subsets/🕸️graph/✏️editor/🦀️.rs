@@ -45,7 +45,7 @@ use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Dialect
 pub const SEMIO_GRAPH_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("graph") };
-pub const SEMIO_GRAPH_DOCUMENT_SCHEMA: &str = "s.stdio.semio.graph";
+pub const SEMIO_GRAPH_DOCUMENT_SCHEMA: &str = "stdio.semio.graph";
 //#endregion 🔖️Dialect
 
 //#region 🔖️Command
@@ -155,6 +155,8 @@ impl ArtifactOwnedToolJobFactory for SemioGraphEditorExampleFactory {
     type Owner = EditorApp<SemioGraphEditor>;
     const TOOL_IDS: &'static [&'static str] = SEMIO_GRAPH_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_GRAPH_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_semio_base::semio_natural_file!(SemioGraphSnapshot, "stdio.semio.graph");
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_GRAPH_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 #[path = "🧭️edit-rules/🦀️.rs"]
@@ -188,7 +190,7 @@ impl ArtifactEditor for SemioGraphEditor {
         owner: EditorApp<SemioGraphEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/✏️editor/🦀️.rs",
         controller: "s.stdio.semio@v1/graph#editor",
-        artifact_schema: "s.stdio.semio.graph",
+        artifact_schema: "stdio.semio.graph",
         factory: "SemioGraphEditorExampleFactory",
         factory_type: SemioGraphEditorExampleFactory,
         contract: ToolExecutionContract::bounded_first_step(SEMIO_GRAPH_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500),

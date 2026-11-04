@@ -28,6 +28,9 @@ import { chromeHostedPanelCapRowStyle, publishShellChromePanelBox, safeAreaBoxFr
 import { PANEL_TREE_UNIT_MIME, beginPanelTreeUnitDrag, endPanelTreeUnitDrag, readActivePanelTreeUnitDrag, usePanelDockContext, usePanelTreeUnitDragActive } from "../../🔨️modules/🧲️panel-dock/🟦️.tsx";
 import { type Anchor, anchorHorizontal, anchorPositionStyle, chromeHostedOpenPanelPositionStyle, flowFromAnchor } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
 import { PanelGhostRoot } from "../👻️PanelGhost/🟦️.tsx";
+import { PANEL_MAX_VIEWPORT_FRACTION, panelFitV1 } from "./📐️panel-fit/🟦️.ts";
+
+export { PANEL_MAX_VIEWPORT_FRACTION, PANEL_MIN_EDITOR_WIDTH_PX, panelFitV1 } from "./📐️panel-fit/🟦️.ts";
 import { PanelTabBar, type PanelTabNode, type PanelTabSelectionOptions, type PanelTreeUnit, findPanelTabNode, progressPanelTabSelection, resolvePanelBranchBodyLeaf, usePanelTabSelection } from "../🧭️PanelTabBar/🟦️.tsx";
 import { Icon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
@@ -424,6 +427,15 @@ const Panel: React.FC<PanelProps> = ({
       publishShellChromePanelBox(panelShellRoot, key, anchor, null);
     };
   }, [anchor, panelShellRoot, size, visible]);
+  reactHostPort.useEffect(() => {
+    if (!visible || typeof window === "undefined" || onVisibleChange === undefined) return;
+    const fold = () => {
+      if (panelFitV1(window.innerWidth, sizeRef.current).collapsed) onVisibleChange(false);
+    };
+    fold();
+    window.addEventListener("resize", fold);
+    return () => window.removeEventListener("resize", fold);
+  }, [onVisibleChange, visible]);
   const isBottom = flow.block === "up";
   const isChromeHosted = tabBarHost === "chrome";
   const { resolvedPath, handlePathChange } = usePanelTabSelection({ tabs, visible, onVisibleChange, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, drillOnOpen });
@@ -435,7 +447,7 @@ const Panel: React.FC<PanelProps> = ({
 
   const positionStyle = {
     ...(isChromeHosted && visible ? chromeHostedOpenPanelPositionStyle(anchor) : anchorPositionStyle(anchor)),
-    width: visible ? `${size}px` : undefined,
+    width: visible ? `min(${size}px, ${PANEL_MAX_VIEWPORT_FRACTION * 100}vw)` : undefined,
     ...(zIndex !== undefined ? { zIndex } : {}),
   };
   const panelZClass = getLevelZClass("panel");

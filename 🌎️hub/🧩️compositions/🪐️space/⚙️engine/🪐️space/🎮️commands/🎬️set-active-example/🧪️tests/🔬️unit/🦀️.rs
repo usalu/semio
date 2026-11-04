@@ -23,7 +23,7 @@ async fn open_studio_loads_created_empty_catalog_studio() {
     use semio_framework_artifact_space_space::{SpaceKind, SpaceRole, SpaceUser, SpaceVisibility};
     use semio_framework_os::{MemoryBackbonePort, OsBackbonePorts, create_os_space};
     use std::sync::Arc;
-    let port = Arc::new(OsBackbonePorts::Store(store::os_store::backbone::BackbonePorts::Memory(MemoryBackbonePort::default())));
+    let port = Arc::new(OsBackbonePorts::store(store::os_store::backbone::BackbonePorts::Memory(MemoryBackbonePort::default())));
     let owner = SpaceUser { id: "tester".into(), name: "Tester".into(), avatar: None, role: SpaceRole::Author };
     let entry = create_os_space("Opened Empty", SpaceKind::Atelier, SpaceVisibility::Private, owner, &port).expect("create");
     crate::register_studio_port_for_test(&entry.id, port).await;

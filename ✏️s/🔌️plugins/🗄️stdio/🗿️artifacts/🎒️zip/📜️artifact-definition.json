@@ -76,7 +76,33 @@
       }
     }
   ],
-  "mutations": [],
+  "mutations": [
+    {
+      "id": "s.stdio.zip.mutation.set-archive-comment.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.zip.mutation.add-entry.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.zip.mutation.remove-entry.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.zip.mutation.rename-entry.v1",
+      "status": "implemented",
+      "executable_registration": false
+    },
+    {
+      "id": "s.stdio.zip.mutation.set-entry-data.v1",
+      "status": "implemented",
+      "executable_registration": false
+    }
+  ],
   "inferences": [],
   "resources": [
     {
@@ -266,7 +292,13 @@
     "lossless": "unimplemented",
     "canonical": "unimplemented",
     "validators": [],
-    "mutations": [],
+    "mutations": [
+      "s.stdio.zip.mutation.set-archive-comment.v1",
+      "s.stdio.zip.mutation.add-entry.v1",
+      "s.stdio.zip.mutation.remove-entry.v1",
+      "s.stdio.zip.mutation.rename-entry.v1",
+      "s.stdio.zip.mutation.set-entry-data.v1"
+    ],
     "inferences": [],
     "fixtures": []
   }

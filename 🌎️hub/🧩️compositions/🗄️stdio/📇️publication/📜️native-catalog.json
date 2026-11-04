@@ -221,6 +221,14 @@
       "protocolSourceSha256": "d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536"
     },
     {
+      "artifactKind": "s.stdio.wav",
+      "artifactSchema": "stdio.wav",
+      "packSchemaHash": "a90ed01f33ac476750694405d62fc88c077decec3bf5a14d3fbbed2981faf97f",
+      "factoryId": "stdio.native.wav.v1",
+      "extension": "semio",
+      "protocolSourceSha256": "a90ed01f33ac476750694405d62fc88c077decec3bf5a14d3fbbed2981faf97f"
+    },
+    {
       "artifactKind": "s.stdio.xlsx",
       "artifactSchema": "stdio.xlsx",
       "packSchemaHash": "b81858b598a8d0bdcbcc36b48291e9d3a3f638adf4cac479e5ebce714c9a1a17",

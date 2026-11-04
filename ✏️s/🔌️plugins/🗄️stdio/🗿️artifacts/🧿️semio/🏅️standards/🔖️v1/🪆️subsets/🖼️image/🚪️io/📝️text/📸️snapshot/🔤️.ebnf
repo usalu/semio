@@ -6,7 +6,7 @@
    (bare artifact mark token standing in for the stripped preamble). *)
 document        = artifact mark, schema line, width line, height line, colorspace line,
                    bit depth line, icc line, frames line, metadata line ;
-artifact mark   = "s.stdio.semio.image" ;
+artifact mark   = "stdio.semio.image" ;
 schema line     = "schema", "=", hex ;
 width line      = "width", "=", digit sequence ;
 height line     = "height", "=", digit sequence ;

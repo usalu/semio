@@ -40,7 +40,7 @@
       "target": {
         "artifactId": "curation-catalog",
         "dialect": {
-          "artifactKind": "s.stdio.semio.kit",
+          "artifactKind": "stdio.semio.kit",
           "standard": "v1",
           "subset": "kit"
         }

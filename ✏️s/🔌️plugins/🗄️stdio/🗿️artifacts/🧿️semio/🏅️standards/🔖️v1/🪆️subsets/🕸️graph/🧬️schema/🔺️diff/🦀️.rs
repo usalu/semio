@@ -220,7 +220,7 @@ impl IndexedRow<SemioGraphEdge> for SemioGraphEdgeDiff {
 //#region 🔖️Diff
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.graph.diff")]
+#[artifact_schema(id = "stdio.semio.graph.diff")]
 pub struct SemioGraphDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]

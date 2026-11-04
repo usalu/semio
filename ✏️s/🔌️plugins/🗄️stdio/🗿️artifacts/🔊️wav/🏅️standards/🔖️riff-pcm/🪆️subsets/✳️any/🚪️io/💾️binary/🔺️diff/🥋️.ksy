@@ -1,8 +1,9 @@
 meta:
   id: wav_diff
-  endian: le
+  encoding: UTF-8
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  The binary WavDiff is the one-line text diff verbatim as UTF-8; the clause grammar is ../../📝️text/🔺️diff/📖️.grammar.semio.
 seq:
-  - id: magic
-    contents: "stdio.wav.diff"
+  - id: line
+    type: str
+    size-eos: true

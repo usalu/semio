@@ -50,6 +50,12 @@ pub mod standards {
                         pub mod replace_image;
                         #[path = "../../../🧩️replace-samples/🦀️.rs"]
                         pub mod replace_samples;
+                        #[path = "../../../🌈️set-palette-entry/🦀️.rs"]
+                        pub mod set_palette_entry;
+                        #[path = "../../../📥️insert-palette-entry/🦀️.rs"]
+                        pub mod insert_palette_entry;
+                        #[path = "../../../📤️remove-palette-entry/🦀️.rs"]
+                        pub mod remove_palette_entry;
                     }
                     pub use semio_s_artifact_stdio_bmp_inferences::standards::v_v3::subsets::any::schema::operations;
                 }

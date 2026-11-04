@@ -1,6 +1,6 @@
 {
   "schema": "semio.stdio.definition-roster-law/v1",
-  "note": "The definition-only roster lists the full roster's identities in the same order; the artifacts below publish no native codec and are contributed by their schema-owned definition alone, so both rosters commit to the identical catalog payload.",
+  "note": "The definition-only roster lists the full roster's identities in the same order. Only the identities under definitionOnly are substituted by their schema-owned definition because their runtime crate is not linked into the light roster; every other identity keeps its runtime crate, whether or not it publishes a native codec (epw, gif, bmp, wav and binary publish none yet ship runtime crates).",
   "identities": [
     "binary",
     "txt",

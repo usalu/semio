@@ -1,3 +1,12 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.wav.snapshot" ;
+(* The DSL text of a WAV snapshot (after the `semio stdio.wav.dsl v1` preamble): `key = value` records in a fixed order, as in 📖️.grammar.semio. *)
+document = schema , fmt pad , data pad , fmt , data , other chunks , chunk order ;
+schema = "schema" , "=" , text ;
+fmt pad = "fmt-pad-byte" , "=" , int ;
+data pad = "data-pad-byte" , "=" , int ;
+fmt = "fmt" , "=" , "audio-format" , "=" , int , "channels" , "=" , int , "sample-rate" , "=" , int , "byte-rate" , "=" , int , "block-align" , "=" , int , "bits-per-sample" , "=" , int , [ "ext" , "=" , "[" , { int } , "]" ] ;
+data = "data" , "=" , "kind" , "=" , ( "pcm16" | "pcm8" | "float32" | "raw" ) , kind , "=" , "[" , { number } , "]" ;
+kind = "pcm16" | "pcm8" | "float32" | "raw" ;
+other chunks = "other-chunks" , "=" , "[" , { "{" , "fourcc" , "=" , text , "data" , "=" , string , "pad-byte" , "=" , int , "}" } , "]" ;
+chunk order = "chunk-order" , "=" , "[" , { "{" , "kind" , "=" , ( "format" | "samples" | "other" , "index" , "=" , int ) , "}" } , "]" ;
+text = string | identifier | int ;
+number = int | float ;

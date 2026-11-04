@@ -43,9 +43,7 @@
       "mimes": [
         "image/tiff"
       ],
-      "extensions": [
-        ".tiff"
-      ],
+      "extensions": [".tiff", ".tif"],
       "is_binary": true,
       "aliases": [],
       "neutral": true,
@@ -208,7 +206,7 @@
     {
       "id": "s.stdio.tiff.standard.6-0.representation.mime-image-tiff-extension-tiff",
       "category": "representation",
-      "descriptor": "runtime-capability:representation:mime:image/tiff|extension:.tiff",
+      "descriptor": "runtime-capability:representation:mime:image/tiff|extension:.tiff|extension:.tif",
       "claims": [
         {
           "namespace": "mime",
@@ -217,6 +215,10 @@
         {
           "namespace": "extension",
           "value": ".tiff"
+        },
+        {
+          "namespace": "extension",
+          "value": ".tif"
         }
       ]
     },

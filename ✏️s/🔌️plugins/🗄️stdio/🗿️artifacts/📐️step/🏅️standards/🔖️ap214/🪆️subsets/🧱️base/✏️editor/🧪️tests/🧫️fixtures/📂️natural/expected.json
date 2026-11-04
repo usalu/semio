@@ -1,0 +1,17 @@
+{
+  "cartesianPoints": [
+    [
+      1.0,
+      2.0,
+      3.0
+    ]
+  ],
+  "directions": [
+    [
+      1.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "schema": "AUTOMOTIVE_DESIGN"
+}

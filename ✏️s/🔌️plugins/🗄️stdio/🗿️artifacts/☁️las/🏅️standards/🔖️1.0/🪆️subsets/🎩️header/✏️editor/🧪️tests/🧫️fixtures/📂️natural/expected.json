@@ -1,0 +1,30 @@
+{
+  "scale": [
+    0.01,
+    0.01,
+    0.01
+  ],
+  "offset": [
+    100.0,
+    200.0,
+    0.0
+  ],
+  "points": [
+    {
+      "x": 101.25,
+      "y": 202.5,
+      "z": 3.0,
+      "intensity": 9,
+      "classification": 2,
+      "pointSourceId": 7
+    },
+    {
+      "x": 110.0,
+      "y": 210.0,
+      "z": 12.5,
+      "intensity": 40,
+      "classification": 5,
+      "pointSourceId": 7
+    }
+  ]
+}

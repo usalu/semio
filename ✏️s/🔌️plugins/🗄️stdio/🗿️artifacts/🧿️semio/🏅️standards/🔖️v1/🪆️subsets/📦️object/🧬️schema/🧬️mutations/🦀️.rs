@@ -28,7 +28,7 @@ use crate::schema::mutations::scale_object;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioObjectSnapshot, diff = SemioObjectDiff, schema = "s.stdio.semio.object", reference = SemioObjectSnapshot, reference_diff = SemioObjectDiff)]
+#[mutations(snapshot = SemioObjectSnapshot, diff = SemioObjectDiff, schema = "stdio.semio.object", reference = SemioObjectSnapshot, reference_diff = SemioObjectDiff)]
 pub enum SemioObjectMutation {
     MoveObject(move_object::MoveObject),
     RotateObject(rotate_object::RotateObject),

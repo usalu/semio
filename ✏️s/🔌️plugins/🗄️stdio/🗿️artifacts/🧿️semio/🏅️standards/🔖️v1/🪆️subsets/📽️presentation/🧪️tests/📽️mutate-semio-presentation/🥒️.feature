@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 @mutations-semio-v1-presentation
 Feature: Apply every typed semio PRESENTATION mutation to a real conference deck, against an independent Python implementation
-  `s.stdio.semio.presentation` is a semio-NATIVE format: no third party reads or writes
+  `stdio.semio.presentation` is a semio-NATIVE format: no third party reads or writes
   `.dsl.semio`/`.pack.semio`, and `python-pptx` — the obvious candidate — was surveyed and rejected,
   because it cannot create masters or layouts at all and because reaching a
   `SemioPresentationSnapshot` from pptx bytes through OUR importer would compare this repository with

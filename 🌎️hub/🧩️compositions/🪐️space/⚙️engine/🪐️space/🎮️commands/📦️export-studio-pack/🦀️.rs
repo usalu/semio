@@ -13,11 +13,13 @@ pub fn handle(_payload: &ExportStudioPack, _doc: &ArtifactView<'_, WorkflowSnaps
     let space_id = semio_hub_space_operations::resolve_future(semio_hub_space_operations::config_space_id(cfg.snapshot));
     match semio_hub_space_operations::resolve_future(crate::resolve_studio_document(&space_id)) {
         Some(document) => match export_os_space_pack(&document) {
-            Ok(pack_files) => {
+            Ok(export) => {
+                let stem = export.file_stem(&space_id);
+                let pack_files = export.files;
                 Ok(Emit {
                     effects: vec![
-                        Effect::DownloadMediaExport { filename: format!("{space_id}.pack"), mime_type: "application/octet-stream".into(), data: base64_codec::base64_standard_encode(&pack_files.pack), encoding: Some("base64".into()) },
-                        Effect::DownloadMediaExport { filename: format!("{space_id}.ops"), mime_type: "text/plain".into(), data: pack_files.ops, encoding: None },
+                        Effect::DownloadMediaExport { filename: format!("{stem}.pack"), mime_type: "application/octet-stream".into(), data: base64_codec::base64_standard_encode(&pack_files.pack), encoding: Some("base64".into()) },
+                        Effect::DownloadMediaExport { filename: format!("{stem}.ops"), mime_type: "text/plain".into(), data: pack_files.ops, encoding: None },
                     ],
                     ..Default::default()
                 })

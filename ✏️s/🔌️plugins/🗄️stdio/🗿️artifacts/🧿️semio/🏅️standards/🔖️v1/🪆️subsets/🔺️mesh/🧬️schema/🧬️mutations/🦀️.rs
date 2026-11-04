@@ -124,7 +124,7 @@ use crate::schema::mutations::set_primitive_topology;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioMeshSnapshot, diff = SemioMeshDiff, schema = "s.stdio.semio.mesh", reference = SemioMeshSnapshot, reference_diff = SemioMeshDiff)]
+#[mutations(snapshot = SemioMeshSnapshot, diff = SemioMeshDiff, schema = "stdio.semio.mesh", reference = SemioMeshSnapshot, reference_diff = SemioMeshDiff)]
 pub enum SemioMeshMutation {
     CreateMesh(create_mesh::CreateMesh),
     DeleteMesh(delete_mesh::DeleteMesh),

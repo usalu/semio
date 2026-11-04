@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.stdio.artifact-acceptance/v1",
+  "title": "🎯️ Per-artifact acceptance matrix of the well-known stdio artifacts",
+  "type": "object",
+  "required": ["schema", "artifacts", "nonArtifacts"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "semio.stdio.artifact-acceptance/v1" },
+    "nonArtifacts": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "artifacts": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/artifact" } }
+  },
+  "$defs": {
+    "oracle": { "enum": ["json", "xml", "text", "csv", "tsv", "html", "zip", "ooxml", "zlib", "png", "gif", "bmp", "jpeg", "tiff", "pdf", "svg", "wav", "mp3", "mp4", "avi", "stl", "obj", "ply", "gltf", "las", "step", "ifc", "dxf", "dwg", "epw", "bcf", "binary", "semio", "none"] },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["batch", "artifact", "directory", "kind", "plugin", "extension", "oracle", "surface", "edit", "export", "invalid"],
+      "properties": {
+        "batch": { "enum": ["A", "B", "C", "D", "E", "F", "G", "H"] },
+        "artifact": { "type": "string", "pattern": "^[a-z0-9]+$" },
+        "directory": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "pattern": "^s\\.stdio\\.[a-z0-9]+$" },
+        "plugin": { "type": ["string", "null"] },
+        "extension": { "type": "string", "pattern": "^\\.[a-z0-9]+$" },
+        "oracle": { "$ref": "#/$defs/oracle" },
+        "surface": { "enum": ["shipped", "missing"] },
+        "ownerApp": { "type": "string", "description": "Definition-only artifact whose natural file opens in another plugin's editor: the full app id of that editor, which must exist in a family manifest and in the natural-file lifecycle fixture." },
+        "sample": { "type": "string", "description": "Repository path relative to the artifact directory; absent selects the smallest file with the extension inside the artifact tree." },
+        "edit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode"],
+          "properties": {
+            "mode": { "enum": ["verb", "rendered", "scan", "none"] },
+            "path": { "enum": ["main", "details"], "description": "Where the edit is made: the main window, or the Details split pane of read-only main-window editors (snapshot-edit actions such as setSnapshotValue)." },
+            "field": { "type": "string", "description": "Details path only: the field whose Details control (aria-label prefix `<field>:`) is edited." },
+            "verb": { "type": "string" },
+            "args": { "type": "object", "additionalProperties": { "type": "string" } },
+            "control": { "type": "string" },
+            "value": { "type": "string" }
+          }
+        },
+        "export": { "type": "object", "additionalProperties": false, "required": ["format"], "properties": { "format": { "$ref": "#/$defs/oracle" } } },
+        "invalid": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["bytes", "expect"],
+          "properties": {
+            "bytes": { "type": "string", "description": "Hex octets of an input the format must refuse." },
+            "expect": { "enum": ["refusal-notice"] }
+          }
+        }
+      }
+    }
+  }
+}

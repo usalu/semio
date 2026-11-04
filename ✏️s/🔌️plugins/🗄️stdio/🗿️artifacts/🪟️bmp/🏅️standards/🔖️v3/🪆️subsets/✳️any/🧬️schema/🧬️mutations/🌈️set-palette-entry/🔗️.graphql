@@ -1,0 +1,7 @@
+input SetPaletteEntryInput {
+  index: Int!
+  red: Int!
+  green: Int!
+  blue: Int!
+  reserved: Int!
+}

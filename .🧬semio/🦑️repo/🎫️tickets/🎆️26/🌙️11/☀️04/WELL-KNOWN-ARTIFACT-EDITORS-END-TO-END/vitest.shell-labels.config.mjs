@@ -1,0 +1,1 @@
+export default { test: { include: ["**/📺️renderer/🧑‍🎨engine/🧪️tests/🎯️input-ledger/🟦️.ts", "**/📺️renderer/🧑‍🎨engine/🧪️tests/🪟️spawned-program-session/🟦️.tsx", "**/📺️renderer/🧑‍🎨engine/🧪️tests/⌨️window-scope/🟦️.ts", "**/📺️renderer/🧑‍🎨engine/🧪️tests/🔁️refresh-coalescing/🟦️.ts"], root: "/home/deck/semio", environment: "jsdom" } };

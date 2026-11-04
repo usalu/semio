@@ -20,6 +20,8 @@
  * guest round trip that made a one-second marquee drain for 1–3 s after mouseup. */
 // #endregion 🧲️Header
 
+import { localizedLabelTextV1 } from "../📣️replay-refusal/🟦️.ts";
+
 //#region 🪪️Provenance
 /** 🪪️ Who issued an input. `user` is a CONTROL press (a button, a menu row, a keybinding, a picker) — the
  * one origin whose refusals may become a notice; `gesture` is a pointer/camera stream a scene host
@@ -402,7 +404,7 @@ export function expectedGenerationFromArgsV1(args: unknown): number | null {
 
 //#region 🔔️RefusalNotice
 /** 🗣️ Notice text per reason, authored in the unit that decides the refusal (the `🔀️surface-switch` rule):
- * no shell i18n import, `locale` picks, only an unknown locale falls back to English. */
+ * no shell i18n import, `locale` picks, an unknown locale renders every language joined by ` | `. */
 export type InputRefusalLabelV1 = { readonly en: string; readonly de: string };
 export const INPUT_REFUSAL_LABELS_V1: Readonly<Record<InputRefusalReasonV1, InputRefusalLabelV1>> = {
   "no-session": { en: "No app session is open.", de: "Keine App-Sitzung geöffnet." },
@@ -420,8 +422,7 @@ export const INPUT_REFUSAL_LABELS_V1: Readonly<Record<InputRefusalReasonV1, Inpu
   "catching-up": { en: "Not applied — the document is still catching up with the hub. Try again in a moment.", de: "Nicht angewendet — das Dokument gleicht sich noch mit dem Hub ab. Bitte gleich erneut versuchen." },
 };
 export function inputRefusalNoticeTextV1(reason: InputRefusalReasonV1, locale: string): string {
-  const label = INPUT_REFUSAL_LABELS_V1[reason];
-  return locale === "de" ? label.de : label.en;
+  return localizedLabelTextV1(INPUT_REFUSAL_LABELS_V1[reason], locale);
 }
 
 export type RefusalNoticeThrottleV1 = {
@@ -611,7 +612,8 @@ export function createHubIdentitySettleV1(setTimer: (run: () => void, ms: number
 }
 
 /** 🔐️ The notice a user input shows while it waits for the sign-in to finish (en + de). */
+export const INPUT_IDENTITY_SETTLE_LABEL_V1: InputRefusalLabelV1 = { en: "Finishing sign-in — your input follows in a moment.", de: "Die Anmeldung wird abgeschlossen – Ihre Eingabe folgt gleich." };
 export function inputIdentitySettleNoticeTextV1(locale: string): string {
-  return locale === "de" ? "Die Anmeldung wird abgeschlossen – Ihre Eingabe folgt gleich." : "Finishing sign-in — your input follows in a moment.";
+  return localizedLabelTextV1(INPUT_IDENTITY_SETTLE_LABEL_V1, locale);
 }
 //#endregion 🔐️IdentitySettle

@@ -1,5 +1,5 @@
 dialect protocol
-protocol s.stdio.semio.table.diff
+protocol stdio.semio.table.diff
 version 1
 schema s.stdio.semio.table
 start body

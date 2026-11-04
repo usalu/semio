@@ -52,8 +52,25 @@ fn validate_text(value: &str) -> Result<(), Fault> {
     Ok(())
 }
 
+/// 🛡️ Refuses any member name an extractor could resolve outside its root, before the mutation reaches history.
+pub fn require_safe_names(emit: Emit<ZipMutation>) -> Result<Emit<ZipMutation>, Fault> {
+    for mutation in &emit.artifact_mutations {
+        let name = match mutation {
+            ZipMutation::RenameEntry(rename) => &rename.new_name,
+            ZipMutation::AddEntry(add) => &add.entry.name,
+            _ => continue,
+        };
+        crate::standards::v2_0::subsets::base::io::check_entry_name(name).map_err(|error| fault("stdio.zip.name-unsafe", &error.to_string()))?;
+    }
+    Ok(emit)
+}
+
 /// ✏️ Publishes one reversible edit only when the exact archive target remains unambiguous.
 pub fn edit_node(snapshot: &ZipSnapshot, node_id: &str, value: &str, revision: &str) -> Result<Emit<ZipMutation>, Fault> {
+    edit_node_unchecked(snapshot, node_id, value, revision).and_then(require_safe_names)
+}
+
+fn edit_node_unchecked(snapshot: &ZipSnapshot, node_id: &str, value: &str, revision: &str) -> Result<Emit<ZipMutation>, Fault> {
     validate_text(value)?;
     if node_id == COMMENT_NODE_ID {
         validate_text(&snapshot.comment)?;

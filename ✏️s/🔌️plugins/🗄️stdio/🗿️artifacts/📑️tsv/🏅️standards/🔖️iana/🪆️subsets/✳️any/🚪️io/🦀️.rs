@@ -1,7 +1,5 @@
-//! 🚪️ IO — 🚧 scaffolded by W1b: structure only. Registration flows through
-//! 🎹️composer::register (matching the repo-wide convention — see gif's own io leaf doc comment).
-//! W4 adds the real import/export leaves under 📥️import/🧩️deserializers and
-//! 📤️export/🧵️serializers.
+//! 🚪️ IO stdio.tsv (iana/✳️any) — registration flows through 🎹️composer::register, not per-leaf register();
+//! the real text, binary and sqlite leaves live in the sibling folders.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;

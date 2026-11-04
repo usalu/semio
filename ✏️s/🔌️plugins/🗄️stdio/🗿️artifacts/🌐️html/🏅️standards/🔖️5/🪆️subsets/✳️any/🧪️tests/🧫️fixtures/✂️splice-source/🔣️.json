@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "edit-text",
+      "before": "<!DOCTYPE html>\n<html><head><title>T</title></head><body><p id=\"a\">Hello</p></body></html>",
+      "splices": [
+        {
+          "offset": 67,
+          "delete": 5,
+          "insert": "Grüße 🌍"
+        }
+      ],
+      "after": "<!DOCTYPE html>\n<html><head><title>T</title></head><body><p id=\"a\">Grüße 🌍</p></body></html>"
+    },
+    {
+      "id": "add-attribute",
+      "before": "<!DOCTYPE html>\n<html><head><title>T</title></head><body><p id=\"a\">Hello</p></body></html>",
+      "splices": [
+        {
+          "offset": 59,
+          "delete": 0,
+          "insert": " class=\"b\""
+        }
+      ],
+      "after": "<!DOCTYPE html>\n<html><head><title>T</title></head><body><p class=\"b\" id=\"a\">Hello</p></body></html>"
+    },
+    {
+      "id": "rename-element",
+      "before": "<!DOCTYPE html>\n<html><head><title>T</title></head><body><p id=\"a\">Hello</p></body></html>",
+      "splices": [
+        {
+          "offset": 58,
+          "delete": 1,
+          "insert": "section"
+        },
+        {
+          "offset": 74,
+          "delete": 1,
+          "insert": "section"
+        }
+      ],
+      "after": "<!DOCTYPE html>\n<html><head><title>T</title></head><body><section id=\"a\">Hello</section></body></html>"
+    },
+    {
+      "id": "unclosed-markup",
+      "before": "<!DOCTYPE html>\n<html><head><title>T</title></head><body><p id=\"a\">Hello</p></body></html>",
+      "splices": [
+        {
+          "offset": 76,
+          "delete": 0,
+          "insert": "<div>"
+        }
+      ],
+      "refused": true
+    }
+  ]
+}

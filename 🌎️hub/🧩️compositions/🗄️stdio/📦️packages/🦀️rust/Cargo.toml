@@ -109,6 +109,7 @@ semio-s-artifact-stdio-ifc-2x3-sav = { workspace = true }
 semio-s-artifact-stdio-ifc-4 = { workspace = true }
 semio-s-artifact-stdio-ifc-4-model = { workspace = true }
 semio-s-artifact-stdio-ifc-4-mutations = { workspace = true }
+semio-s-artifact-stdio-ifc-4x3 = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dwg-editor = { workspace = true }
 semio-s-artifact-stdio-dwg-editor-ac1018 = { workspace = true }
@@ -179,6 +180,9 @@ semio-s-artifact-stdio-avi = { workspace = true }
 semio-s-artifact-stdio-mp3 = { workspace = true }
 semio-s-artifact-stdio-wav = { workspace = true }
 semio-s-artifact-stdio-epw = { workspace = true }
+semio-s-artifact-stdio-idml = { workspace = true }
+semio-s-artifact-stdio-idml-any = { workspace = true }
+semio-s-artifact-stdio-idml-story = { workspace = true }
 semio-s-artifact-stdio-idf = { workspace = true }
 # /🧩️ Composition Test Dependencies
 
@@ -189,6 +193,14 @@ path = "../../🧪️tests/📇️native-openable-provider/🦀️.rs"
 [[test]]
 name = "editor_catalog"
 path = "../../🧪️tests/✏️editor-catalog/🦀️.rs"
+
+[[test]]
+name = "format_resolution"
+path = "../../🧪️tests/🧭️format-resolution/🦀️.rs"
+
+[[test]]
+name = "semio_natural_dispatch"
+path = "../../🧪️tests/🧿️semio-natural-dispatch/🦀️.rs"
 
 [[test]]
 name = "shipped_fleet"

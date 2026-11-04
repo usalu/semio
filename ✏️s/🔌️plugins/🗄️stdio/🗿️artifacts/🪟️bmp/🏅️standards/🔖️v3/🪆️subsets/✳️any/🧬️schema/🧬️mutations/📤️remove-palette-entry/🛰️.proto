@@ -1,0 +1,4 @@
+message RemovePaletteEntry {
+  uint32 index = 1;
+  uint32 colors_used = 2;
+}

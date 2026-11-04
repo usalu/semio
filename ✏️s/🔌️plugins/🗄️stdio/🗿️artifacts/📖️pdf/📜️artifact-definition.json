@@ -79,6 +79,7 @@
       "id": "s.stdio.pdf.standard.1-7.representation.document",
       "standard": "s.stdio.pdf.standard.1-7",
       "representation": "document",
+      "owner": true,
       "mimes": [
         "application/pdf"
       ],

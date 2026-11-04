@@ -11,7 +11,7 @@ import { folderCanonicalBootstrapMirrorHeaders, folderCanonicalBootstrapMirrorUr
 import { setStatus } from "../🎭️actor-lifecycle/🟦️.ts";
 import { seedConfigFacet } from "../🗂️config-lane/🟦️.ts";
 import { equalByteArrays } from "../📮️hub-outbox/🟦️.ts";
-import { folderEnvelopeUrl } from "./✍️write/🟦️.ts";
+import { folderEnvelopeUrl, folderWorkUnacknowledged, resumeBlockedFolderArchive } from "./✍️write/🟦️.ts";
 
 /** 🌉️ `fetchWithTimeout` only declares the structural subset every OTHER call site in this file
  * needs (`ok`/`status`/`headers.get`/`json`/`text`) so its own module never requires the ambient
@@ -88,7 +88,7 @@ export async function pollFolderOnce(state: ArtifactState, binding: Extract<Pers
       state.folderBootstrapped = true;
       if (held !== null) {
         state.folderArchive = null;
-        setStatus(state, { persisted: false });
+        setStatus(state, {});
       }
             seedConfigFacet(state, null);
 return;
@@ -97,14 +97,21 @@ return;
     const archive = new Uint8Array(await response.arrayBuffer());
     decodeDocumentArchiveBytes(archive);
     const echo = state.folderArchive !== null && equalByteArrays(state.folderArchive, archive);
+    if (!echo && folderWorkUnacknowledged(state)) {
+      setStatus(state, { writeFailure: { code: "external-divergence" } });
+      return;
+    }
     state.folderArchive = archive;
     state.folderBootstrapped = true;
     if (!echo) emitEvent(state, { kind: "documentArchiveReplaced", archive: Array.from(archive) });
-    setStatus(state, { persisted: true });
+    if (state.status.writeFailure?.code === "external-divergence" || state.status.writeFailure?.code === "folder-unreadable") setStatus(state, { writeFailure: undefined });
+    else setStatus(state, {});
+    resumeBlockedFolderArchive(state, binding);
       if (!echo || state.facetValue === undefined) seedConfigFacet(state, archive);
 } catch (error) {
     if (state.docAbort.signal.aborted) return;
     console.error("[backbone-worker] folder poll failed", state.config.documentId, error);
+    setStatus(state, { writeFailure: { code: "folder-unreadable" } });
   }
 }
 

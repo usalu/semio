@@ -1749,6 +1749,17 @@
           ]
         },
         {
+          "mutationId": "change-reliability-member-id",
+          "sourceMutationDirectoryName": "🚦️change-reliability-member-id",
+          "mutationDirectoryName": "🚦️change-reliability-member-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
           "mutationId": "insert-traffic-group",
           "sourceMutationDirectoryName": "🚦️insert-traffic-group",
           "mutationDirectoryName": "🚦️insert-traffic-group",
@@ -1903,6 +1914,7 @@
         "remove-factor-override",
         "change-traffic-group-group",
         "change-traffic-group-variable-id",
+        "change-reliability-member-id",
         "insert-traffic-group",
         "remove-traffic-group"
       ]
@@ -4528,6 +4540,26 @@
             "operation": "change-traffic-group-variable-id",
             "bridgeVersion": 1,
             "variant": "ChangeTrafficGroupVariableId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-reliability-member-id",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-reliability-member-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeReliabilityMemberId"
           },
           "oracleRequirements": [
             {

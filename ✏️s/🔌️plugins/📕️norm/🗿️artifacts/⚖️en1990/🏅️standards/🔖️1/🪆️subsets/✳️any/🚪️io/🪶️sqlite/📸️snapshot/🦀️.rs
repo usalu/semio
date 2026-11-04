@@ -124,7 +124,7 @@ impl En1990Snapshot{
             out.insert_float( "en1990_fatigue_spectrum", &[Cell::Integer(1), ordinal(position)?, Cell::Text(&spectrum.id), Cell::Text(&spectrum.member_id), member, Cell::Real(spectrum.detail_category), Cell::Real(spectrum.stress_range), Cell::Real(spectrum.cycles)], FATIGUE_FLOATS)?;
         }
         for (position, analysis) in self.reliability_analyses.iter().enumerate() {
-            out.insert_float( "en1990_reliability_analysis", &[Cell::Integer(1), ordinal(position)?, Cell::Text(&analysis.id), Cell::Text(distribution_kind_text(analysis.resistance_distribution)), Cell::Real(analysis.resistance_mean), Cell::Real(analysis.resistance_sd), Cell::Text(distribution_kind_text(analysis.action_distribution)), Cell::Real(analysis.action_mean), Cell::Real(analysis.action_sd)], RELIABILITY_FLOATS)?;
+            out.insert_float( "en1990_reliability_analysis", &[Cell::Integer(1), ordinal(position)?, Cell::Text(&analysis.id), Cell::Text(distribution_kind_text(analysis.resistance_distribution)), Cell::Real(analysis.resistance_mean), Cell::Real(analysis.resistance_sd), Cell::Text(distribution_kind_text(analysis.action_distribution)), Cell::Real(analysis.action_mean), Cell::Real(analysis.action_sd),Cell::Text(&analysis.member_id)], RELIABILITY_FLOATS)?;
         }
         for (position, series) in self.test_series.iter().enumerate() {
             out.insert_float( "en1990_test_series", &[Cell::Integer(1), ordinal(position)?, Cell::Text(&series.id), Cell::Text(&series.quantity), Cell::Text(test_distribution_text(series.distribution)), Cell::Integer(i64::from(series.sample_size)), Cell::Real(series.mean), Cell::Real(series.std_dev), Cell::Real(series.variation_known), Cell::Real(series.conversion_factor), Cell::Real(series.required),Cell::Text(&series.pairs),Cell::Real(series.theory_variation)], TEST_FLOATS)?;
@@ -161,7 +161,7 @@ impl ArtifactSqliteSnapshotHost for En1990Snapshot {
         let mut bound = NativeEncodingBound::file_only(control)?;
         bound.add(32768)?;
         bound.repeated(self.project_id.len(), 24)?;
-        for action in &self.permanents { bound.add(2048)?; bound.repeated(action.id.len(), 24)?; bound.repeated(action.kind.len(), 24)?; }
+        for action in &self.permanents { bound.add(2048)?; bound.repeated(action.id.len(), 24)?; bound.repeated(action.kind.as_str().len(), 24)?; }
         for action in &self.variables { bound.add(2048)?; bound.repeated(action.id.len(), 24)?; bound.repeated(action.category.len(), 24)?; }
         for action in &self.accidentals { bound.add(2048)?; bound.repeated(action.id.len(), 24)?; }
         for action in &self.seismics { bound.add(2048)?; bound.repeated(action.id.len(), 24)?; }
@@ -170,8 +170,8 @@ impl ArtifactSqliteSnapshotHost for En1990Snapshot {
         for effect in &self.effects { bound.add(2048)?; bound.repeated(effect.member_id.len(), 24)?; bound.repeated(effect.action_id.len(), 24)?; }
         for action in &self.variables { bound.repeated(action.group.len(), 24)?; }
         for spectrum in &self.fatigue_spectra { bound.add(4096)?; bound.repeated(spectrum.id.len(), 24)?; bound.repeated(spectrum.member_id.len(), 24)?; }
-        for analysis in &self.reliability_analyses { bound.add(4096)?; bound.repeated(analysis.id.len(), 24)?; bound.repeated(analysis.resistance_distribution.len(), 24)?; bound.repeated(analysis.action_distribution.len(), 24)?; }
-        for series in &self.test_series { bound.add(4096)?; bound.repeated(series.id.len(), 24)?; bound.repeated(series.quantity.len(), 24)?; bound.repeated(series.distribution.len(), 24)?; }
+        for analysis in &self.reliability_analyses { bound.add(4096)?; bound.repeated(analysis.id.len(), 24)?; bound.repeated(analysis.member_id.len(), 24)?; bound.repeated(analysis.resistance_distribution.as_str().len(), 24)?; bound.repeated(analysis.action_distribution.as_str().len(), 24)?; bound.repeated(analysis.second_action_distribution.as_str().len(), 24)?; }
+        for series in &self.test_series { bound.add(4096)?; bound.repeated(series.id.len(), 24)?; bound.repeated(series.quantity.len(), 24)?; bound.repeated(series.pairs.len(), 24)?; bound.repeated(series.distribution.as_str().len(), 24)?; }
         for placement in &self.placements { bound.add(4096)?; bound.repeated(placement.id.len(), 24)?; }
         for row in &self.factor_overrides { bound.add(4096)?; for value in [&row.id, &row.factor, &row.target, &row.justification] { bound.repeated(value.len(), 24)?; } }
         for row in &self.traffic_groups { bound.add(4096)?; for value in [&row.id, &row.variable_id] { bound.repeated(value.len(), 24)?; } }
@@ -201,7 +201,7 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
         let bridge_rows = entities(database, "en1990_bridge_sls", 20, BRIDGE_FLOATS, control)?;
         let effect_rows = entities(database, "en1990_effect", 8, EFFECT_FLOATS, control)?;
         let fatigue_rows = entities(database, "en1990_fatigue_spectrum", 9, FATIGUE_FLOATS, control)?;
-        let reliability_rows = entities(database, "en1990_reliability_analysis", 10, RELIABILITY_FLOATS, control)?;
+        let reliability_rows = entities(database, "en1990_reliability_analysis", 11, RELIABILITY_FLOATS, control)?;
         let test_rows = entities(database, "en1990_test_series", 14, TEST_FLOATS, control)?;
         let placement_rows = entities(database, "en1990_placement", 8, PLACEMENT_FLOATS, control)?;
         let override_rows = entities(database, "en1990_factor_override", 8, FACTOR_OVERRIDE_FLOATS, control)?;
@@ -264,13 +264,13 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
         for row in ordered(reliability_rows.values().copied(), 2, control)? {
             checkpoint(control, reliability_analyses.len(), 0)?;
             if row.integer(1)? != 1 { return Err(invalid("EN1990 reliability analysis has an unknown document")); }
-            reliability_analyses.push(ReliabilityAnalysis { id: reconstruct_text(control, row.text(3)?)?, resistance_distribution: read_distribution_kind(row.text(4)?)?, resistance_mean: row.real(5)?, resistance_sd: row.real(6)?, action_distribution: read_distribution_kind(row.text(7)?)?, action_mean: row.real(8)?, action_sd: row.real(9)? });
+            reliability_analyses.push(ReliabilityAnalysis { id: reconstruct_text(control, row.text(3)?)?, resistance_distribution: read_distribution_kind(row.text(4)?)?, resistance_mean: row.real(5)?, resistance_sd: row.real(6)?, action_distribution: read_distribution_kind(row.text(7)?)?, action_mean: row.real(8)?, action_sd: row.real(9)?, second_action_distribution: DistributionKind::Normal, second_action_mean: 0.0, second_action_sd: 0.0, member_id: reconstruct_text(control, row.text(10)?)? });
         }
         let mut test_series = Vec::new();
         for row in ordered(test_rows.values().copied(), 2, control)? {
             checkpoint(control, test_series.len(), 0)?;
             if row.integer(1)? != 1 { return Err(invalid("EN1990 test series has an unknown document")); }
-            test_series.push(TestSeries { id: reconstruct_text(control, row.text(3)?)?, quantity: reconstruct_text(control, row.text(4)?)?, distribution: read_test_distribution(row.text(5)?)?, sample_size: u32::try_from(row.integer(6)?).map_err(|error| invalid(error.to_string()))?, mean: row.real(7)?, std_dev: row.real(8)?, variation_known: row.real(9)?, conversion_factor: row.real(10)?, required: row.real(11)?,pairs: reconstruct_text(control, row.text(12)?)?,theory_variation: row.real(13)? });
+            test_series.push(TestSeries { id: reconstruct_text(control, row.text(3)?)?, quantity: reconstruct_text(control, row.text(4)?)?, distribution: read_test_distribution(row.text(5)?)?, sample_size: u32::try_from(row.integer(6)?).map_err(|error| invalid(error.to_string()))?, mean: row.real(7)?, std_dev: row.real(8)?, variation_known: row.real(9)?, conversion_factor: row.real(10)?, required: row.real(11)?,pairs: reconstruct_text(control, row.text(12)?)?, theory_variation: row.real(13)?, theory_mean: 0.0 });
         }
         let mut placements = Vec::new();
         for row in ordered(placement_rows.values().copied(), 2, control)? {

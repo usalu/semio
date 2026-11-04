@@ -181,3 +181,37 @@ impl<'a> BmpPaintWorkOperation<'a> {
 
 #[path="🪪️validation/🦀️.rs"]
 pub mod owned_validation;
+
+
+/// 🎨️ Replaces one palette entry's color; every sample keeps its index.
+pub fn palette_entry_set(image: &BmpImage, index: usize, entry: crate::schema::snapshot::BmpPaletteEntry) -> Result<BmpImage, String> {
+    let mut edited = image.clone();
+    *edited.palette.get_mut(index).ok_or_else(|| format!("bmp: palette entry {index} is absent"))? = entry;
+    edited.validate()?;
+    Ok(edited)
+}
+
+/// 📥️ Inserts one palette entry and shifts every sample index at or above it so the picture stays identical; `colors_used` is the explicit resulting header value.
+pub fn palette_entry_inserted(image: &BmpImage, index: usize, entry: crate::schema::snapshot::BmpPaletteEntry, colors_used: u32) -> Result<BmpImage, String> {
+    let BmpPixels::Indexed { indices } = &image.pixels else { return Err("bmp: only indexed images own a palette".into()); };
+    if index > image.palette.len() { return Err(format!("bmp: palette position {index} is beyond the palette end {}", image.palette.len())); }
+    let mut edited = image.clone();
+    edited.palette.insert(index, entry);
+    edited.colors_used = colors_used;
+    edited.pixels = BmpPixels::Indexed { indices: indices.iter().map(|sample| if usize::from(*sample) >= index { sample.saturating_add(1) } else { *sample }).collect() };
+    edited.validate()?;
+    Ok(edited)
+}
+
+/// 📤️ Removes one palette entry no sample uses and shifts every higher sample index down; `colors_used` is the explicit resulting header value.
+pub fn palette_entry_removed(image: &BmpImage, index: usize, colors_used: u32) -> Result<BmpImage, String> {
+    let BmpPixels::Indexed { indices } = &image.pixels else { return Err("bmp: only indexed images own a palette".into()); };
+    if index >= image.palette.len() { return Err(format!("bmp: palette entry {index} is absent")); }
+    if indices.iter().any(|sample| usize::from(*sample) == index) { return Err(format!("bmp: palette entry {index} is still used by samples")); }
+    let mut edited = image.clone();
+    edited.palette.remove(index);
+    edited.colors_used = colors_used;
+    edited.pixels = BmpPixels::Indexed { indices: indices.iter().map(|sample| if usize::from(*sample) > index { *sample - 1 } else { *sample }).collect() };
+    edited.validate()?;
+    Ok(edited)
+}

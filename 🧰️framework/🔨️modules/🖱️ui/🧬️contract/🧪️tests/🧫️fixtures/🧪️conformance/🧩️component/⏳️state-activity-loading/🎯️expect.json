@@ -19,7 +19,7 @@
   "accessibility": [
     {
       "id": 0,
-      "label": null,
+      "label": "Title",
       "description": null,
       "live": "off",
       "shortcut": null,

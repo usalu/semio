@@ -13,7 +13,7 @@
 //! paths from the scenario's step text. The feature is the single place any of them is written down,
 //! so neither implementation can hold a transcription that drifts from what the other one read.
 //!
-//! `s.stdio.semio.graph` is the neutral typed property graph: id-keyed nodes carrying ordered ports
+//! `stdio.semio.graph` is the neutral typed property graph: id-keyed nodes carrying ordered ports
 //! and ordered `SemioValue` properties, and id-keyed EDGES that are ordinary entities rather than an
 //! attach handle. `delete-node` cascades into every edge naming it, so its inverse has to restore the
 //! node AND the severed edges — the one verb here whose undo is more than a single step.

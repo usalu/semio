@@ -1,0 +1,271 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/mutation/patch-frames/schema.json",
+  "title": "PatchFrames",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index",
+    "removeCount"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "patchFrames"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Start frame",
+          "de": "Start-Frame"
+        },
+        "description": {
+          "en": "Index of the first MPEG frame the patch replaces, counted from 0.",
+          "de": "Index des ersten MPEG-Frames, das die Änderung ersetzt, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0
+      }
+    },
+    "removeCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Frames to remove",
+          "de": "Zu entfernende Frames"
+        },
+        "description": {
+          "en": "Number of whole frames removed at the index before the new frames are inserted.",
+          "de": "Anzahl ganzer Frames, die am Index vor dem Einfügen der neuen Frames entfernt werden."
+        },
+        "step": 1
+      }
+    },
+    "frames": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Mp3Frame"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Inserted MPEG audio frames",
+          "de": "Eingefügte MPEG-Audio-Frames"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Mp3Frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "header"
+      ],
+      "properties": {
+        "header": {
+          "$ref": "#/$defs/Mp3FrameHeader",
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame header",
+              "de": "Frame-Header"
+            }
+          }
+        },
+        "payload": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame payload",
+              "de": "Frame-Nutzdaten"
+            }
+          }
+        }
+      }
+    },
+    "Mp3FrameHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mpegVersionId",
+        "layer",
+        "protectionBit",
+        "bitrateIndex",
+        "sampleRateIndex",
+        "padding",
+        "privateBit",
+        "channelMode",
+        "modeExtension",
+        "copyright",
+        "original",
+        "emphasis"
+      ],
+      "properties": {
+        "mpegVersionId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "MPEG version",
+              "de": "MPEG-Version"
+            },
+            "description": {
+              "en": "0 = MPEG-2.5, 2 = MPEG-2, 3 = MPEG-1.",
+              "de": "0 = MPEG-2.5, 2 = MPEG-2, 3 = MPEG-1."
+            }
+          }
+        },
+        "layer": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "protectionBit": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Protection bit",
+              "de": "Schutzbit"
+            },
+            "description": {
+              "en": "Set when the frame has no CRC (inverted in the header).",
+              "de": "Gesetzt, wenn der Frame keine CRC hat (im Header invertiert)."
+            }
+          }
+        },
+        "bitrateIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Bitrate index",
+              "de": "Bitraten-Index"
+            },
+            "description": {
+              "en": "4-bit header field selecting the bitrate.",
+              "de": "4-Bit-Headerfeld, das die Bitrate wählt."
+            }
+          }
+        },
+        "sampleRateIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Sample rate index",
+              "de": "Abtastraten-Index"
+            }
+          }
+        },
+        "padding": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Padding",
+              "de": "Auffüllung"
+            },
+            "description": {
+              "en": "Frame carries one extra padding slot.",
+              "de": "Frame enthält einen zusätzlichen Füllslot."
+            }
+          }
+        },
+        "privateBit": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Private bit",
+              "de": "Privates Bit"
+            }
+          }
+        },
+        "channelMode": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Channel mode",
+              "de": "Kanalmodus"
+            },
+            "description": {
+              "en": "0 = stereo, 1 = joint stereo, 2 = dual channel, 3 = mono.",
+              "de": "0 = Stereo, 1 = Joint Stereo, 2 = Zweikanal, 3 = Mono."
+            }
+          }
+        },
+        "modeExtension": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Mode extension",
+              "de": "Modus-Erweiterung"
+            },
+            "description": {
+              "en": "Joint-stereo coding flags.",
+              "de": "Flags der Joint-Stereo-Kodierung."
+            }
+          }
+        },
+        "copyright": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Copyright",
+              "de": "Urheberrechtlich geschützt"
+            }
+          }
+        },
+        "original": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "label": {
+              "en": "Original",
+              "de": "Original"
+            }
+          }
+        },
+        "emphasis": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Emphasis",
+              "de": "Emphasis (Preemphasis)"
+            },
+            "description": {
+              "en": "0 = none, 1 = 50/15 µs, 3 = CCITT J.17.",
+              "de": "0 = keine, 1 = 50/15 µs, 3 = CCITT J.17."
+            }
+          }
+        }
+      }
+    }
+  }
+}

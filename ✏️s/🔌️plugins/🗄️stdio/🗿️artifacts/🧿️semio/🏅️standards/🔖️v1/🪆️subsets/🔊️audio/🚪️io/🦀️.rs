@@ -117,7 +117,7 @@ use semio_framework_diagnostic::TextSpan;
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️Register
-    /// 📌️ Registers this subset's schema descriptor, document codec (`"s.stdio.semio.audio"` — the
+    /// 📌️ Registers this subset's schema descriptor, document codec (`"stdio.semio.audio"` — the
     /// document-codec id, repo-wide unique per the ticket's static policy check, distinct from every
     /// other artifact's own document schema string), and `SubsetValidator`. Called from this
     /// artifact's standard-level `engine::register()`.
@@ -144,7 +144,7 @@ use semio_framework_diagnostic::TextSpan;
         builder
     }
 
-    /// 💡️ Registers `s.stdio.semio.audio.inference`'s facet leaves into the OS-wide inference
+    /// 💡️ Registers `stdio.semio.audio.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

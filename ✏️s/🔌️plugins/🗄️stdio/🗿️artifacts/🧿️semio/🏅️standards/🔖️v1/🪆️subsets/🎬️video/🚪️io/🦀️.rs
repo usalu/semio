@@ -110,7 +110,7 @@ pub mod derived_composition {
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️Register
-    /// 📌️ Registers this subset's schema descriptor, document codec (`"s.stdio.semio.video"` — the
+    /// 📌️ Registers this subset's schema descriptor, document codec (`"stdio.semio.video"` — the
     /// repo-wide-unique id `policyDocumentCodecDuplicateIds` checks statically), and SubsetValidator.
     /// Called from this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -136,7 +136,7 @@ pub mod derived_composition {
         builder
     }
 
-    /// 💡️ Registers `s.stdio.semio.video.inference`'s facet leaves into the OS-wide inference
+    /// 💡️ Registers `stdio.semio.video.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

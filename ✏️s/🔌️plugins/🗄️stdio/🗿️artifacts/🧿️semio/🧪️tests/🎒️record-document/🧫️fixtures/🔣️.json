@@ -131,7 +131,7 @@
   {
    "folder": "🎞️animation",
    "spec": "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
-   "envelope": "s.stdio.semio.animation",
+   "envelope": "stdio.semio.animation",
    "packs": [
     "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🚶️walk/🖼️assets/🎒️.pack.semio",
     "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/📚️examples/🚶️walk/🖼️assets/🎒️.pack.semio"
@@ -169,7 +169,7 @@
   {
    "folder": "📊️table",
    "spec": "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
-   "envelope": "s.stdio.semio.table",
+   "envelope": "stdio.semio.table",
    "packs": [
     "🏅️standards/🔖️v1/🪆️subsets/📊️table/🖼️assets/📃️sheet/🎒️.pack.semio",
     "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧪️tests/🧫️fixtures/📊️mutate-semio-table/📦️reuse-marketplaces.pack.semio"
@@ -187,7 +187,7 @@
   {
    "folder": "📑️document",
    "spec": "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
-   "envelope": "s.stdio.semio.document",
+   "envelope": "stdio.semio.document",
    "packs": [
     "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🗒️memo/🖼️assets/🎒️.pack.semio",
     "🏅️standards/🔖️v1/🪆️subsets/📑️document/🖼️assets/🗒️memo/🎒️.pack.semio"
@@ -204,7 +204,7 @@
   {
    "folder": "📽️presentation",
    "spec": "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
-   "envelope": "s.stdio.semio.presentation",
+   "envelope": "stdio.semio.presentation",
    "packs": [
     "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📽️deck/🖼️assets/🎒️.pack.semio",
     "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🖼️assets/📽️deck/🎒️.pack.semio",
@@ -243,7 +243,7 @@
   {
    "folder": "🔤️text",
    "spec": "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
-   "envelope": "s.stdio.semio.text",
+   "envelope": "stdio.semio.text",
    "packs": [
     "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📃️note/🖼️assets/🎒️.pack.semio",
     "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🖼️assets/📃️note/🎒️.pack.semio",
@@ -263,7 +263,7 @@
   {
    "folder": "🕸️graph",
    "spec": "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
-   "envelope": "s.stdio.semio.graph",
+   "envelope": "stdio.semio.graph",
    "packs": [
     "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🖼️assets/🕸️wires/🎒️.pack.semio",
     "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧪️tests/🧫️fixtures/🌳️mutate-semio-graph/🎒️.pack.semio"
@@ -281,7 +281,7 @@
   {
    "folder": "🖼️image",
    "spec": "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
-   "envelope": "s.stdio.semio.image",
+   "envelope": "stdio.semio.image",
    "packs": [
     "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖼️swatch/🖼️assets/🎒️.pack.semio",
     "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧪️tests/🧫️fixtures/🖼️mutate-semio-image/🎒️.pack.semio"

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.stdio.artifact-acceptance-samples/v1",
+  "type": "object",
+  "required": ["schema", "samples"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "semio.stdio.artifact-acceptance-samples/v1" },
+    "source": { "type": "string" },
+    "samples": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["valid", "invalid"],
+        "additionalProperties": false,
+        "properties": {
+          "valid": { "type": "array", "items": { "type": "string", "maxLength": 255 } },
+          "invalid": { "type": "array", "items": { "type": "string", "maxLength": 255 } }
+        }
+      }
+    }
+  }
+}

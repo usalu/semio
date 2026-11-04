@@ -41,6 +41,9 @@ semio-s-artifact-stdio-xlsx-base-mutations = { workspace = true }
 semio-s-artifact-stdio-xlsx-strict = { workspace = true }
 semio-s-artifact-stdio-xlsx-strict-mutations = { workspace = true }
 semio-s-artifact-stdio-xlsx-transitional = { workspace = true }
+semio-s-artifact-stdio-idml = { workspace = true }
+semio-s-artifact-stdio-idml-any = { workspace = true }
+semio-s-artifact-stdio-idml-story = { workspace = true }
 # /🧩️ Composition Dependencies
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework = { workspace = true }

@@ -270,6 +270,7 @@ export function useMarketplaceHostAndTaskManager({ registry, extensionIdSet, plu
   const taskManagerShellTasksRef = useRef<readonly TaskManagerTaskV1[]>([]);
   const taskManagerListenersRef = useRef(new Set<() => void>());
   const taskManagerTasksCacheRef = useRef<{ readonly jobs: readonly SpawnedJobRowV1[]; readonly exports: readonly VideoRenderJobRow[]; readonly shell: readonly TaskManagerTaskV1[]; readonly transfers: readonly TaskManagerTaskV1[]; readonly tasks: readonly TaskManagerTaskV1[] } | null>(null);
+  const documentTransferFlightRef = useRef(false);
   const documentTransfersRef = useRef(new Map<string, { readonly transfer: TaskManagerDocumentTransferV1; readonly abort: AbortController }>());
   const documentTransferTasksRef = useRef<readonly TaskManagerTaskV1[]>([]);
   const installStartedAtRef = useRef(new Map<string, number>());
@@ -335,5 +336,5 @@ export function useMarketplaceHostAndTaskManager({ registry, extensionIdSet, plu
     for (const listener of [...taskManagerListenersRef.current]) listener();
   }, [agentBridge.conversation, installingPluginIds, toolRunPanelNode, focusedProgram?.pluginId, focusedProgram?.spawnedId]);
   const frameworkTaskManagerTab = useMemo(() => createFrameworkTaskManagerPanelTab(() => <TaskManagerWindow sources={taskManagerSources} />), [taskManagerSources, uiLocale]);
-  return { frameworkMarketplaceTab, frameworkChatTab, taskManagerListenersRef, documentTransfersRef, documentTransferTasksRef, frameworkTaskManagerTab };
+  return { frameworkMarketplaceTab, frameworkChatTab, taskManagerListenersRef, documentTransfersRef, documentTransferFlightRef, documentTransferTasksRef, frameworkTaskManagerTab };
 }

@@ -1,4 +1,4 @@
-//! 💾️ Binary representation codec surface for `s.stdio.semio.kit.diff` — protocol include.
+//! 💾️ Binary representation codec surface for `stdio.semio.kit.diff` — protocol include.
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 

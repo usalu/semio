@@ -36,10 +36,3 @@ pub const BMP_ARTIFACT_SCHEMA_ID: &str = "s.stdio.bmp";
 }
 //#endregion 🧩️ArtifactItems2
 
-//#region 🧩️ArtifactItems6
-pub mod artifact_items_6 {
-pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
-    Vec::new()
-}
-}
-//#endregion 🧩️ArtifactItems6

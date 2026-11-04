@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 @mutations-semio-v1-document
 Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, against an independent Python implementation
-  `s.stdio.semio.document` is a semio-NATIVE format: no third party in any ecosystem reads or writes
+  `stdio.semio.document` is a semio-NATIVE format: no third party in any ecosystem reads or writes
   `.dsl.semio`/`.pack.semio`, so the second producer a differential comparison needs is a second
   IMPLEMENTATION. `🐍️component.py` beside this file is that implementation - the envelope, the DSL
   grammar, the binary pack frame and all eighteen verbs together with their inverses, written in
@@ -29,7 +29,7 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
   PNG payload, and eight top-level blocks covering ALL eight `DocBlock` variants - a level-1
   heading whose run is bold, a plain paragraph, an ordered list, a one-cell table, a `rust` code
   block, a quote, an image block carrying both optional dimensions, and a page break. It is the
-  richest `s.stdio.semio.document` document committed anywhere in this artifact; `asset://` resolves
+  richest `stdio.semio.document` document committed anywhere in this artifact; `asset://` resolves
   against the artifact root, so no other plugin's larger `.dsl.semio` is reachable from here, and
   that limit is stated rather than papered over.
 

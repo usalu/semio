@@ -27,6 +27,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/html/5/any/mutation/set-raw-text/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/html/5/any/mutation/splice-source/schema.json"
     }
   ]
 }

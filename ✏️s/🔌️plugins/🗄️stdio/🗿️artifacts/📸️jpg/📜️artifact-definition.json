@@ -43,9 +43,7 @@
       "mimes": [
         "image/jpeg"
       ],
-      "extensions": [
-        ".jpg"
-      ],
+      "extensions": [".jpg", ".jpeg"],
       "is_binary": true,
       "aliases": [],
       "neutral": true,
@@ -208,7 +206,7 @@
     {
       "id": "s.stdio.jpg.standard.jfif-1-01.representation.mime-image-jpeg-extension-jpg",
       "category": "representation",
-      "descriptor": "runtime-capability:representation:mime:image/jpeg|extension:.jpg",
+      "descriptor": "runtime-capability:representation:mime:image/jpeg|extension:.jpg|extension:.jpeg",
       "claims": [
         {
           "namespace": "mime",
@@ -217,6 +215,10 @@
         {
           "namespace": "extension",
           "value": ".jpg"
+        },
+        {
+          "namespace": "extension",
+          "value": ".jpeg"
         }
       ]
     },

@@ -40,7 +40,7 @@ use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::reorder_ro
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioTableSnapshot, diff = SemioTableDiff, schema = "s.stdio.semio.table", reference = SemioTableSnapshot, reference_diff = SemioTableDiff)]
+#[mutations(snapshot = SemioTableSnapshot, diff = SemioTableDiff, schema = "stdio.semio.table", reference = SemioTableSnapshot, reference_diff = SemioTableDiff)]
 pub enum SemioTableMutation {
     CreateColumn(create_column::CreateColumn),
     DeleteColumn(delete_column::DeleteColumn),

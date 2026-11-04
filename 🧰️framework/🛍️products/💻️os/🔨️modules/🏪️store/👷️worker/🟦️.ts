@@ -116,7 +116,7 @@ import { acknowledgeDirectoryBootstrap, cancelDirectoryCommand, closeScopedDirec
 import { closePreferenceLane, openPreferenceLane, recordPreferenceLaneChange } from "./🌐️preference-lane/🟦️.ts";
 import { closeDirectoryAdministration, requestDirectoryAdministrationCapability, revokeDirectoryAdministrationForScope, settleDirectoryAdministrationCapability, submitDirectoryAdministrationCommand } from "./🛡️directory-administration/🟦️.ts";
 import "./🧱️blob-cache/🟦️.ts";
-import { closeArtifact, handleLocalMsg, newArtifactState } from "./♻️artifact-lifecycle/🟦️.ts";
+import { closeArtifact, closeArtifactFlushed, handleLocalMsg, newArtifactState } from "./♻️artifact-lifecycle/🟦️.ts";
 import { openArtifact } from "./🚪️artifact-open/🟦️.ts";
 
 export type RustWorkerHost = {
@@ -349,7 +349,7 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
       openArtifact(request);
       break;
     case "close":
-      closeArtifact(request.documentId, request.spaceId, request.clientInstanceId);
+      void closeArtifactFlushed(request.documentId, request.spaceId, request.clientInstanceId);
       break;
     case "send": {
       const state = artifactState(request.documentId, request.spaceId);
@@ -516,6 +516,8 @@ if (import.meta.vitest) {
   const testSeams = dependencies.testSeams;
   const { registerFolderArchiveRestoreTests } = await import("../../../🧪️tests/🧪️folder-archive-restore/🟦️.ts");
   await registerFolderArchiveRestoreTests(import.meta.vitest, { testSeams, artifactState, closeArtifact, handleTsRequest, installStreamMuxEndpoint });
+  const { registerFolderWriteAcknowledgmentTests } = await import("../../../🧪️tests/💾️folder-write-acknowledgment/🟦️.ts");
+  await registerFolderWriteAcknowledgmentTests(import.meta.vitest, { testSeams, artifactState, closeArtifact, handleTsRequest, installStreamMuxEndpoint });
   const { registerConfigFacetFoldTests } = await import("../../../🧪️tests/🎚️config-facet-fold/🟦️.ts");
   await registerConfigFacetFoldTests(import.meta.vitest, { testSeams, artifactState, closeArtifact, handleTsRequest, installStreamMuxEndpoint, configFacetArchiveV1 });
   const { registerColdPairLoadingTests } = await import("./🧪️tests/🧪️cold-pair-loading/🟦️.ts");

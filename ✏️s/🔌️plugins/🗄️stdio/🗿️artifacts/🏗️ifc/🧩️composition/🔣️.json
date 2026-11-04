@@ -130,6 +130,19 @@
       "type": "semio_s_artifact_stdio_ifc_4x3::editor::Ifc4x3AnyEditor",
       "factory": "semio_s_artifact_stdio_ifc_4x3::editor::create_ifc4x3_any_editor",
       "mutationRoster": false,
+      "laws": {
+        "editing": "ifc4x3_any_editor",
+        "sqliteSnapshot": "sqlite_snapshot_ifc4x3_any_editor"
+      }
+    },
+    {
+      "owner": "stdio-bim",
+      "order": 11,
+      "variant": "Ifc4x3AnyViewer",
+      "role": "viewer",
+      "type": "semio_s_artifact_stdio_ifc_4x3::viewer::Ifc4x3AnyViewer",
+      "factory": "semio_s_artifact_stdio_ifc_4x3::viewer::create_ifc4x3_any_viewer",
+      "mutationRoster": false,
       "laws": null
     }
   ],
@@ -207,6 +220,18 @@
       "ports": {
         "react": 6249,
         "wgpu": 6349
+      }
+    },
+    {
+      "owner": "stdio-bim",
+      "variant": "stdio-ifc-4x3",
+      "app": "s.stdio.ifc@4x3/*#editor",
+      "aliases": [
+        "stdio ifc 4x3"
+      ],
+      "ports": {
+        "react": 6222,
+        "wgpu": 6322
       }
     }
   ],

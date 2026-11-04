@@ -48,6 +48,16 @@
       "type": "object",
       "required": ["kind", "revision", "value"],
       "properties": {
+        "kind": { "const": "cutFrames" },
+        "revision": { "type": "string", "minLength": 1 },
+        "value": { "type": "string", "pattern": "^\\s*[0-9]+\\s*-\\s*[0-9]+\\s*$" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["kind", "revision", "value"],
+      "properties": {
         "kind": { "const": "setSampleRate" },
         "revision": { "type": "string", "minLength": 1 },
         "value": { "type": "string", "pattern": "^[1-9][0-9]*$" }

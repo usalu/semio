@@ -350,27 +350,27 @@
             "name": "@semio-tech/framework-os-dev",
             "root": "💻️os/🧑‍💻dev",
             "targets": {
-              "dev-shell-react-dev": {
+              "dev-shell-react-prototype": {
                 "executor": "nx:run-commands",
                 "continuous": true
               },
-              "dev-shell-wgpu-dev": {
+              "dev-shell-wgpu-prototype": {
                 "executor": "nx:run-commands",
                 "continuous": true
               },
-              "run-shell-native-dev": {
+              "run-shell-native-prototype": {
                 "executor": "nx:run-commands",
                 "continuous": true
               },
-              "dev-cad-react-dev": {
+              "dev-cad-react-prototype": {
                 "executor": "nx:run-commands",
                 "continuous": true
               },
-              "dev-cad-wgpu-dev": {
+              "dev-cad-wgpu-prototype": {
                 "executor": "nx:run-commands",
                 "continuous": true
               },
-              "run-cad-native-dev": {
+              "run-cad-native-prototype": {
                 "executor": "nx:run-commands",
                 "continuous": true
               }

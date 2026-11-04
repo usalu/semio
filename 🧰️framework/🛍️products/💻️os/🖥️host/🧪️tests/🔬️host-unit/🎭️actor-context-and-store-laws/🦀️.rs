@@ -88,7 +88,9 @@
         assert_eq!(rebuilt_document.edit_messages, document.edit_messages);
         assert_eq!(rebuilt_document.conflicts, document.conflicts);
 
-        let text = export_backbone_dsl(&document).expect("backbone text encodes");
+        let exported = export_backbone_dsl(&document).expect("backbone text encodes");
+        assert_eq!(exported.name, document.name, "a DSL export keeps the document name its files cannot carry");
+        let text = exported.files;
         let parsed = resolve_kernel_future(store::os_store::text_format::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).expect("backbone text decodes");
         assert!(parsed.envelope.edit_messages.iter().eq(document.edit_messages.iter()));
         assert_eq!(parsed.envelope.conflicts, document.conflicts);
@@ -140,7 +142,7 @@
         rebuilt_document.retire();
         close_workflow_fixture(&mut rebuilt);
 
-        let text = export_backbone_dsl(&document).expect("text encode");
+        let text = export_backbone_dsl(&document).expect("text encode").files;
         let parsed = resolve_kernel_future(store::os_store::text_format::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).expect("text decode");
         assert_eq!(workflow_history(&parsed.envelope.id, parsed.envelope.vcs.edits.iter(), &parsed.envelope.transitions, &parsed.envelope.conflicts), history);
         parsed.into_envelope().retire_unadopted();

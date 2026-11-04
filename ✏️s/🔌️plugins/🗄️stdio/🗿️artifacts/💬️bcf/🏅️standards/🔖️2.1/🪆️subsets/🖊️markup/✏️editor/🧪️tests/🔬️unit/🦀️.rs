@@ -107,3 +107,40 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_field() {
     assert!(matches!(dropped.artifact_mutations.as_slice(), [BcfMutation::RemoveComment(_)]));
     assert_eq!(emit(editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).err().expect("no kind").code.0, "snapshot-edit.unsupported-path");
 }
+
+const NATURAL_MINIMAL: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/📂️natural-open/minimal.bcf");
+const NATURAL_TRUNCATED: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/📂️natural-open/truncated.bcf");
+const NATURAL_MISSING_VERSION: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/📂️natural-open/missing-version.bcf");
+
+#[test]
+fn natural_file_open_edit_save_reopen_keeps_comments_viewpoints_and_png() {
+    let opened = <BcfAnyEditor as ArtifactEditor>::decode_natural_file(NATURAL_MINIMAL).expect("a real bcfzip opens");
+    assert_eq!(opened.version, "2.1");
+    assert_eq!(opened.topics.len(), 1);
+    let topic = &opened.topics[0];
+    assert_eq!(topic.guid, "topic-minimal-01");
+    assert_eq!(topic.comments.len(), 1);
+    assert_eq!(topic.viewpoints.len(), 1);
+    let png = topic.viewpoints[0].snapshot.as_ref().expect("the viewpoint snapshot is retained");
+    assert_eq!(&png[..8], b"\x89PNG\r\n\x1a\n");
+    let command = BcfAnyEditCommand::SetCell { row: 0, column: 1, revision: semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&opened), value: "Door swing blocks the corridor".into() };
+    let emit = bcf_emit(&command, &opened).expect("title edit");
+    let mut edited = opened.clone();
+    for mutation in &emit.artifact_mutations {
+        apply_mutation(&mut edited, mutation);
+    }
+    assert_eq!(edited.topics[0].title, "Door swing blocks the corridor");
+    let saved = <BcfAnyEditor as ArtifactEditor>::encode_natural_file(&edited).expect("save");
+    let reopened = <BcfAnyEditor as ArtifactEditor>::decode_natural_file(&saved).expect("reopen");
+    assert_eq!(reopened, edited);
+    assert_eq!(reopened.topics[0].comments, opened.topics[0].comments);
+    assert_eq!(reopened.topics[0].viewpoints, opened.topics[0].viewpoints);
+}
+
+#[test]
+fn natural_file_refuses_a_truncated_archive_and_a_missing_version_part() {
+    let truncated = <BcfAnyEditor as ArtifactEditor>::decode_natural_file(NATURAL_TRUNCATED).expect_err("a truncated zip is refused");
+    assert!(!truncated.to_string().is_empty());
+    let missing = <BcfAnyEditor as ArtifactEditor>::decode_natural_file(NATURAL_MISSING_VERSION).expect_err("an archive without bcf.version is refused");
+    assert!(missing.to_string().contains("bcf.version"), "{missing}");
+}

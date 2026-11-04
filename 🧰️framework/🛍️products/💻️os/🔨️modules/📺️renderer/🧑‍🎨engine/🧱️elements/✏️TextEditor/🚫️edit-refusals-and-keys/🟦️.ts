@@ -32,9 +32,10 @@ export function refusalReason(outcome: unknown): string | null {
  * (ticket 26/09/23 F1: typing 158 keys into the dag/flow/sequence compiled windows raised 300 refusals). */
 export const TEXT_EDITOR_READ_ONLY_REFUSALS: ReadonlySet<string> = new Set(["undeclared-action", "viewer-read-only"]);
 
-/** ✍️ Whether a key edits the text (so a read-only editor swallows it): a printable key, Enter, Tab, Backspace, Delete. */
+/** ✍️ Whether a key edits the text (so a read-only editor swallows it): a printable key, Enter, Backspace, Delete; Tab is never one, so a read-only editor never traps focus. */
 export function isTextEditingKey(event: { readonly key: string; readonly metaKey: boolean; readonly ctrlKey: boolean; readonly altKey: boolean }): boolean {
-  if (event.key === "Enter" || event.key === "Tab" || event.key === "Backspace" || event.key === "Delete") return !event.metaKey && !event.ctrlKey;
+  if (event.key === "Tab") return false;
+  if (event.key === "Enter" || event.key === "Backspace" || event.key === "Delete") return !event.metaKey && !event.ctrlKey;
   return event.key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey;
 }
 
@@ -51,3 +52,25 @@ export function documentHistoryChord(event: { readonly key: string; readonly met
 }
 //#endregion EditingHelpers
 //#endregion 🔖️TextEditorHost
+
+/** ⌨️ What a key does to the editor's Tab trap (WAI-ARIA keyboard-trap pattern): read-only never consumes Tab, Shift+Tab always leaves, Escape arms the next Tab to leave, Ctrl+M toggles a persistent leave mode, anything else disarms. */
+export type TabTrapKeyV1 = Readonly<{ key: string; shiftKey: boolean; ctrlKey: boolean; metaKey: boolean; altKey: boolean }>;
+export type TabTrapStateV1 = Readonly<{ armed: boolean; leaveMode: boolean }>;
+export type TabTrapStepV1 = Readonly<{ state: TabTrapStateV1; action: "insert-tab" | "leave" | "consume" | "pass"; announce: "leaving" | "leave-mode-on" | "leave-mode-off" | null }>;
+
+export function tabTrapStepV1(state: TabTrapStateV1, event: TabTrapKeyV1, readOnly: boolean): TabTrapStepV1 {
+  if (event.ctrlKey && !event.metaKey && !event.altKey && event.key.toLowerCase() === "m") {
+    const leaveMode = !state.leaveMode;
+    return { state: { armed: false, leaveMode }, action: "consume", announce: leaveMode ? "leave-mode-on" : "leave-mode-off" };
+  }
+  if (event.key === "Escape") return { state: { armed: !readOnly, leaveMode: state.leaveMode }, action: "pass", announce: null };
+  if (event.key !== "Tab") return { state: { armed: false, leaveMode: state.leaveMode }, action: "pass", announce: null };
+  if (readOnly || event.shiftKey || state.leaveMode || state.armed) return { state: { armed: false, leaveMode: state.leaveMode }, action: "leave", announce: state.armed ? "leaving" : null };
+  return { state: { armed: false, leaveMode: state.leaveMode }, action: "insert-tab", announce: null };
+}
+
+export const TAB_TRAP_ANNOUNCEMENTS_V1 = {
+  leaving: { en: "Leaving the editor.", de: "Editor wird verlassen." },
+  "leave-mode-on": { en: "Tab now moves focus out of the editor.", de: "Tab verlässt jetzt den Editor." },
+  "leave-mode-off": { en: "Tab now inserts a tab.", de: "Tab fügt jetzt wieder einen Tabulator ein." },
+} as const;

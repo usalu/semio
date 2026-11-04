@@ -19,6 +19,7 @@ import { contextMenuHoverEndItem, contextMenuHoverItem, contextMenuItemAtPath, c
 import { CONTEXT_MENU_NO_FUSION_PANELS, type ContextMenuFusionPlacement, type FixedContextMenuRenderOptions, contextMenuFusionOffsetsEqual, contextMenuOpenFusionPanels, renderFixedContextMenuItems } from "./🔗️fusion/🟦️.tsx";
 import { buildTextSelectionContextMenuItems, copyDomTextSelection, cutDomTextSelection, isDomTextEditableTarget, isPointerEventOnDomTextSelection, pasteDomTextSelection, readDomTextSelection, selectAllDomText } from "./📝️text-selection/🟦️.ts";
 
+export { ContextMenuTriggerButton, contextMenuAnchorPointV1, dispatchContextMenuAtV1, type ContextMenuTriggerButtonProps } from "./🔘️trigger/🟦️.tsx";
 export { createDOMEventBinding, type DOMListenerTarget } from "../../🔨️modules/👂️dom-event-binding/🟦️.ts";
 
 export interface ContextMenuProps {

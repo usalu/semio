@@ -37,7 +37,7 @@ use semio_repo_test_host::Json;
 /// here only by this module's own real-fixture sweep test, which is what keeps this copy honest
 /// against a drift (the case adapter's own `KINDS` is the one the runner actually dispatches on).
 #[cfg(test)]
-const KINDS: &[&str] = &["set-doctype", "insert-node", "remove-node", "set-element-name", "set-attribute", "set-text", "set-comment", "set-raw-text"];
+const KINDS: &[&str] = &["set-doctype", "insert-node", "remove-node", "set-element-name", "set-attribute", "set-text", "set-comment", "set-raw-text", "splice-source"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Oracles
@@ -344,6 +344,22 @@ mod oracles {
                 };
                 *current = text;
             }
+            "splice-source" => {
+                let source: Vec<char> = String::from_utf8(serialize_doc(doc)?).map_err(|error| error.to_string())?.chars().collect();
+                let mut text = String::new();
+                let mut position = 0usize;
+                for splice in params.array("splices") {
+                    let (offset, delete) = (usize_field(&splice, "offset"), usize_field(&splice, "delete"));
+                    if offset < position || offset + delete > source.len() {
+                        return Err("splice-source: ranges must ascend, never overlap and stay inside the source".to_string());
+                    }
+                    text.extend(&source[position..offset]);
+                    text.push_str(&splice.str("insert"));
+                    position = offset + delete;
+                }
+                text.extend(&source[position..]);
+                *doc = parse(text.as_bytes())?;
+            }
             other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
         }
         Ok(())
@@ -394,6 +410,7 @@ mod oracles {
                 }
             }
             "set-text" | "set-comment" | "set-raw-text" => replace(doc, &path, at(base.root.as_ref(), &path)?)?,
+            "splice-source" => *doc = base.clone(),
             other => return Err(format!("mutation kind {other:?} has no oracle inverse implementation")),
         }
         Ok(())

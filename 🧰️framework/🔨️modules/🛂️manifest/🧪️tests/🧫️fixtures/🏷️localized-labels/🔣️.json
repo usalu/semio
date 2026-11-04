@@ -1,0 +1,13 @@
+{
+  "schema": "semio.manifest.localized-label-law/v1",
+  "rule": "Every localized label (an object whose values are locale maps carrying en and de) needs a non-blank en and de in every terminology row.",
+  "cases": [
+    { "case": "complete", "value": { "label": { "default": { "en": "Save", "de": "Speichern" } } }, "blank": [] },
+    { "case": "blank-de", "value": { "label": { "default": { "en": "Save", "de": "" } } }, "blank": ["/label"] },
+    { "case": "whitespace-en", "value": { "label": { "default": { "en": "  ", "de": "Speichern" } } }, "blank": ["/label"] },
+    { "case": "one-terminology-row-blank", "value": { "label": { "default": { "en": "Save", "de": "Speichern" }, "plan": { "en": "Save", "de": " " } } }, "blank": ["/label"] },
+    { "case": "nested-in-arrays", "value": { "actions": [ { "id": "a", "label": { "default": { "en": "A", "de": "A" } } }, { "id": "b", "args": [ { "label": { "default": { "en": "", "de": "" } } } ] } ] }, "blank": ["/actions[1]/args[0]/label"] },
+    { "case": "plain-strings-are-not-labels", "value": { "title": "", "map": { "x": { "en": "", "de": "" } } }, "blank": ["/map"] },
+    { "case": "single-locale-map-is-not-a-label", "value": { "m": { "default": { "en": "" } } }, "blank": [] }
+  ]
+}

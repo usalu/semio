@@ -44,6 +44,6 @@ pub(super) const LABEL_CELLS: u16 = 72;
 
 /// 🎡️ The build target that runs a playground variant with a renderer.
 pub fn playground_target(variant: &str, renderer: &str) -> Option<String> {
-    match renderer { "react" => Some(format!("dev-{variant}-react-dev")), "wgpu" | "wgpu-wasm" => Some(format!("dev-{variant}-wgpu-dev")), "wgpu-native" => Some(format!("run-{variant}-native-dev")), _ => None }
+    match renderer { "react" => Some(format!("dev-{variant}-react-prototype")), "wgpu" | "wgpu-wasm" => Some(format!("dev-{variant}-wgpu-prototype")), "wgpu-native" => Some(format!("run-{variant}-native-prototype")), _ => None }
 }
 // #endregion 🔖️Registry

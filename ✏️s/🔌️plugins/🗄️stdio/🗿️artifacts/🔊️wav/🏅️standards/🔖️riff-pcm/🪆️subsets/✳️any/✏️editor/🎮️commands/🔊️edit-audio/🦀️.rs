@@ -22,6 +22,7 @@ pub const SET_SAMPLE_ACTION_ID: &str = "set-cell";
 pub const INSERT_FRAME_ACTION_ID: &str = "insert-frame";
 pub const INSERT_CHANNEL_ACTION_ID: &str = "insert-channel";
 pub const SET_SAMPLE_RATE_ACTION_ID: &str = "set-sample-rate";
+pub const CUT_FRAMES_ACTION_ID: &str = "cut-frames";
 pub const PAYLOAD_SCHEMA: &str = "s.stdio.wav.command.edit-audio.v1";
 pub const SCHEMA: &str = include_str!("🧬️schema/🔣️.json");
 pub const MAXIMUM_RAW_BYTES: usize = 8_192;
@@ -36,6 +37,7 @@ pub const TOOL_IDS: &[&str] = &[
     INSERT_CHANNEL_ACTION_ID,
     semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID,
     SET_SAMPLE_RATE_ACTION_ID,
+    CUT_FRAMES_ACTION_ID,
 ];
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
@@ -49,6 +51,7 @@ pub enum EditAudio {
     InsertChannel { channel: u32, revision: String },
     RemoveChannel { channel: u32, revision: String },
     SetSampleRate { revision: String, value: String },
+    CutFrames { revision: String, value: String },
 }
 
 fn fault(code: &'static str, message: impl Into<String>) -> Fault {
@@ -69,6 +72,7 @@ pub fn from_action(action: &str, args: Option<&semio_framework_value::DslValue>)
         INSERT_CHANNEL_ACTION_ID => Ok(EditAudio::InsertChannel { channel: semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "column")?, revision: revision()? }),
         semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID => Ok(EditAudio::RemoveChannel { channel: semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "column")?, revision: revision()? }),
         SET_SAMPLE_RATE_ACTION_ID => Ok(EditAudio::SetSampleRate { revision: revision()?, value: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "value")? }),
+        CUT_FRAMES_ACTION_ID => Ok(EditAudio::CutFrames { revision: revision()?, value: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "value")? }),
         _ => Err(fault("stdio.wav.audio-action", format!("unknown WAV audio action {action}"))),
     }
 }
@@ -83,6 +87,7 @@ pub fn action_id(command: &EditAudio) -> &'static str {
         EditAudio::InsertChannel { .. } => INSERT_CHANNEL_ACTION_ID,
         EditAudio::RemoveChannel { .. } => semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID,
         EditAudio::SetSampleRate { .. } => SET_SAMPLE_RATE_ACTION_ID,
+        EditAudio::CutFrames { .. } => CUT_FRAMES_ACTION_ID,
     }
 }
 
@@ -95,7 +100,8 @@ fn revision(command: &EditAudio) -> &str {
         | EditAudio::AppendChannel { revision }
         | EditAudio::InsertChannel { revision, .. }
         | EditAudio::RemoveChannel { revision, .. }
-        | EditAudio::SetSampleRate { revision, .. } => revision,
+        | EditAudio::SetSampleRate { revision, .. }
+        | EditAudio::CutFrames { revision, .. } => revision,
     }
 }
 
@@ -278,6 +284,13 @@ impl AudioPlan {
                 }
                 PlanKind::RemoveSamples { index: frame * channels, count: channels, chunk: samples_per_chunk }
             }
+            EditAudio::CutFrames { value, .. } => {
+                let (start, end) = parse_frame_range(value)?;
+                if start >= end || end > frames {
+                    return Err(fault("stdio.wav.frame-range", format!("Frame range {start}-{end} must satisfy 0 <= start < end <= {frames}")));
+                }
+                PlanKind::RemoveSamples { index: start * channels, count: (end - start) * channels, chunk: samples_per_chunk }
+            }
             EditAudio::AppendChannel { .. } | EditAudio::InsertChannel { .. } | EditAudio::RemoveChannel { .. } => {
                 let (channel, insert) = match command {
                     EditAudio::AppendChannel { .. } => (channels, true),
@@ -349,6 +362,14 @@ impl AudioPlan {
     }
 }
 
+/// ✂️ Parses a half-open frame range written `start-end`, both counted in whole frames.
+pub(crate) fn parse_frame_range(value: &str) -> Result<(usize, usize), Fault> {
+    let invalid = || fault("stdio.wav.frame-range", "Frame range must be written start-end with whole frame numbers. / Der Framebereich muss als Start-Ende mit ganzen Framenummern geschrieben werden.");
+    let whole = |text: &str| Some(text.trim()).filter(|text| !text.is_empty() && text.bytes().all(|byte| byte.is_ascii_digit())).and_then(|text| text.parse::<usize>().ok());
+    let (start, end) = value.trim().split_once('-').ok_or_else(invalid)?;
+    Ok((whole(start).ok_or_else(invalid)?, whole(end).ok_or_else(invalid)?))
+}
+
 fn number_arg(id: &'static str, en: &'static str, de: &'static str, minimum: f64, maximum: f64) -> ActionArgDef {
     let mut argument = ActionArgDef::number(id, LocalizedLabel::native(en, de)).required();
     if let ArgSchema::Number { min, max, step, integer, .. } = &mut argument.schema {
@@ -374,6 +395,9 @@ pub fn extra_actions() -> Vec<ActionDefinition> {
             .in_palette(false),
         ActionDefinition::bounded_catalog(SET_SAMPLE_RATE_ACTION_ID, LocalizedLabel::native("Set sample rate", "Abtastrate setzen"), ActionKind::Mutation)
             .with_args([revision_arg(), ActionArgDef::text("value", LocalizedLabel::native("Sample rate (Hz)", "Abtastrate (Hz)")).required()])
+            .in_palette(false),
+        ActionDefinition::bounded_catalog(CUT_FRAMES_ACTION_ID, LocalizedLabel::native("Cut frames", "Frames ausschneiden"), ActionKind::Mutation)
+            .with_args([revision_arg(), ActionArgDef::text("value", LocalizedLabel::native("Frame range (start-end)", "Framebereich (Start-Ende)")).required()])
             .in_palette(false),
     ]
     .map(|mut action| {
@@ -709,6 +733,33 @@ mod tests {
             }
         }
         assert_eq!(edited, base);
+    }
+
+    #[test]
+    fn cutting_a_frame_range_is_one_exactly_reversible_edit_and_refuses_invalid_ranges() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🎚️natural-edit/🔣️.json")).expect("neutral audio-edit fixture parses");
+        let base: WavSnapshot = semio_framework_pack_json::from_json_str(&serde_json::to_string(&fixture["before"]).expect("fixture before prints"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture before decodes");
+        let plan = AudioPlan::new(&EditAudio::CutFrames { revision: "r".into(), value: fixture["cutFrames"]["range"].as_str().expect("range").into() }, &base).expect("frame range cut plans");
+        let mut format_ext = None;
+        let mutations = (0..plan.items).filter_map(|ordinal| plan.mutation(ordinal, &base, &mut format_ext)).collect::<Vec<_>>();
+        let mut edited = base.clone();
+        let mut inverses = Vec::new();
+        for mutation in &mutations {
+            inverses.push(<WavMutation as ColdMutation<WavSnapshot>>::inverse(mutation, &edited).expect("valid retained mutation inverse fixture"));
+            edited = apply_all(&edited, std::slice::from_ref(mutation));
+        }
+        let expected = fixture["cutFrames"]["expectedData"].as_array().expect("expected data").iter().map(|value| value.as_i64().expect("sample") as i16).collect::<Vec<_>>();
+        assert_eq!(edited.data, WavData::Pcm16(expected));
+        for batch in inverses.into_iter().rev() {
+            for inverse in batch {
+                edited = apply_all(&edited, &[inverse]);
+            }
+        }
+        assert_eq!(edited, base);
+        for refused in fixture["cutFrames"]["refused"].as_array().expect("refused ranges") {
+            let error = AudioPlan::new(&EditAudio::CutFrames { revision: "r".into(), value: refused.as_str().expect("range").into() }, &base).expect_err("invalid range is refused");
+            assert_eq!(error.code.0, "stdio.wav.frame-range");
+        }
     }
 
     #[test]

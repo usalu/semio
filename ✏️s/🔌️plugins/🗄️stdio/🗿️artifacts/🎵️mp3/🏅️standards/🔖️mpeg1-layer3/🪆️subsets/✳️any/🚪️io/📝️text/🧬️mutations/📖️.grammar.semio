@@ -1,5 +1,17 @@
-dialect grammar stdio.mp3.mutations
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.mp3.mutations"
+dialect grammar
+grammar stdio.mp3.mutations
+start op
+
+# The one-line text of a mutation op is the JSON of its tagged value (../🦀️.rs `print_op`): an object whose
+# `mutation` member names the kind (setId3v2, setFrames, setId3v1, patchFrames) next to that kind's payload members.
+# The members each kind admits are fixed by the leaf payload JSON Schemas under ../../../🧬️schema/🧬️mutations.
+comment none
+
+op = object
+object = "{" members? "}"
+members = member {"," member}*
+member = STRING ":" value
+value = object / array / STRING / INT / FLOAT / boolean / "null"
+array = "[" values? "]"
+values = value {"," value}*
+boolean = "true" / "false"

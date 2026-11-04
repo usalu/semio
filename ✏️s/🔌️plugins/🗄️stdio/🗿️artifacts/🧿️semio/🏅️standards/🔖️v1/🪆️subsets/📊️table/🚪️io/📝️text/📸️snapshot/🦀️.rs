@@ -134,7 +134,7 @@ impl pack::snapshot::ArtifactDsl for SemioTableSnapshot {
 }
 
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
-/// `s.stdio.semio.table` — the shape `📊️mutate-semio-table` compares under `ordered-json-v1`, derived from the
+/// `stdio.semio.table` — the shape `📊️mutate-semio-table` compares under `ordered-json-v1`, derived from the
 /// snapshot type itself rather than hand-written a second time in the adapter, where it could drift
 /// away from the type it claims to project. Cells are a discriminated value union rather than plain scalars, and rows are positional, so
 /// the projection has to preserve both the cell tagging and the row order the fixtures were authored
@@ -154,7 +154,7 @@ pub fn decode_semio_table_snapshot_json(text: &str) -> Result<SemioTableSnapshot
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
-/// 📝️ Parses `s.stdio.semio.table` DSL text into a [`SemioTableSnapshot`] — a named pass-through of this snapshot's own
+/// 📝️ Parses `stdio.semio.table` DSL text into a [`SemioTableSnapshot`] — a named pass-through of this snapshot's own
 /// `pack::snapshot::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
 /// crate, so `📊️mutate-semio-table`'s `identity-round-trip` scenario reaches the real committed
 /// artifact (`../../🖼️assets/📃️sheet/🗣️.dsl.semio`) through this instead.
@@ -163,7 +163,7 @@ pub fn parse_semio_table_dsl(text: &str) -> Result<SemioTableSnapshot, String> {
     <SemioTableSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
-/// 📝️ Renders a [`SemioTableSnapshot`] back as `s.stdio.semio.table` DSL text — the inverse of
+/// 📝️ Renders a [`SemioTableSnapshot`] back as `stdio.semio.table` DSL text — the inverse of
 /// [`parse_semio_table_dsl`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_table_dsl(snapshot: &SemioTableSnapshot) -> String {

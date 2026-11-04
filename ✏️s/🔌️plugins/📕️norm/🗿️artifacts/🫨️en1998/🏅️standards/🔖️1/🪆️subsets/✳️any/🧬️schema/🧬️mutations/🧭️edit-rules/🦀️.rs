@@ -226,6 +226,7 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
         SetFieldRule { path: "bridges[].correlatedOccupancy", kind: "change-bridge-correlated-occupancy", selectors: &[SelectorKey::Id("id")], value: "newCorrelatedOccupancy" },
         SetFieldRule { path: "assessments[].knowledgeLevel", kind: "change-assessment-knowledge-level", selectors: &[SelectorKey::Id("id")], value: "newKnowledgeLevel" },
         SetFieldRule { path: "assessments[].limitState", kind: "change-assessment-limit-state", selectors: &[SelectorKey::Id("id")], value: "newLimitState" },
+        SetFieldRule { path: "assessments[].analysisMethod", kind: "change-assessment-analysis-method", selectors: &[SelectorKey::Id("id")], value: "newAnalysisMethodChoice" },
         SetFieldRule { path: "assessments[].supportedBuildingId", kind: "change-assessment-supported-building-id", selectors: &[SelectorKey::Id("id")], value: "newSupportedBuildingId" },
         SetFieldRule { path: "assessments[].gammaEl", kind: "change-assessment-gamma-el", selectors: &[SelectorKey::Id("id")], value: "newGammaEl" },
         SetFieldRule { path: "towers[].heightM", kind: "change-tower-height-m", selectors: &[SelectorKey::Id("id")], value: "newHeightM" },

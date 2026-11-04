@@ -1,6 +1,6 @@
 //! ✏️ DXF editor — thin, kit-based editor surface (ticket
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `DxfAnyEditor`
-//! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
+//! implements `ArtifactEditor`, wiring the shared `ImageWindowKit` 2D drawing render and the snapshot Details window.
 
 use crate::editor::dxf::modes::edit;
 use crate::editor::dxf::modes::edit::windows::main;
@@ -182,6 +182,24 @@ impl ArtifactEditor for DxfAnyEditor {
     const DIALECT: Dialect = DXF_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DXF_ANY_DOCUMENT_SCHEMA;
 
+    /// 📂️ Opening a natural file or a document pack is the whole-document LOAD (genesis path), never a history mutation.
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
+    }
+
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.dxf@r12", extension: ".dxf", media_type: "image/vnd.dxf", binary: false })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        Ok(crate::standards::v_r12::subsets::any::io::text::snapshot::print_dxf_document(snapshot).into_bytes())
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
+        crate::standards::v_r12::subsets::any::io::text::snapshot::parse_dxf_document(text).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+    }
+
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<DxfAnyEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/✏️editor/🦀️.rs",
@@ -265,7 +283,7 @@ impl editing::SnapshotEditingEditor for DxfAnyEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_dxf_any_editor() -> semio_framework_plugin::AppDefinition {
-    let builder = Editor::builder(DXF_ANY_DIALECT).document(["stdio", "dxf"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::DXF_ANY_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
+    let builder = Editor::builder(DXF_ANY_DIALECT).document(["stdio", "dxf"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::DXF_ANY_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Main")).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())

@@ -329,4 +329,51 @@ fn metadata_edit_and_inverse_preserve_exact_source_authority() {
     let restored = protocol::apply_diff_cold(mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&edited).diff(), &edited).unwrap(); assert_eq!(restored, base);
 }
 
+fn independent_png_with_metadata() -> Vec<u8> {
+    let mut info = png::Info::with_size(4, 3);
+    info.color_type = png::ColorType::Rgba;
+    info.bit_depth = png::BitDepth::Eight;
+    info.icc_profile = Some(std::borrow::Cow::Owned(b"semio-icc-profile-bytes".to_vec()));
+    info.exif_metadata = Some(std::borrow::Cow::Owned(b"MM\x00*\x00\x00\x00\x08\x00\x00".to_vec()));
+    info.uncompressed_latin1_text.push(png::text_metadata::TEXtChunk::new("Author", "Semio Test"));
+    info.uncompressed_latin1_text.push(png::text_metadata::TEXtChunk::new("Comment", "kept through edits"));
+    let mut bytes = Vec::new();
+    let mut writer = png::Encoder::with_info(&mut bytes, info).expect("png crate encoder").write_header().expect("png crate header");
+    writer.write_image_data(&[1, 2, 3, 255].repeat(12)).expect("png crate raster");
+    writer.finish().expect("png crate finish");
+    bytes
+}
+
+#[test]
+fn ancillary_metadata_survives_a_pixel_edit_and_natural_export() {
+    use protocol::{ColdMutation, Mutation, MutationDiff};
+    let source = independent_png_with_metadata();
+    let base = <PngEditor as ArtifactEditor>::decode_natural_file(&source).expect("PNG with metadata opens");
+    let mutations = drive_pixel_region(&pixel_region_command(), &base);
+    let edited = protocol::apply_diff_cold(mutations[0].diff(&base).diff(), &base).expect("pixel edit applies");
+    let exported = <PngEditor as ArtifactEditor>::encode_natural_file(&edited).expect("edited PNG exports");
+    let mut independent = png::Decoder::new(std::io::Cursor::new(&exported)).read_info().expect("png crate accepts the edited export");
+    let info = independent.info().clone();
+    assert_eq!(info.icc_profile.as_deref(), Some(&b"semio-icc-profile-bytes"[..]), "iCCP lost");
+    assert_eq!(info.exif_metadata.as_deref(), Some(&b"MM\x00*\x00\x00\x00\x08\x00\x00"[..]), "eXIf lost");
+    let text: Vec<(&str, &str)> = info.uncompressed_latin1_text.iter().map(|chunk| (chunk.keyword.as_str(), chunk.text.as_str())).collect();
+    assert_eq!(text, [("Author", "Semio Test"), ("Comment", "kept through edits")], "tEXt lost or reordered");
+    let mut samples = vec![0; independent.output_buffer_size().expect("bounded PNG output")];
+    independent.next_frame(&mut samples).expect("png crate decodes the edited raster");
+    assert_eq!(&samples[20..28], &[10, 20, 30, 128, 10, 20, 30, 128]);
+    assert_eq!(&samples[..4], &[1, 2, 3, 255]);
+    let inverse = mutations[0].inverse(&base).expect("pixel edit inverse");
+    let restored = protocol::apply_diff_cold(inverse[0].diff(&edited).diff(), &edited).expect("undo applies");
+    assert_eq!(restored, base);
+    assert_eq!(<PngEditor as ArtifactEditor>::encode_natural_file(&restored).expect("undone PNG exports"), <PngEditor as ArtifactEditor>::encode_natural_file(&base).expect("base PNG exports"));
+}
+
+#[test]
+fn truncated_png_is_refused_with_a_recoverable_error() {
+    let source = independent_png_with_metadata();
+    for length in [0, 7, 8, 20, source.len() / 2, source.len() - 1] {
+        assert!(<PngEditor as ArtifactEditor>::decode_natural_file(&source[..length]).is_err(), "truncated at {length}");
+    }
+}
+
 semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::png::PngEditor, || semio_framework_plugin::App { definition: crate::editor::png::create_png_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any");

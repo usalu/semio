@@ -31,7 +31,7 @@ use framework_schema::ArtifactSchema;
 /// 🏷️ Document schema / DSL envelope id AND `ArtifactSchema` descriptor id — same literal for
 /// both, per the master plan's "Schema descriptor ids `s.stdio.semio` + `s.stdio.semio.<subset>`"
 /// convention, one per subset.
-pub const STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA: &str = "s.stdio.semio.graph";
+pub const STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA: &str = "stdio.semio.graph";
 //#endregion 🔖️Ids
 
 //#region 🔖️NodeId
@@ -148,7 +148,7 @@ pub struct SemioGraphEdge {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(layout = "lines")]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.graph")]
+#[artifact_schema(id = "stdio.semio.graph")]
 pub struct SemioGraphSnapshot {
     #[state(artifact)]
     pub schema: String,
@@ -259,7 +259,7 @@ impl Default for SemioGraphSnapshot {
 //#endregion 🔖️Wire
 
 //#region 🔖️Demo
-/// 🌱 The demo `s.stdio.semio.graph` document — two nodes (each with ≥1 port and ≥1 property,
+/// 🌱 The demo `stdio.semio.graph` document — two nodes (each with ≥1 port and ≥1 property,
 /// non-default position) and one edge connecting them, exercising every leaf/collection shape at
 /// least once. Single source of truth for `📚️examples/…/🖼️assets/🗣️.dsl.semio`/
 /// `🎒️.pack.semio` and for the conformance-law tests in `🚪️io/🦀️.rs`.

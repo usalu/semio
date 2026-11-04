@@ -21,6 +21,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
         Ifc2x3SavViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_ifc_2x3_sav::viewer::ifc2x3_sav::Ifc2x3SavViewer>>),
         Ifc4AnyEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_ifc_4::editor::ifc4_any::Ifc4AnyEditor>>),
         Ifc4AnyViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_ifc_4::viewer::ifc4_any::Ifc4AnyViewer>>),
+        Ifc4x3AnyEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_ifc_4x3::editor::Ifc4x3AnyEditor>>),
+        Ifc4x3AnyViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_ifc_4x3::viewer::Ifc4x3AnyViewer>>),
         BcfAnyEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_bcf::editor::bcf::BcfAnyEditor>>),
         BcfAnyViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_bcf::viewer::bcf::BcfAnyViewer>>),
     }
@@ -41,6 +43,8 @@ pub fn plugin() -> Result<Plugin<StdioBimApps>, PluginAssemblyError> {
     builder = builder.viewer::<semio_s_artifact_stdio_ifc_2x3_sav::viewer::ifc2x3_sav::Ifc2x3SavViewer>(semio_s_artifact_stdio_ifc_2x3_sav::viewer::ifc2x3_sav::create_ifc2x3_sav_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_ifc_4::editor::ifc4_any::Ifc4AnyEditor>(semio_s_artifact_stdio_ifc_4::editor::ifc4_any::create_ifc4_any_editor());
     builder = builder.viewer::<semio_s_artifact_stdio_ifc_4::viewer::ifc4_any::Ifc4AnyViewer>(semio_s_artifact_stdio_ifc_4::viewer::ifc4_any::create_ifc4_any_viewer());
+    builder = builder.editor::<semio_s_artifact_stdio_ifc_4x3::editor::Ifc4x3AnyEditor>(semio_s_artifact_stdio_ifc_4x3::editor::create_ifc4x3_any_editor());
+    builder = builder.viewer::<semio_s_artifact_stdio_ifc_4x3::viewer::Ifc4x3AnyViewer>(semio_s_artifact_stdio_ifc_4x3::viewer::create_ifc4x3_any_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_bcf::editor::bcf::BcfAnyEditor>(semio_s_artifact_stdio_bcf::editor::bcf::create_bcf_any_editor());
     builder = builder.viewer::<semio_s_artifact_stdio_bcf::viewer::bcf::BcfAnyViewer>(semio_s_artifact_stdio_bcf::viewer::bcf::create_bcf_any_viewer());
     builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_ifc_catalog::artifact_kind().id });

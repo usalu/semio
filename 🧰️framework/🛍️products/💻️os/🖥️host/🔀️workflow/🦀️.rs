@@ -495,6 +495,36 @@ impl OsMediaExportResult {
     }
 }
 
+/// 🧼️ Derives one cross-platform file stem from a document name: reserved characters, control characters and trailing dots or spaces never reach the file system, Windows device names are prefixed and the stem stays within 100 bytes.
+pub fn sanitize_export_file_stem(name: &str, fallback: &str) -> String {
+    fn clean(text: &str) -> String {
+        let mapped: String = text.chars().map(|character| if character.is_control() || "<>:\"/\\|?*".contains(character) { '_' } else { character }).collect();
+        let mut bounded = String::new();
+        for character in mapped.trim().chars() {
+            if bounded.len() + character.len_utf8() > 100 {
+                break;
+            }
+            bounded.push(character);
+        }
+        let trimmed = bounded.trim_end_matches(['.', ' ']);
+        let device = trimmed.split('.').next().unwrap_or_default().to_ascii_uppercase();
+        let reserved = matches!(device.as_str(), "CON" | "PRN" | "AUX" | "NUL") || ["COM", "LPT"].iter().any(|prefix| device.strip_prefix(prefix).is_some_and(|digit| matches!(digit.chars().collect::<Vec<_>>().as_slice(), [character] if ('1'..='9').contains(character) || matches!(character, '\u{b9}' | '\u{b2}' | '\u{b3}'))));
+        if trimmed.is_empty() { String::new() } else if reserved { format!("_{trimmed}") } else { trimmed.to_string() }
+    }
+    let stem = clean(name);
+    if !stem.is_empty() { stem } else { let fallback = clean(fallback); if fallback.is_empty() { "document".into() } else { fallback } }
+}
+
+/// 🏷️ Names an export after its document: the registered stem is replaced while the format's extension stays authoritative.
+fn name_export_after_document(mut result: OsMediaExportResult, format_kind: &str, stem: &str) -> OsMediaExportResult {
+    let extension = semio_framework_os_kernel::io::format_descriptor(format_kind).ok().flatten().and_then(|row| row.extensions.first().cloned());
+    result.file_name = match extension {
+        Some(extension) if result.file_name.ends_with(&extension) => format!("{stem}{extension}"),
+        _ => result.file_name,
+    };
+    result
+}
+
 pub type OsMediaExportHandler = Box<dyn Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync>;
 
 /// 🗃️ The process-wide export handler registry, shared with the registrars of the media raster producer.
@@ -521,7 +551,8 @@ pub fn export_os_app_instance_media_kind(node: &WorkflowNode, source_document: &
 /// 📤️ Export that stops at its next IO checkpoint once `cancel` fires; the refusal is the exact string `media export was cancelled`.
 pub fn export_os_app_instance_media_kind_cancellable(node: &WorkflowNode, source_document: &Value, format_artifact_kind: &str, cancel: &semio_framework_async::CancelToken) -> Result<OsMediaExportResult, String> {
     let format_kind = semio_framework_os_kernel::io::normalize_format_kind(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
-    if let Some(result) = registry_export_media(&node.yields, &format_kind, source_document, cancel) {
+    let stem = sanitize_export_file_stem(&node.label, &node.yields);
+    if let Some(result) = registry_export_media(&node.yields, &format_kind, source_document, &stem, cancel) {
         return result;
     }
     let handlers = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -529,7 +560,7 @@ pub fn export_os_app_instance_media_kind_cancellable(node: &WorkflowNode, source
         .get(&os_media_handler_key(&node.yields, &format_kind))
         .or_else(|| handlers.get(&os_media_handler_key(&node.yields, format_artifact_kind)))
         .ok_or_else(|| format!("no export handler for {}:{}", node.yields, format_artifact_kind))?;
-    handler(source_document)
+    handler(source_document).map(|result| name_export_after_document(result, &format_kind, &stem))
 }
 
 /// 🏁️ How one host IO route run ended.
@@ -629,7 +660,7 @@ fn registry_export_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, fo
 /// working, UNCHANGED logic, as the fallback for artifacts that have not migrated onto the new
 /// io-mechanism yet -- W6 deletes this function outright. Never merged with the new path above;
 /// `registry_export_media` picks ONE or the other per call, never blends their results.
-fn registry_export_media_via_composer_registry(artifact_kind: &str, format_kind: &str, source_document: &Value) -> Option<Result<OsMediaExportResult, String>> {
+fn registry_export_media_via_composer_registry(artifact_kind: &str, format_kind: &str, source_document: &Value, file_stem: &str) -> Option<Result<OsMediaExportResult, String>> {
     use {semio_framework_os_kernel::io::ErasedComposeSource,semio_framework_os_kernel::io::IoDirection,semio_framework_os_kernel::io::IoKey,semio_framework_os_kernel::io::IoPayload};
     let native_kind = native_dialect_kind(artifact_kind);
     let target = match resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(&native_kind, IoDirection::Export)) {
@@ -654,19 +685,19 @@ fn registry_export_media_via_composer_registry(artifact_kind: &str, format_kind:
         IoPayload::Binary(b) => b,
         IoPayload::Text(t) => t.into_bytes(),
     };
-    Some(OsMediaExportResult::from_format_kind_bytes(bytes, format_kind, artifact_kind))
+    Some(OsMediaExportResult::from_format_kind_bytes(bytes, format_kind, file_stem))
 }
 
 /// 🚪️ Entry point `export_os_app_instance_media_kind` calls: tries the NEW io-mechanism path
 /// first (task 1's real fix), falls through to the OLD `io_dispatch` path (debt D2) when no route
 /// exists yet, falls through again to the stringly handler map at the call site. One path wins per
 /// call -- never merged (design.md's rejected-approaches list; `📌️important.md`).
-fn registry_export_media(artifact_kind: &str, format_kind: &str, source_document: &Value, cancel: &semio_framework_async::CancelToken) -> Option<Result<OsMediaExportResult, String>> {
+fn registry_export_media(artifact_kind: &str, format_kind: &str, source_document: &Value, file_stem: &str, cancel: &semio_framework_async::CancelToken) -> Option<Result<OsMediaExportResult, String>> {
     let dialect = os_artifact_dialect(artifact_kind);
-    if let Some(result) = registry_export_media_via_io_mechanism(&dialect, format_kind, source_document, artifact_kind, cancel) {
+    if let Some(result) = registry_export_media_via_io_mechanism(&dialect, format_kind, source_document, file_stem, cancel) {
         return Some(result);
     }
-    registry_export_media_via_composer_registry(artifact_kind, format_kind, source_document)
+    registry_export_media_via_composer_registry(artifact_kind, format_kind, source_document, file_stem)
 }
 
 pub fn os_media_export_extension_for_format_kind(format_artifact_kind: &str) -> Result<Option<String>, semio_framework_os_kernel::io::FormatRegistryError> {

@@ -89,6 +89,10 @@ pub use self::arguments::*;
 pub mod inspector;
 pub use self::inspector::*;
 
+#[path = "♿️text-layer/🦀️.rs"]
+mod text_layer;
+pub use self::text_layer::*;
+
 
 #[path = "🖌️graphics/🦀️.rs"]
 mod graphics;

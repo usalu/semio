@@ -1,4 +1,4 @@
-"""🐍️ Independent Python implementation of the `s.stdio.semio.image` carrier and its thirteen-verb
+"""🐍️ Independent Python implementation of the `stdio.semio.image` carrier and its thirteen-verb
 mutation vocabulary — the differential ORACLE this case is measured against.
 
 Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. Two independent producers meet in this file, and they

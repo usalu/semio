@@ -267,6 +267,9 @@ function applyWorldOrbitPinch(controls: ThreeOrbitControls, camera: Camera, step
   controls.update();
 }
 
+/** ⌨️ Keyboard zoom of a focused world canvas: `+`/`=`/PageUp dolly in, `-`/`_`/PageDown dolly out (distance factor per press). Arrow keys pan and Ctrl+arrows orbit through three's own key binding, both scoped to the focused canvas. */
+const WORLD_ORBIT_KEY_ZOOM_FACTORS: Readonly<Record<string, number>> = { "+": 0.85, "=": 0.85, PageUp: 0.85, "-": 1 / 0.85, _: 1 / 0.85, PageDown: 1 / 0.85 };
+
 /**
  * 🛰️ Canvas-local Three orbit-control binding that never crosses the optional Drei runtime boundary.
  *
@@ -342,9 +345,35 @@ function WorldOrbitControlsBridge({
     gestureDocument.addEventListener("pointermove", onGestureMove, { capture: true });
     gestureDocument.addEventListener("pointerup", onGestureUp, { capture: true });
     gestureDocument.addEventListener("pointercancel", onGestureUp, { capture: true });
+    if (!pointerTarget.hasAttribute("tabindex")) pointerTarget.tabIndex = 0;
+    controls.listenToKeyEvents(pointerTarget);
+    const onKeyZoom = (event: KeyboardEvent) => {
+      if (!enabledRef.current || event.altKey || event.ctrlKey || event.metaKey) return;
+      const factor = WORLD_ORBIT_KEY_ZOOM_FACTORS[event.key];
+      if (factor === undefined) return;
+      event.preventDefault();
+      callbacksRef.current.onStart(controls);
+      if (camera instanceof ThreeOrthographicCamera) {
+        camera.zoom = Math.min(controls.maxZoom, Math.max(controls.minZoom, camera.zoom / factor));
+        camera.updateProjectionMatrix();
+      } else {
+        const offset = camera.position.clone().sub(controls.target);
+        const distance = Math.min(controls.maxDistance, Math.max(controls.minDistance, offset.length() * factor));
+        camera.position.copy(controls.target).add(offset.setLength(distance));
+      }
+      controls.update();
+      callbacksRef.current.onChange();
+      callbacksRef.current.onEnd(controls);
+    };
+    const onFocusPointer = () => pointerTarget.focus({ preventScroll: true });
+    pointerTarget.addEventListener("keydown", onKeyZoom);
+    pointerTarget.addEventListener("pointerdown", onFocusPointer);
     set({ controls });
     controls.update();
     return () => {
+      pointerTarget.removeEventListener("keydown", onKeyZoom);
+      pointerTarget.removeEventListener("pointerdown", onFocusPointer);
+      controls.stopListenToKeyEvents();
       pointerTarget.removeEventListener("pointerdown", onGestureDown, { capture: true });
       gestureDocument.removeEventListener("pointermove", onGestureMove, { capture: true });
       gestureDocument.removeEventListener("pointerup", onGestureUp, { capture: true });

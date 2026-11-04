@@ -60,6 +60,20 @@ pub(crate) fn dec_attr_value_tristate(s: &str) -> Result<Option<Option<String>>,
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_source_splices(s: &str) -> Result<Vec<splice_source::SourceSplice>, String> {
+    split_top_level(strip_brackets(s)?, ',')
+        .into_iter()
+        .filter(|item| !item.is_empty())
+        .map(|item| {
+            let parts = split_top_level(strip_brackets(item)?, ',');
+            let [offset, delete, insert] = parts.as_slice() else { return Err(format!("source splice: expected 3 fields, got {}", parts.len())) };
+            let number = |field: &str| field.parse::<u32>().map_err(|error| error.to_string());
+            Ok(splice_source::SourceSplice { offset: number(offset)?, delete: number(delete)?, insert: dec_str(insert)? })
+        })
+        .collect()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_html_mutation(m: &HtmlMutation) -> String {
     match m {
         HtmlMutation::SetDoctype(set_doctype::SetDoctype { doctype }) => format!("set-doctype doctype={}", encode_option(doctype, |v| enc_str(v))),
@@ -70,6 +84,7 @@ pub(crate) fn print_html_mutation(m: &HtmlMutation) -> String {
         HtmlMutation::SetText(set_text::SetText { path, text }) => format!("set-text path={} text={}", enc_node_path(path), enc_str(text)),
         HtmlMutation::SetComment(set_comment::SetComment { path, text }) => format!("set-comment path={} text={}", enc_node_path(path), enc_str(text)),
         HtmlMutation::SetRawText(set_raw_text::SetRawText { path, text }) => format!("set-raw-text path={} text={}", enc_node_path(path), enc_str(text)),
+        HtmlMutation::SpliceSource(splice_source::SpliceSource { splices }) => format!("splice-source splices=[{}]", splices.iter().map(|splice| format!("[{},{},{}]", splice.offset, splice.delete, enc_str(&splice.insert))).collect::<Vec<_>>().join(",")),
     }
 }
 
@@ -88,6 +103,7 @@ pub(crate) fn parse_html_mutation(line: &str) -> Result<HtmlMutation, String> {
         "set-text" => Ok(HtmlMutation::SetText(set_text::SetText { path: dec_node_path(arg("path")?)?, text: dec_str(arg("text")?)? })),
         "set-comment" => Ok(HtmlMutation::SetComment(set_comment::SetComment { path: dec_node_path(arg("path")?)?, text: dec_str(arg("text")?)? })),
         "set-raw-text" => Ok(HtmlMutation::SetRawText(set_raw_text::SetRawText { path: dec_node_path(arg("path")?)?, text: dec_str(arg("text")?)? })),
+        "splice-source" => Ok(HtmlMutation::SpliceSource(splice_source::SpliceSource { splices: dec_source_splices(arg("splices")?)? })),
         other => Err(format!("html mutation: unknown keyword {other:?}")),
     }
 }

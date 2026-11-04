@@ -1,14 +1,14 @@
 //! ✏️ Json editor — the FIRST authored `ArtifactEditor` surface for `s.stdio.json@rfc8259/*`
 //! (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET). One real window, `🪟️main`
 //! (`TreeWindowKit`), directly editing ANY node of `JsonSnapshot.value` through the artifact's own
-//! `JsonMutation::SetScalar` — the frozen `set-node` command always replaces the whole subtree
-//! addressed by the node's path, never merges into an existing object/array (documented scope: this
-//! is a "replace this node" editor, not a structural insert/remove editor — `SetMember`/
-//! `RemoveMember`/`InsertArrayElement`/`RemoveArrayElement` stay unreachable through this window).
+//! `JsonIJsonMutation` verbs: the frozen `set-node` command replaces the whole subtree addressed by the node's path with the leaf
+//! that fits it (`set-string`, `set-safe-number`, `upsert-member`, element remove-then-insert, `set-top-level`), and the Details pane
+//! reaches `upsert-member`, `remove-member`, `rename-member`, `insert-array-element` and `remove-array-element` structurally.
 
 use crate::editor::json_i_json::modes::edit;
 use crate::editor::json_i_json::modes::edit::windows::main;
-use crate::{JsonMutation, JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use crate::standards::v_rfc8259::subsets::i_json::schema::mutations::JsonIJsonMutation;
+use crate::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;
@@ -255,7 +255,7 @@ fn json_i_json_retained_extent(_command: &JsonIJsonIJsonEditorCommand, _snapshot
 /// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
 /// its document, `set-node` becomes this artifact's own mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn json_i_json_emit(command: &JsonIJsonIJsonEditorCommand, snapshot: &JsonSnapshot, canonical_revision: Option<[u8; 32]>) -> Result<Emit<JsonMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+pub fn json_i_json_emit(command: &JsonIJsonIJsonEditorCommand, snapshot: &JsonSnapshot, canonical_revision: Option<[u8; 32]>) -> Result<Emit<JsonIJsonMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     if let JsonIJsonIJsonEditorCommand::EditSnapshot { event } = command {
         return <JsonIJsonEditor as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, snapshot);
     }
@@ -288,7 +288,7 @@ fn json_i_json_retained_reduce(
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<JsonIJsonEditor>>>,
     operation: &AppOperationContext,
-) -> Result<Emit<JsonMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+) -> Result<Emit<JsonIJsonMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     json_i_json_emit(command, snapshot, Some(operation.canonical_base_revision))
 }
 
@@ -340,7 +340,7 @@ impl ArtifactEditor for JsonIJsonEditor {
         vec![crate::standards::v_rfc8259::subsets::i_json::examples::demo::source()]
     }
     type Snapshot = JsonSnapshot;
-    type Mutation = JsonMutation;
+    type Mutation = JsonIJsonMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;

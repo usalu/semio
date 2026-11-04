@@ -1,9 +1,10 @@
 /** 🔸️ The open artifact app phase of useArtifactOpening. */
 import { createAdmittedShellInstanceV1, shellDialogSessionIsCurrentV1 } from "../../🗨️dialog-origin/🟦️.ts";
 import { type DocumentOpeningReceiptV1 } from "../../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
-import { runArtifactCreationReadyOpeningV1 } from "../../🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
+import { type ArtifactCreationReadyOpeningOutcomeV1, runArtifactCreationReadyOpeningV1 } from "../../🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
 import { useCallback, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { type AppRef, type AppRole, type ArtifactDialect, type Conflict } from "@semio-tech/framework";
+import type { ResolvedArtifactOpeningRelay } from "@semio-tech/framework/backbone";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { selectOpenConflicts } from "../../../🐚️Shell/🕹️shell-store/🟦️.ts";
 import { shellLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
@@ -15,7 +16,7 @@ import type { PreparedArtifactOpeningTarget } from "../../🔒️identity-docume
 import type { useCatalogState } from "../🔶️catalog/🟦️.ts";
 
 /** 🔹 Builds openArtifactWithAppRef, openReadySpaceArtifactCreation, defaultAppsRows, defaultAppsHost of useArtifactOpening. */
-export function useOpenArtifactAppState({ shellStateRef, captureEffectOwner, captureDialogOrigin, isCurrentEffectOwner, loadedPluginsRef, installPlugin, publishPreparedArtifactOpening, loadedPlugins, openArtifactWithAppRefRef, spaceArtifactCreationOwnersRef, openDocumentSessionsRef, setSpaceArtifactCreationUi, resolveArtifactOpeningWithActivationRef, openDocument, closeDocument, retireDocumentAttachment, openReadySpaceArtifactCreationRef, appRouter, knownDialects, pinnedAppFor, pluginLabelById, uiLocale, dispatchSetDefaultApp, dispatchClearDefaultApp, shellState, selectedConflictId, dispatch, dispatchResolveConflict }: Pick<ReturnType<typeof useCatalogState>, "shellStateRef" | "captureEffectOwner" | "captureDialogOrigin" | "isCurrentEffectOwner" | "loadedPluginsRef" | "installPlugin" | "publishPreparedArtifactOpening" | "loadedPlugins" | "openArtifactWithAppRefRef" | "spaceArtifactCreationOwnersRef" | "openDocumentSessionsRef" | "setSpaceArtifactCreationUi" | "resolveArtifactOpeningWithActivationRef" | "openDocument" | "closeDocument" | "retireDocumentAttachment" | "openReadySpaceArtifactCreationRef" | "appRouter" | "knownDialects" | "pinnedAppFor" | "pluginLabelById" | "uiLocale" | "dispatchSetDefaultApp" | "dispatchClearDefaultApp" | "shellState" | "selectedConflictId" | "dispatch" | "dispatchResolveConflict">) {
+export function useOpenArtifactAppState({ shellStateRef, captureEffectOwner, captureDialogOrigin, isCurrentEffectOwner, loadedPluginsRef, installPlugin, publishPreparedArtifactOpening, loadedPlugins, openResolvedArtifactRef, spaceArtifactCreationOwnersRef, openDocumentSessionsRef, setSpaceArtifactCreationUi, resolveArtifactOpeningWithActivationRef, openDocument, closeDocument, retireDocumentAttachment, openReadySpaceArtifactCreationRef, appRouter, knownDialects, pinnedAppFor, pluginLabelById, uiLocale, dispatchSetDefaultApp, dispatchClearDefaultApp, shellState, selectedConflictId, dispatch, dispatchResolveConflict }: Pick<ReturnType<typeof useCatalogState>, "shellStateRef" | "captureEffectOwner" | "captureDialogOrigin" | "isCurrentEffectOwner" | "loadedPluginsRef" | "installPlugin" | "publishPreparedArtifactOpening" | "loadedPlugins" | "openResolvedArtifactRef" | "spaceArtifactCreationOwnersRef" | "openDocumentSessionsRef" | "setSpaceArtifactCreationUi" | "resolveArtifactOpeningWithActivationRef" | "openDocument" | "closeDocument" | "retireDocumentAttachment" | "openReadySpaceArtifactCreationRef" | "appRouter" | "knownDialects" | "pinnedAppFor" | "pluginLabelById" | "uiLocale" | "dispatchSetDefaultApp" | "dispatchClearDefaultApp" | "shellState" | "selectedConflictId" | "dispatch" | "dispatchResolveConflict">) {
   /** 👁️✏️ Re-points the primary session at a different registered `AppRef` for the SAME artifact
    * (contract freeze §3/§5's "Open with…") — installs the target plugin first if it isn't loaded
    * yet, then mirrors `establishPrimarySession`'s non-studio create/seed/dispatch sequence. Also
@@ -48,7 +49,38 @@ export function useOpenArtifactAppState({ shellStateRef, captureEffectOwner, cap
     },
     [loadedPlugins, installPlugin, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, publishPreparedArtifactOpening],
   );
-  openArtifactWithAppRefRef.current = openArtifactWithAppRef;
+
+  /** 🧹️ Tears down a prepared target that never published: closes its document session, retires the attachment, destroys the instance. */
+  const releasePreparedArtifactOpening = useCallback(async (target: PreparedArtifactOpeningTarget, receipt: DocumentOpeningReceiptV1 | null): Promise<void> => {
+    try {
+      if (receipt !== null) {
+        const entry = openDocumentSessionsRef.current.get(receipt.runtimeKey);
+        if (entry?.clientInstanceId === receipt.clientInstanceId && entry.plugin === target.plugin && shellDialogSessionIsCurrentV1(entry.session, target.session)) {
+          closeDocument(receipt.runtimeKey, receipt.clientInstanceId);
+        }
+        await retireDocumentAttachment(target.plugin, target.session.instanceId, receipt.clientInstanceId);
+      }
+    } finally {
+      await target.plugin.destroyApp(target.session.instanceId);
+    }
+  }, [closeDocument, retireDocumentAttachment]);
+
+  /** 📂️ Opens a resolved artifact: documentless openings publish their app at once, every other one publishes only after its document opened and releases the instance on failure, the same ordering as creation. */
+  const openResolvedArtifact = useCallback(async (opening: ResolvedArtifactOpeningRelay, current: () => boolean): Promise<ArtifactCreationReadyOpeningOutcomeV1> => {
+    const { documentId, schema, spaceId } = opening;
+    if (!documentId || !schema) {
+      const target = await openArtifactWithAppRef(opening.app, opening.dialect, opening.role, current);
+      return target !== null ? "opened" : current() ? "failed" : "retired";
+    }
+    return runArtifactCreationReadyOpeningV1<PreparedArtifactOpeningTarget, DocumentOpeningReceiptV1>({
+      current,
+      prepare: () => openArtifactWithAppRef(opening.app, opening.dialect, opening.role, current, false),
+      open: (target) => openDocument({ documentId, schema, ...(spaceId ? { spaceId } : {}) }, undefined, target),
+      publish: (target, receipt) => publishPreparedArtifactOpening(target, receipt),
+      release: releasePreparedArtifactOpening,
+      failed: (openingError) => console.warn("[os-shell] artifact opening failed", openingError),
+    });
+  }, [openArtifactWithAppRef, openDocument, publishPreparedArtifactOpening, releasePreparedArtifactOpening]);
 
   const openReadySpaceArtifactCreation = useCallback((requestId: string): void => {
     const owner = spaceArtifactCreationOwnersRef.current.get(requestId);
@@ -81,19 +113,7 @@ export function useOpenArtifactAppState({ shellStateRef, captureEffectOwner, cap
         target,
       ),
       publish: (target, receipt) => publishPreparedArtifactOpening(target, receipt),
-      release: async (target, receipt) => {
-        try {
-          if (receipt !== null) {
-            const entry = openDocumentSessionsRef.current.get(receipt.runtimeKey);
-            if (entry?.clientInstanceId === receipt.clientInstanceId && entry.plugin === target.plugin && shellDialogSessionIsCurrentV1(entry.session, target.session)) {
-              closeDocument(receipt.runtimeKey, receipt.clientInstanceId);
-            }
-            await retireDocumentAttachment(target.plugin, target.session.instanceId, receipt.clientInstanceId);
-          }
-        } finally {
-          await target.plugin.destroyApp(target.session.instanceId);
-        }
-      },
+      release: releasePreparedArtifactOpening,
       failed: (openingError) => {
         if (spaceArtifactCreationOwnersRef.current.get(requestId) !== openingOwner) return;
         spaceArtifactCreationOwnersRef.current.set(requestId, { ...openingOwner, opening: false });
@@ -107,6 +127,7 @@ export function useOpenArtifactAppState({ shellStateRef, captureEffectOwner, cap
     });
   }, [closeDocument, openArtifactWithAppRef, openDocument, publishPreparedArtifactOpening, retireDocumentAttachment]);
   openReadySpaceArtifactCreationRef.current = openReadySpaceArtifactCreation;
+  openResolvedArtifactRef.current = openResolvedArtifact;
 
   /** 🗂️ `DefaultAppsHostApi.rows` — one row per `(dialect, role)` pair among `knownDialects`, both
    * roles even when only one has registered surfaces (an empty `options` list still renders the row,

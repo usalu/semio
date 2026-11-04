@@ -155,6 +155,8 @@ impl ArtifactOwnedToolJobFactory for SemioAnyEditorExampleFactory {
     type Owner = EditorApp<SemioAnyEditor>;
     const TOOL_IDS: &'static [&'static str] = SEMIO_ANY_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_ANY_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_semio_base::semio_natural_file!(SemioSnapshot, "stdio.semio");
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_ANY_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 #[path = "🧭️edit-rules/🦀️.rs"]

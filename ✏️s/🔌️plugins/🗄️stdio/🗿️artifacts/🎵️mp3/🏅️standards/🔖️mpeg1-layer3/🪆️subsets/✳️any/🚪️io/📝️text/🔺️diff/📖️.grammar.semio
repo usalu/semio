@@ -1,5 +1,28 @@
-dialect grammar stdio.mp3.diff
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.mp3.diff"
+dialect grammar
+grammar stdio.mp3.diff
+start diff
+
+# The one-line form `print_diff`/`parse_diff` of `Mp3Diff` emit (../🦀️.rs `print_mp3_diff`): one space-separated
+# `name=value` clause per changed field, always printed in this order. `parse_diff` accepts the clauses in any order.
+comment none
+
+diff = id3v2-clause? frames-clause? splices-clause? id3v1-clause?
+
+# The two tags are tri-state: `[0]` clears the tag, `[1,[<hex of the tag's JSON>]]` sets it.
+id3v2-clause = "id3v2" "=" metadata-opt
+id3v1-clause = "id3v1" "=" metadata-opt
+metadata-opt = "[" "0" "]" | "[" "1" "," "[" hex "]" "]"
+
+# A whole-lane replacement of the MPEG frames.
+frames-clause = "frames" "=" frame-list
+frame-list = "[" frame-items? "]"
+frame-items = frame {";" frame}*
+frame = "[" header "," hex "]"
+header = "[" INT "," INT "," bit "," INT "," INT "," bit "," bit "," INT "," INT "," bit "," bit "," INT "]"
+bit = "0" | "1"
+
+# Sequential splices of the frame lane: `index,removeCount,[inserted frames]`, applied in order.
+splices-clause = "splices" "=" splice {";" splice}*
+splice = INT "," INT "," frame-list
+
+# `hex` is the framework's built-in hex macro (see ../../🧬️mutations/📝️text/📖️.grammar.semio of other artifacts).

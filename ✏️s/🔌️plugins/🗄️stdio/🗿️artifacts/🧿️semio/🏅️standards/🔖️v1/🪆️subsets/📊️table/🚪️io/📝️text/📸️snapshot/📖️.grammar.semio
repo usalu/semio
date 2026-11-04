@@ -11,7 +11,7 @@ start document
 # s.stdio.semio.table.dsl v1` preamble stripped and replaced with the bare `envelope_id()` token —
 # `artifact-mark` below — before recognition, same convention every other semio subset's own
 # grammar uses).
-artifact-mark = "s.stdio.semio.table"
+artifact-mark = "stdio.semio.table"
 document = artifact-mark schema-line columns-line rows-line
 
 schema-line = "schema" "=" hex

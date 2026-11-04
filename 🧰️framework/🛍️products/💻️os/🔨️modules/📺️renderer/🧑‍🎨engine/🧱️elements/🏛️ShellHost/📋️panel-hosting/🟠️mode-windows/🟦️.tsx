@@ -1,4 +1,5 @@
 /** 🟠️ The mode windows phase of usePanelHosting. */
+import { CurrentDocumentUnsavedMarker } from "../../🚪️close-guard/🟦️.tsx";
 import { type CSSProperties, useMemo } from "../../../⚛️react-port/🟦️.ts";
 import { type AppDefinition, type LocalizedLabel } from "@semio-tech/framework";
 import { spawnedGuestWindowInstancesV1, spawnedWindowInstanceIdV1 } from "../../🪟️spawned-program/🟦️.ts";
@@ -27,7 +28,7 @@ export function useModeWindows({ session, loadedPlugins, actionPaneExpandedByWin
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
     const primaryMediaHandle = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
-    const primaryMediaOwner = (windowId: string): MediaTransportOwnerV1 | null => primaryMediaHandle ? { instanceId: session.instanceId, controllerId: session.app.controllerId, windowId, port: primaryMediaHandle } : null;
+    const primaryMediaOwner = (windowId: string): MediaTransportOwnerV1 | null => primaryMediaHandle ? { instanceId: session.instanceId, controllerId: session.app.controllerId, windowId, port: primaryMediaHandle, apply: (action, args) => onActionStable({ controllerId: session.app.controllerId, action, args }) } : null;
     const actionPaneSlice: ActionPaneSlice = { expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId };
     const actionsFoldedFor = (windowId: string, windowKindId: string = windowId) =>
       introductionTargetsWindow(windowId, windowKindId, null, introductionActionWindowSegment) ? false : (actionPaneFoldedByWindowId[windowId] ?? true);
@@ -46,7 +47,7 @@ export function useModeWindows({ session, loadedPlugins, actionPaneExpandedByWin
       const spawnedApp = activeSpawnedApp;
       const spawnedLocalDocumentOwner = localDocumentOwnerRegistry.acquire({ pluginId: spawned.pluginId, appId: spawned.appId, sessionInstanceId: spawned.instanceId, runtimeKey: `spawned:${spawned.id}`, clientInstanceId: spawned.id });
       const spawnedMediaHandle = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.handle;
-      const spawnedMediaOwner = (windowId: string): MediaTransportOwnerV1 | null => spawnedMediaHandle ? { instanceId: spawned.instanceId, controllerId: spawnedApp.controllerId, windowId, port: spawnedMediaHandle } : null;
+      const spawnedMediaOwner = (windowId: string): MediaTransportOwnerV1 | null => spawnedMediaHandle ? { instanceId: spawned.instanceId, controllerId: spawnedApp.controllerId, windowId, port: spawnedMediaHandle, apply: (action, args) => onActionStable({ controllerId: spawnedApp.controllerId, action, args }) } : null;
       const spawnedWorld3dViews = world3dWindowViewRegistry.scope(`${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`);
       const spawnedKindById = new Map(spawnedApp.windowKinds.map((kind) => [kind.id, kind] as const));
       const spawnedDeclaredTitles = new Map(resolveFrameworkLayoutSeed(spawnedApp.defaultLayout, withLocalizedWindowKindLabels(spawnedApp.windowKinds), appLabelsOverlay, uiTerminology, uiLocale).extraInstances.map((extra) => [extra.id, extra.title] as const));
@@ -64,7 +65,7 @@ export function useModeWindows({ session, loadedPlugins, actionPaneExpandedByWin
           iconId: windowIconsById[windowId] ?? windowKind.iconId ?? "app-window",
           title: wireLabel(declaredTitle !== undefined ? appWindowLabel(spawnedApp, uiTerminology, declaredTitle, uiLocale) : spawnedApp.windowKinds.length > 1 ? appWindowLabel(spawnedApp, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", windowKind.id, resolveManifestLabel(windowKind.label as LocalizedLabel | string, uiTerminology, uiLocale)), uiLocale) : appBreadcrumb(resolveAppBreadcrumb(spawnedApp, uiTerminology))),
           fill: true,
-          controls: timeTravelIndicator,
+          controls: <><CurrentDocumentUnsavedMarker />{timeTravelIndicator}</>,
           measures: chrome.measures,
           measuresFolded: measuresFoldedFor(windowId, windowKind.id),
           engagement: chrome.engagement,
@@ -101,7 +102,7 @@ export function useModeWindows({ session, loadedPlugins, actionPaneExpandedByWin
         iconId: windowIconsById[kind.id] ?? kind.iconId,
         title: wireLabel(windowTitlesById[kind.id] ?? appWindowLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label as LocalizedLabel | string, uiTerminology, uiLocale)), uiLocale)),
         fill: true,
-        controls: timeTravelIndicator,
+        controls: <><CurrentDocumentUnsavedMarker />{timeTravelIndicator}</>,
         measures: chrome.measures,
         measuresFolded: measuresFoldedFor(kind.id, kind.id),
         engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),
@@ -141,7 +142,7 @@ export function useModeWindows({ session, loadedPlugins, actionPaneExpandedByWin
           iconId: windowIconsById[instance.id] ?? kind.iconId,
           title: wireLabel(windowTitlesById[instance.id] ?? instance.title),
           fill: true,
-          controls: timeTravelIndicator,
+          controls: <><CurrentDocumentUnsavedMarker />{timeTravelIndicator}</>,
           measures: chrome.measures,
           measuresFolded: measuresFoldedFor(instance.id, instance.windowKindId),
           engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),

@@ -35,6 +35,12 @@ pub struct ImageView {
 
 pub struct ImageWindowKit;
 
+/// 🔤️ Language-neutral accessible description: the container format and the pixel dimensions (the view carries no document name).
+fn image_alt_text(view: &ImageView) -> UiAssemblyResult<Label> {
+    let format = view.mime.rsplit('/').next().unwrap_or("").to_ascii_uppercase();
+    UiText::try_format(format_args!("{format} {}x{} px", view.width, view.height)).map(Label).ok_or_else(|| ui_assembly_error("image-window.alt"))
+}
+
 /// 🚚️ Out-of-doc lane key for an image whose data URI is larger than one [`UiText`]
 /// (`UI_TEXT_MAX_BYTES` is 512, so no real composited PNG fits). The payload rides in a
 /// [`paged_text_carrier`] sibling of the image node under the window's own body key — the same
@@ -74,7 +80,7 @@ impl WindowKit for ImageWindowKit {
     /// composited PNG never fits (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, raster §3).
     fn render(view: &ImageView) -> UiAssemblyResult<BuiltNode> {
         let source = format!("data:{};base64,{}", view.mime, view.base64);
-        let alt = UiText::try_format(format_args!("{}x{}", view.width, view.height)).map(Label).ok_or_else(|| ui_assembly_error("image-window.alt"))?;
+        let alt = image_alt_text(view)?;
         if let Some(src) = UiText::try_format(format_args!("{source}")) {
             return image(src).alt(alt).try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("image-window.id"))?.try_build().map_err(|_| ui_assembly_error("image-window.build"));
         }
@@ -94,7 +100,7 @@ impl WindowKit for ImageWindowKit {
 impl ImageWindowKit {
     fn render_content(view: &ImageView) -> UiAssemblyResult<BuiltNode> {
         let source = format!("data:{};base64,{}", view.mime, view.base64);
-        let alt = UiText::try_format(format_args!("{}x{}", view.width, view.height)).map(Label).ok_or_else(|| ui_assembly_error("image-window.alt"))?;
+        let alt = image_alt_text(view)?;
         if let Some(src) = UiText::try_format(format_args!("{source}")) {
             return image(src).alt(alt).try_id(IMAGE_WINDOW_CONTENT_NODE_KEY).map_err(|_| ui_assembly_error("image-window.content-id"))?.try_build().map_err(|_| ui_assembly_error("image-window.content-build"));
         }

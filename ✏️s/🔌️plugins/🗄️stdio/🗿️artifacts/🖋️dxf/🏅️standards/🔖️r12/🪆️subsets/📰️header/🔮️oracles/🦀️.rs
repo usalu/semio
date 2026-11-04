@@ -44,6 +44,12 @@ pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8
     imp::oracle_apply_then_undo(input, spec)
 }
 
+/// 🔎️ The independent reading of a DXF: `dxf` parses the bytes and every LINE and CIRCLE is returned as its kind plus numbers
+/// (`line`: x1 y1 z1 x2 y2 z2, `circle`: x y z radius), so a subject's saved file is checked by a parser that shares no code with it.
+pub fn oracle_project_entities(input: &[u8]) -> Result<Vec<(String, Vec<f64>)>, String> {
+    imp::oracle_project_entities(input)
+}
+
 //#endregion 🔖️Dispatch
 
 /// 🔒️ Every `dxf`-linked helper lives inside this ONE `cfg`-gated module, so the non-`oracles` build
@@ -467,6 +473,18 @@ mod imp {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         apply_kind(&mut drawing, &kind, &params)?;
         save(&drawing)
+    }
+
+    pub fn oracle_project_entities(input: &[u8]) -> Result<Vec<(String, Vec<f64>)>, String> {
+        let drawing = load(input)?;
+        Ok(drawing
+            .entities()
+            .filter_map(|entity| match &entity.specific {
+                EntityType::Line(line) => Some(("line".to_string(), vec![line.p1.x, line.p1.y, line.p1.z, line.p2.x, line.p2.y, line.p2.z])),
+                EntityType::Circle(circle) => Some(("circle".to_string(), vec![circle.center.x, circle.center.y, circle.center.z, circle.radius])),
+                _ => None,
+            })
+            .collect())
     }
 
     pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {

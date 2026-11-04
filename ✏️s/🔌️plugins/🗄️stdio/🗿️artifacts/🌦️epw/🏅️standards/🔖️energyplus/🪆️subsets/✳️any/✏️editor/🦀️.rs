@@ -171,6 +171,21 @@ impl ArtifactEditor for EpwEditor {
         Ok(crate::standards::energyplus::subsets::any::schema::blank_epw_snapshot())
     })}
 
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.epw@energyplus", extension: ".epw", media_type: "text/plain", binary: false })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        Ok(semio_s_artifact_stdio_epw_snapshot::standards::energyplus::subsets::any::io::natural::encode_epw(snapshot).into_bytes())
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        use semio_s_artifact_stdio_epw_snapshot::standards::energyplus::subsets::any::io::natural::{decode_epw, EpwDecodeError};
+        let refuse = |error: EpwDecodeError| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string());
+        let text = std::str::from_utf8(bytes).map_err(|error| refuse(EpwDecodeError::not_utf8(&error.to_string())))?;
+        decode_epw(text).map_err(refuse)
+    }
+
     /// ✏️ Resolves the addressed column to its canonical wire index and emits one
     /// `EpwMutation::SetRecordField` through the same guarded reducer as retained execution.
     fn handle(

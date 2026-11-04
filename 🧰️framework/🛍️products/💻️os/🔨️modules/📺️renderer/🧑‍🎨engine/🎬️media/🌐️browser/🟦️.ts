@@ -20,7 +20,10 @@ export type PresentedMediaSlot = {
   readonly parentDocumentId: string;
   readonly props: MediaTransportProps;
 };
-export type BrowserMediaOperation = { readonly operation: "submit" } | { readonly operation: "poll" | "cancel" | "take"; readonly handle: MediaExportHandle };
+export type BrowserMediaOperation = { readonly operation: "submit" } | { readonly operation: "poll" | "cancel" | "take"; readonly handle: MediaExportHandle } | { readonly operation: "apply"; readonly action: string; readonly args: Readonly<Record<string, unknown>> };
+
+/** ✂️ Bounds of one slot-scoped action (the trim "Cut selection"): a short action id and a small JSON-object argument. */
+export const BROWSER_MEDIA_APPLY_LIMITS = { actionBytes: 128, argumentBytes: 1024 } as const;
 export type BrowserMediaCommand = BrowserMediaOperation & { readonly kind: "media-command"; readonly lifecycle: number; readonly requestId: number; readonly slotToken: string };
 export type BrowserMediaRelease = { readonly kind: "media-release"; readonly lifecycle: number; readonly slotToken: string };
 export type BrowserMediaValue = MediaExportHandle | MediaExportStatus | MediaExportChunk | null;
@@ -71,7 +74,7 @@ export class BrowserMediaRegistry {
   private readonly runs = new Map<string, WorkerRun>();
   private readonly retired = new Set<Promise<void>>();
   private closed = false;
-  constructor(private readonly resolvePort: (pluginId: string) => MediaTransportPort | undefined) {}
+  constructor(private readonly resolvePort: (pluginId: string) => MediaTransportPort | undefined, private readonly dispatchAction?: (slot: PresentedMediaSlot, action: string, args: Readonly<Record<string, unknown>>) => void) {}
 
   accept(value: unknown): readonly PresentedMediaSlot[] {
     if (this.closed) return [];
@@ -86,7 +89,20 @@ export class BrowserMediaRegistry {
     return slots;
   }
 
+  private applyAction(command: Extract<BrowserMediaCommand, { operation: "apply" }>): null {
+    const run = this.runs.get(command.slotToken);
+    if (this.closed || !run?.active) throw new Error("browser-media.retired");
+    if (!this.dispatchAction) throw new Error("browser-media.apply-unavailable");
+    const args = command.args;
+    if (typeof command.action !== "string" || command.action === "" || new TextEncoder().encode(command.action).byteLength > BROWSER_MEDIA_APPLY_LIMITS.actionBytes) throw new Error("browser-media.apply-action");
+    if (!args || typeof args !== "object" || Array.isArray(args) || new TextEncoder().encode(JSON.stringify(args)).byteLength > BROWSER_MEDIA_APPLY_LIMITS.argumentBytes) throw new Error("browser-media.apply-arguments");
+    if (!exact(command as unknown as Record<string, unknown>, ["kind", "lifecycle", "requestId", "slotToken", "operation", "action", "args"])) throw new Error("browser-media.command");
+    this.dispatchAction(run.slot, command.action, args);
+    return null;
+  }
+
   async execute(command: BrowserMediaCommand): Promise<BrowserMediaValue> {
+    if (command.operation === "apply") return this.applyAction(command);
     if (!Number.isSafeInteger(command.requestId) || command.requestId < 1 || typeof command.slotToken !== "string" || command.slotToken.length > 4096 || !["submit", "poll", "cancel", "take"].includes(command.operation)) throw new Error("browser-media.command");
     const fields = command.operation === "submit" ? ["kind", "lifecycle", "requestId", "slotToken", "operation"] : ["kind", "lifecycle", "requestId", "slotToken", "operation", "handle"];
     if (!exact(command as unknown as Record<string, unknown>, fields) || new TextEncoder().encode(JSON.stringify(command, (_, value) => typeof value === "bigint" ? String(value) : value)).byteLength > BROWSER_MEDIA_CAPACITY.commandBytes) throw new Error("browser-media.command-capacity");

@@ -1,4 +1,6 @@
 /** 🟠️ The close document phase of useShellUriAndDocuments. */
+import { awaitSavedV1, deriveSavedStateV1, guardDocumentCloseV1, type SavedStateV1 } from "../../../🛠️ShellHelpers/💾️saved-state/🟦️.ts";
+import { DOCUMENT_CLOSE_FLUSH_TIMEOUT_MS_V1, type ClosePromptV1 } from "../../🚪️close-guard/🟦️.tsx";
 import { useCallback, useEffect, useMemo, useState } from "../../../⚛️react-port/🟦️.ts";
 import { type BackboneWorkerRequest, encodeBackboneWorkerRequest, type PersistenceBinding } from "@semio-tech/framework/backbone";
 import { syncAttachDocumentIdV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
@@ -16,7 +18,7 @@ import type { useScopeState } from "../🔶️scope/🟦️.ts";
 import type { useOpenDocument } from "../🔸️open-document/🟦️.ts";
 
 /** 🟡 Builds closeDocument, localFolderBindings, setLocalFolderBindings, rememberLocalFolder of useShellUriAndDocuments. */
-export function useCloseDocumentState({ openDocumentSessionsRef, cancelSpaceArtifactCreationsForRuntime, backboneWorkerRef, backgroundSpaceIndexSessionsRef, setSpaceArtifactCreationCatalog, setSpaceArtifactCreationCatalogUi, socketActorReadyRef, inferencePortOpeningRef, inferencePortOwnerRef, inferencePortAuthorityRef, inferencePortEpochRef, dispatch, retireDocumentAttachment, localDocumentOwnerRegistry, liveDialogRef, closeOwnedDialog, core, tutorialDrivenRef, retireBrowserActorUi, rebootstrapDiscardedSessionsRef, setInferenceHistoryByRuntimeKey, setPresencePeersByRuntimeKey, setBootstrapUiByDocument, setExecutionTargetUiByDocument, directoryScopedOwnersRef, spaceDirectoryHistoriesRef, closeDocumentRef, scope, resolveSyncTargetSession, loadedPlugins, showTransientNoticeRef, openDocument, syncBackboneUri }: Pick<ReturnType<typeof useScopeState>, "openDocumentSessionsRef" | "cancelSpaceArtifactCreationsForRuntime" | "backboneWorkerRef" | "backgroundSpaceIndexSessionsRef" | "setSpaceArtifactCreationCatalog" | "setSpaceArtifactCreationCatalogUi" | "socketActorReadyRef" | "inferencePortOpeningRef" | "inferencePortOwnerRef" | "inferencePortAuthorityRef" | "inferencePortEpochRef" | "dispatch" | "retireDocumentAttachment" | "localDocumentOwnerRegistry" | "liveDialogRef" | "closeOwnedDialog" | "tutorialDrivenRef" | "retireBrowserActorUi" | "rebootstrapDiscardedSessionsRef" | "setInferenceHistoryByRuntimeKey" | "setPresencePeersByRuntimeKey" | "setBootstrapUiByDocument" | "setExecutionTargetUiByDocument" | "directoryScopedOwnersRef" | "spaceDirectoryHistoriesRef" | "closeDocumentRef" | "scope" | "resolveSyncTargetSession" | "loadedPlugins" | "showTransientNoticeRef" | "syncBackboneUri"> & { readonly core: ShellCoreAfterApplyHostEffects } & Pick<ReturnType<typeof useOpenDocument>, "openDocument">) {
+export function useCloseDocumentState({ shellStateRef, openDocumentSessionsRef, cancelSpaceArtifactCreationsForRuntime, backboneWorkerRef, backgroundSpaceIndexSessionsRef, setSpaceArtifactCreationCatalog, setSpaceArtifactCreationCatalogUi, socketActorReadyRef, inferencePortOpeningRef, inferencePortOwnerRef, inferencePortAuthorityRef, inferencePortEpochRef, dispatch, retireDocumentAttachment, localDocumentOwnerRegistry, liveDialogRef, closeOwnedDialog, core, tutorialDrivenRef, retireBrowserActorUi, rebootstrapDiscardedSessionsRef, setInferenceHistoryByRuntimeKey, setPresencePeersByRuntimeKey, setBootstrapUiByDocument, setExecutionTargetUiByDocument, directoryScopedOwnersRef, spaceDirectoryHistoriesRef, closeDocumentRef, scope, resolveSyncTargetSession, loadedPlugins, showTransientNoticeRef, openDocument, syncBackboneUri }: { readonly shellStateRef: ShellCoreAfterApplyHostEffects["shellStateRef"] } & Pick<ReturnType<typeof useScopeState>, "openDocumentSessionsRef" | "cancelSpaceArtifactCreationsForRuntime" | "backboneWorkerRef" | "backgroundSpaceIndexSessionsRef" | "setSpaceArtifactCreationCatalog" | "setSpaceArtifactCreationCatalogUi" | "socketActorReadyRef" | "inferencePortOpeningRef" | "inferencePortOwnerRef" | "inferencePortAuthorityRef" | "inferencePortEpochRef" | "dispatch" | "retireDocumentAttachment" | "localDocumentOwnerRegistry" | "liveDialogRef" | "closeOwnedDialog" | "tutorialDrivenRef" | "retireBrowserActorUi" | "rebootstrapDiscardedSessionsRef" | "setInferenceHistoryByRuntimeKey" | "setPresencePeersByRuntimeKey" | "setBootstrapUiByDocument" | "setExecutionTargetUiByDocument" | "directoryScopedOwnersRef" | "spaceDirectoryHistoriesRef" | "closeDocumentRef" | "scope" | "resolveSyncTargetSession" | "loadedPlugins" | "showTransientNoticeRef" | "syncBackboneUri"> & { readonly core: ShellCoreAfterApplyHostEffects } & Pick<ReturnType<typeof useOpenDocument>, "openDocument">) {
   const closeDocument = useCallback((runtimeKey: string, clientInstanceId?: string) => {
     const entry = openDocumentSessionsRef.current.get(runtimeKey);
     if (!entry) return;
@@ -144,17 +146,48 @@ export function useCloseDocumentState({ openDocumentSessionsRef, cancelSpaceArti
    * dropped the promise, so a document that did not attach said nothing). */
   const attachSyncTarget = useCallback((target: SyncAttachTargetV1): Promise<void> => openSyncTarget(target).catch(tellSyncAttachFailureV1(showTransientNoticeRef.current)), [openSyncTarget]);
 
+  const [closePrompt, setClosePrompt] = useState<ClosePromptV1 | null>(null);
+  /** 🚪️ A person's close of a document: acknowledged-saved closes at once; otherwise the shell waits (bounded, cancellable) for the store to acknowledge, and asks before discarding when it cannot. */
+  const requestCloseDocument = useCallback(async (runtimeKey: string, afterClose?: () => void): Promise<"close" | "stay"> => {
+    const entry = openDocumentSessionsRef.current.get(runtimeKey);
+    const name = entry?.documentId ?? runtimeKey;
+    const abort = new AbortController();
+    const saved = (): SavedStateV1 => deriveSavedStateV1(shellStateRef.current.sync.syncStatusByDocumentId[runtimeKey] ?? null);
+    const decision = await guardDocumentCloseV1({
+      saved,
+      signal: abort.signal,
+      flush: async (signal) => {
+        setClosePrompt({ runtimeKey, name, phase: "saving", failure: null, onKeep: () => abort.abort(), onDiscard: () => undefined });
+        return awaitSavedV1({ saved, signal, timeoutMs: DOCUMENT_CLOSE_FLUSH_TIMEOUT_MS_V1 });
+      },
+      confirmDiscard: () => new Promise<boolean>((resolve) => {
+        const state = saved();
+        setClosePrompt({ runtimeKey, name, phase: "confirm", failure: state.kind === "unsaved" ? state.failure : null, onKeep: () => resolve(false), onDiscard: () => resolve(true) });
+      }),
+    });
+    setClosePrompt(null);
+    if (decision === "close") {
+      closeDocument(runtimeKey);
+      afterClose?.();
+    }
+    return decision;
+  }, [closeDocument]);
+
   /** ✂️ Detaches the attached document; a local folder binding is forgotten with it, so a reload offers nothing back. */
   const detachSyncBackbone = useCallback(() => {
     if (syncBackboneUri) {
       const runtimeKey = syncBackboneUri.replace(/^actor:\/\//, "");
       const entry = openDocumentSessionsRef.current.get(runtimeKey);
       if (entry !== undefined && entry.scope === undefined && entry.persistenceBindings.some((binding) => binding.kind === "folder")) forgetLocalFolder(entry.documentId);
-      closeDocument(runtimeKey);
+      void requestCloseDocument(runtimeKey, () => {
+        dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
+        dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
+      });
+      return;
     }
     dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
     dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
-  }, [closeDocument, forgetLocalFolder, syncBackboneUri]);
+  }, [closeDocument, forgetLocalFolder, requestCloseDocument, syncBackboneUri]);
 
   /** 🪪️ The document identity the focused program holds, read once per program (retried while its channel comes up): the
    * key a remembered folder binding is offered back under. */
@@ -198,5 +231,5 @@ export function useCloseDocumentState({ openDocumentSessionsRef, cancelSpaceArti
     const path = kind === "folder" ? await requestBackboneFolderPath() : await requestBackboneFilePath();
     if (path) dispatch({ type: "SET_SYNC_DRAFT_PATH", value: path });
   }, []);
-  return { closeDocument, forgetLocalFolder, attachSyncTarget, detachSyncBackbone, folderReconnectOffer, folderReconnectBusy, reconnectLocalFolder, browseSyncBackbonePath };
+  return { closeDocument, requestCloseDocument, closePrompt, forgetLocalFolder, attachSyncTarget, detachSyncBackbone, folderReconnectOffer, folderReconnectBusy, reconnectLocalFolder, browseSyncBackbonePath };
 }

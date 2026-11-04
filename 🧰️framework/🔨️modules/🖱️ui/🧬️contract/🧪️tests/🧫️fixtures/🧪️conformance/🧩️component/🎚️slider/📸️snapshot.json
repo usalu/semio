@@ -21,7 +21,9 @@
       },
       "style": {},
       "activity": "idle",
-      "accessibility": {}
+      "accessibility": {
+        "label": "Level"
+      }
     }
   ],
   "layoutEpoch": 0

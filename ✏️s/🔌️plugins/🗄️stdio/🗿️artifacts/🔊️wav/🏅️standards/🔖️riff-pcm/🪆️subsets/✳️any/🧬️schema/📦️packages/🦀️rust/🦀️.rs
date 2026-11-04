@@ -6,7 +6,6 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 pub use crate::standards::riff_pcm::subsets::any::schema::artifact_items_2::{WAV_ARTIFACT_SCHEMA_ID};
-pub use crate::standards::riff_pcm::subsets::any::schema::artifact_items_6::{native_codecs};
 
 #[path = "."]
 pub mod standards {

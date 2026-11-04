@@ -1,0 +1,23 @@
+{
+  "schema": "semio.os.shell-picked-file-refusal/v1",
+  "description": "Every way the shell's Open file refuses a picked file before any document is created, with the notice text each reason shows (en, de; any other locale renders every language joined) and the fault code a probe and a law name it by (codePrefix + reason). `{file}` is the file name.",
+  "codePrefix": "shell.openFile.",
+  "reasons": {
+    "format-unresolved": {
+      "en": "“{file}” is not a format this workspace knows, so no editor was chosen.",
+      "de": "„{file}“ ist kein Format, das dieser Arbeitsbereich kennt, daher wurde kein Editor gewählt."
+    },
+    "format-ambiguous": {
+      "en": "“{file}” matches more than one format; rename it with its exact extension.",
+      "de": "„{file}“ passt zu mehr als einem Format; bitte mit der genauen Endung umbenennen."
+    },
+    "format-catalog-unavailable": {
+      "en": "This shell has no format catalog, so “{file}” cannot be matched to an editor.",
+      "de": "Diese Shell hat keinen Formatkatalog, daher kann „{file}“ keinem Editor zugeordnet werden."
+    },
+    "owner-unavailable": {
+      "en": "No editor for “{file}” is available in this workspace.",
+      "de": "Für „{file}“ ist in diesem Arbeitsbereich kein Editor verfügbar."
+    }
+  }
+}

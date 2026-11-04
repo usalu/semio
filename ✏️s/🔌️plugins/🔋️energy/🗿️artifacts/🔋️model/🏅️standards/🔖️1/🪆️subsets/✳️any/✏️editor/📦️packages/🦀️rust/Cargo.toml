@@ -20,6 +20,8 @@ name = "authoring_law"
 path = "../../🧪️tests/⚖️authoring-law/🦀️.rs"
 
 [dependencies]
+semio-s-artifact-energy-model-export = { workspace = true }
+semio-s-artifact-energy-model-import = { workspace = true }
 semio-s-plugin-energy-engine-sim-retirement = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
@@ -91,7 +93,6 @@ semio-framework-plugin-retained-command = { path = "../../../../../../../../../.
 semio-framework-plugin-instance-initialization = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-s-artifact-energy-model-import = { workspace = true }
 semio-framework-trace = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
 semio-framework-async-macros = { workspace = true }

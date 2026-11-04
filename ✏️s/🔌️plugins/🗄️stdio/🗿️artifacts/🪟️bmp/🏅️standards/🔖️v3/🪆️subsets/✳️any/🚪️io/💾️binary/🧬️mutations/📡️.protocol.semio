@@ -20,3 +20,9 @@ field payload bytes
 
 record replace-image tag=12
 field payload bytes
+record set-palette-entry tag=14
+field payload bytes
+record insert-palette-entry tag=15
+field payload bytes
+record remove-palette-entry tag=16
+field payload bytes

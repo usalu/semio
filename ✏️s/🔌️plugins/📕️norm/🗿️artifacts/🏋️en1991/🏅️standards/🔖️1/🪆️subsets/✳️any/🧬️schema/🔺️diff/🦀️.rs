@@ -1095,13 +1095,13 @@ pub struct En1991Diff {
     #[state(artifact)]
     pub rail_derailments: En1991RailDerailmentDelta,
     #[state(artifact)]
-    pub fatigue_models: Option<En1991FatigueModelDelta>,
+    pub fatigue_models: En1991FatigueModelDelta,
     #[state(artifact)]
-    pub support_collisions: Option<En1991SupportCollisionDelta>,
+    pub support_collisions: En1991SupportCollisionDelta,
     #[state(artifact)]
-    pub local_fires: Option<En1991LocalFireDelta>,
+    pub local_fires: En1991LocalFireDelta,
     #[state(artifact)]
-    pub snow_guards: Option<En1991SnowGuardDelta>,
+    pub snow_guards: En1991SnowGuardDelta,
 }
 //#endregion 🔖️Diff
 
@@ -1377,6 +1377,10 @@ impl protocol::ColdMutationDiff<En1991Snapshot> for En1991Diff {
         self.dust_explosions.absorb(other.dust_explosions);
         self.rail_load_groups.absorb(other.rail_load_groups);
         self.rail_derailments.absorb(other.rail_derailments);
+        self.fatigue_models.absorb(other.fatigue_models);
+        self.support_collisions.absorb(other.support_collisions);
+        self.local_fires.absorb(other.local_fires);
+        self.snow_guards.absorb(other.snow_guards);
     }
 
     fn apply(&self, unpublished: &mut En1991Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
@@ -1492,10 +1496,10 @@ impl protocol::ColdMutationDiff<En1991Snapshot> for En1991Diff {
             dust_explosions: self.dust_explosions.commit_onto(&base.dust_explosions, capability).map_err(|error| error.under(["dust_explosions"]))?,
             rail_load_groups: self.rail_load_groups.commit_onto(&base.rail_load_groups, capability).map_err(|error| error.under(["rail_load_groups"]))?,
             rail_derailments: self.rail_derailments.commit_onto(&base.rail_derailments, capability).map_err(|error| error.under(["rail_derailments"]))?,
-            fatigue_models: vec![],
-            support_collisions: vec![],
-            local_fires: vec![],
-            snow_guards: vec![],
+            fatigue_models: self.fatigue_models.commit_onto(&base.fatigue_models, capability).map_err(|error| error.under(["fatigue_models"]))?,
+            support_collisions: self.support_collisions.commit_onto(&base.support_collisions, capability).map_err(|error| error.under(["support_collisions"]))?,
+            local_fires: self.local_fires.commit_onto(&base.local_fires, capability).map_err(|error| error.under(["local_fires"]))?,
+            snow_guards: self.snow_guards.commit_onto(&base.snow_guards, capability).map_err(|error| error.under(["snow_guards"]))?,
         };
         Ok(())
     }
@@ -1613,6 +1617,10 @@ impl DiffAlgebra<En1991Snapshot> for En1991Diff {
             && self.dust_explosions.is_empty()
             && self.rail_load_groups.is_empty()
             && self.rail_derailments.is_empty()
+            && self.fatigue_models.is_empty()
+            && self.support_collisions.is_empty()
+            && self.local_fires.is_empty()
+            && self.snow_guards.is_empty()
     }
 }
 
@@ -1729,10 +1737,10 @@ impl protocol::ColdDiffAlgebra<En1991Snapshot> for En1991Diff {
             dust_explosions: self.dust_explosions.inverse(&base.dust_explosions),
             rail_load_groups: self.rail_load_groups.inverse(&base.rail_load_groups),
             rail_derailments: self.rail_derailments.inverse(&base.rail_derailments),
-            fatigue_models: vec![],
-            support_collisions: vec![],
-            local_fires: vec![],
-            snow_guards: vec![],
+            fatigue_models: self.fatigue_models.inverse(&base.fatigue_models),
+            support_collisions: self.support_collisions.inverse(&base.support_collisions),
+            local_fires: self.local_fires.inverse(&base.local_fires),
+            snow_guards: self.snow_guards.inverse(&base.snow_guards),
         }
     }
 }

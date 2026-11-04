@@ -6,7 +6,7 @@ document = keyword *(SP arg "=" value)
 ; `print_op`/`parse_op` implement (component.rs `#region OpCodecs`): `keyword arg=value ...`
 ; (space-separated), reusing the diff module's hex/bracket primitives for every value.
 keyword = "set-doctype" / "insert-node" / "remove-node"
-        / "set-element-name" / "set-attribute" / "set-text" / "set-comment" / "set-raw-text"
-arg = "snapshot" / "doctype" / "parent" / "index" / "node" / "path" / "name" / "value" / "text"
+        / "set-element-name" / "set-attribute" / "set-text" / "set-comment" / "set-raw-text" / "splice-source"
+arg = "snapshot" / "doctype" / "parent" / "index" / "node" / "path" / "name" / "value" / "text" / "splices"
 value = hex-str / node-path / html-node / tristate-str / tristate-attr-value / DIGIT-string
 node-path = "[" *(DIGIT ",") "]"

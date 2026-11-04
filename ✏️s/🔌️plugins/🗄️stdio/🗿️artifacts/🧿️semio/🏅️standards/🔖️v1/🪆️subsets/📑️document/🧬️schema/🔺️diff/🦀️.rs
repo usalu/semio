@@ -53,7 +53,7 @@ mod diff_logic_and_algebra;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn snapshot_a() -> SemioDocumentSnapshot {
     SemioDocumentSnapshot {
-        schema: "s.stdio.semio.document".into(),
+        schema: "stdio.semio.document".into(),
         styles: vec![DocStyle { id: "keep".into(), name: "Keep".into(), based_on: Some("toRemove".into()) }, DocStyle { id: "toRemove".into(), name: "Gone".into(), based_on: None }],
         images: vec![DocImage { id: "toRemove".into(), mime: "image/png".into(), bytes: vec![9, 9] }],
         blocks: vec![
@@ -67,7 +67,7 @@ pub(crate) fn snapshot_a() -> SemioDocumentSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn snapshot_b() -> SemioDocumentSnapshot {
     SemioDocumentSnapshot {
-        schema: "s.stdio.semio.document".into(),
+        schema: "stdio.semio.document".into(),
         styles: vec![DocStyle { id: "keep".into(), name: "Keep2".into(), based_on: None }, DocStyle { id: "added".into(), name: "Added".into(), based_on: None }],
         images: vec![DocImage { id: "added".into(), mime: "image/jpeg".into(), bytes: vec![1] }],
         blocks: vec![DocBlock::Paragraph { style_id: Some("keep".into()), runs: vec![DocRun { text: "new".into(), style: RunStyle { bold: true, italic: true, ..Default::default() } }, DocRun::plain("second")] }],

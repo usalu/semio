@@ -1,10 +1,4 @@
-/** 🧬️ Semio_mp3_mutations schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_mp3_mutations
- * `🦀️.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_mp3_mutationsEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ Semio_mp3_mutations: the facet carries the one-line JSON of the mutation op as one UTF-8 string; the `🦀️.rs` sibling holds the codec. */
 export interface Semio_mp3_mutations {
-  /** ⚙️ @state artifact */ schema: string;
-  /** 🧪️ @state artifact */ entries: Semio_mp3_mutationsEntry[];
+  readonly line: string;
 }

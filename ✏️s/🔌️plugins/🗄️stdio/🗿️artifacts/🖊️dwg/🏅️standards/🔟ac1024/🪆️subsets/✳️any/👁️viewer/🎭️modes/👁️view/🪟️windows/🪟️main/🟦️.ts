@@ -1,22 +1,5 @@
-/** 🧊 DWG AC1024 viewer — Main window: typed twin of
- * `🦀️.rs`'s view-model. Read-only mirror of the shared `framework.window.mesh` scene payload
- * `render()` produces. */
+/** 🖼️ 🧊 DWG AC1024 viewer — Main window: typed twin of
+ * `🦀️.rs`'s view-model, mirroring the frozen `framework.window.image` window kit's payload shape (a 2D SVG drawing render). */
 
-export interface DwgAc1024ViewInstance {
-  id: string;
-  meshId: "box";
-  position: [number, number, number];
-  rotation: [number, number, number, number];
-  scale: [number, number, number];
-  label: string;
-  smoothShading: boolean;
-}
-
-export interface DwgAc1024ViewViewModel {
-  windowKindId: "framework.window.mesh";
-  bodyKey: "framework.window.mesh";
-  instances: DwgAc1024ViewInstance[];
-}
-
-export const DWG_AC1024_VIEW_WINDOW_KIND_ID = "framework.window.mesh" as const;
-export const DWG_AC1024_VIEW_BODY_KEY = "framework.window.mesh" as const;
+export const DWG_AC1024_VIEW_WINDOW_KIND_ID = "framework.window.image" as const;
+export const DWG_AC1024_VIEW_BODY_KEY = "framework.window.image" as const;

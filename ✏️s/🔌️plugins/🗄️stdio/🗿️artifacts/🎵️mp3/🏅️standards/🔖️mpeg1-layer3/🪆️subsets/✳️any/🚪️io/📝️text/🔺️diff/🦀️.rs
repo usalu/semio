@@ -1,5 +1,4 @@
-//! 🚧 scaffolded by W1b — text representation marker for `stdio.mp3.diff`. Full grammar-backed
-//! parse/print lands in W2/W3.
+//! 🧬️ The `stdio.mp3.diff` text diff: one-line clauses described by `📖️.grammar.semio`.
 pub const TEXT_MARKER: &str = "stdio.mp3.diff";
 
 #[allow(unused_imports)]
@@ -178,6 +177,14 @@ pub(crate) fn dec_mp3_frames(s: &str) -> Result<Vec<Mp3Frame>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_mp3_frame_splice(s: &str) -> Result<Mp3FrameSplice, String> {
+    let mut parts = s.splitn(3, ',');
+    let (Some(index), Some(remove), Some(insert)) = (parts.next(), parts.next(), parts.next()) else { return Err(format!("mp3 diff: malformed frame splice {s:?}")) };
+    let whole = |text: &str| if !text.is_empty() && text.bytes().all(|byte| byte.is_ascii_digit()) { text.parse::<u64>().map_err(|error| error.to_string()) } else { Err(format!("mp3 diff: frame splice number {text:?} must be plain digits")) };
+    Ok(Mp3FrameSplice { index: whole(index)?, remove: whole(remove)?, insert: dec_mp3_frames(insert)? })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_mp3_diff(d: &Mp3Diff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.id3v2 {
@@ -185,6 +192,9 @@ pub(crate) fn print_mp3_diff(d: &Mp3Diff) -> String {
     }
     if let Some(v) = &d.frames {
         tokens.push(format!("frames={}", enc_mp3_frames(v)));
+    }
+    if !d.frame_splices.is_empty() {
+        tokens.push(format!("splices={}", d.frame_splices.iter().map(|splice| format!("{},{},{}", splice.index, splice.remove, enc_mp3_frames(&splice.insert))).collect::<Vec<_>>().join(";")));
     }
     if let Some(v) = &d.id3v1 {
         tokens.push(format!("id3v1={}", encode_option(v, enc_id3v1)));
@@ -203,6 +213,8 @@ pub(crate) fn parse_mp3_diff(line: &str) -> Result<Mp3Diff, String> {
             d.id3v2 = Some(decode_option(rest, dec_id3v2)?);
         } else if let Some(rest) = token.strip_prefix("frames=") {
             d.frames = Some(dec_mp3_frames(rest)?);
+        } else if let Some(rest) = token.strip_prefix("splices=") {
+            d.frame_splices = split_top_level(rest, ';').into_iter().map(dec_mp3_frame_splice).collect::<Result<_, _>>()?;
         } else if let Some(rest) = token.strip_prefix("id3v1=") {
             d.id3v1 = Some(decode_option(rest, dec_id3v1)?);
         } else {

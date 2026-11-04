@@ -796,7 +796,11 @@
         "resistanceSd",
         "actionDistribution",
         "actionMean",
-        "actionSd"
+        "actionSd",
+        "secondActionDistribution",
+        "secondActionMean",
+        "secondActionSd",
+        "memberId"
       ],
       "properties": {
         "id": {
@@ -819,7 +823,17 @@
         },
         "actionSd": {
           "type": "number"
-        }
+        },
+        "secondActionDistribution": {
+          "type": "string"
+        },
+        "secondActionMean": {
+          "type": "number"
+        },
+        "secondActionSd": {
+          "type": "number"
+        },
+        "memberId": {"type": "string"}
       }
     },
     "TestSeries": {
@@ -836,7 +850,8 @@
         "conversionFactor",
         "required",
         "pairs",
-        "theoryVariation"
+        "theoryVariation",
+        "theoryMean"
       ],
       "properties": {
         "id": {
@@ -869,7 +884,8 @@
           "type": "number"
         },
         "pairs": {"type": "string"},
-        "theoryVariation": {"type": "number", "format": "double"}
+        "theoryVariation": {"type": "number", "format": "double"},
+        "theoryMean": {"type": "number"}
       }
     },
     "Placement": {

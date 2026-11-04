@@ -85,7 +85,21 @@ impl<'ctx> ActionsCtx<'ctx> {
         let creation_changed = self.pump_hub_artifact_creation().await;
         let hub_changed = self.sync.poll_hub_workspace_tasks(&mut self.directory);
         let bridge_changed = self.dock.pump_agent_bridge(&mut self.chrome, &mut self.directory, &mut self.windows);
-        identity_changed || administration_changed || creation_changed || hub_changed || bridge_changed
+        let media_changed = self.pump_media_actions().await;
+        identity_changed || administration_changed || creation_changed || hub_changed || bridge_changed || media_changed
+    }
+
+    /// 🎞️ Runs every media-window action the page host left (the trim "Cut selection") through the same `dispatch_action` the UI intents use, so the response's mutations commit through the normal ingest path; a refused one is logged, never dropped silently. Answers whether anything ran.
+    pub async fn pump_media_actions(&mut self) -> bool {
+        let actions = self.dock.drain_media_actions();
+        let ran = !actions.is_empty();
+        for action in actions {
+            let label = format!("{}/{}", action.controller_id, action.action);
+            if let Err(error) = self.dispatch_action(action).await {
+                debug_log(&format!("[TRACE] wgpu shell media action {label} refused: {error}"));
+            }
+        }
+        ran
     }
 
     //#endregion 📇️DirectoryLane
@@ -349,8 +363,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             (Some(document_id), Some(schema)) => Some(ShellDocumentOpenTarget { document_id, schema, checkpoint: None }),
             _ => None,
         };
+        let mounted = self.docs.session.as_ref().map(|session| (session.plugin_id.as_str(), session.app.id.as_str()));
+        let plan = relay_open_plan(switch.as_ref().map(|(plugin_id, app)| (plugin_id.as_str(), app.id.as_str())), mounted);
+        if plan == RelayOpenPlan::Refuse {
+            self.prefs.refuse_replay(ReplayRefusalReasonV1::OpenRejected, &mut self.chrome);
+            return;
+        }
         match switch {
-            Some((plugin_id, app)) if !self.docs.session.as_ref().is_some_and(|session| session.plugin_id == plugin_id && session.app.id == app.id) => {
+            Some((plugin_id, app)) if plan == RelayOpenPlan::Switch => {
                 let Some(program) = self.plugins.plugins.iter().find(|entry| entry.plugin_id == plugin_id).cloned() else {
                     debug_log(&format!("[TRACE] wgpu shell os.open-artifact could not switch to {plugin_id}: program missing"));
                     return;

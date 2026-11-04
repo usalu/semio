@@ -1,6 +1,6 @@
 //! ✏️ DWG AC1018 editor — thin, kit-based editor surface (ticket
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `DwgAc1018Editor`
-//! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
+//! implements `ArtifactEditor`, wiring the shared `ImageWindowKit` 2D drawing render and the snapshot Details window.
 
 use crate::editor::dwg_ac1018::modes::edit;
 use crate::editor::dwg_ac1018::modes::edit::windows::main;
@@ -182,6 +182,23 @@ impl ArtifactEditor for DwgAc1018Editor {
     const DIALECT: Dialect = DWG_AC1018_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DWG_AC1018_DOCUMENT_SCHEMA;
 
+    /// 📂️ Opening a natural file or a document pack is the whole-document LOAD (genesis path), never a history mutation.
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
+    }
+
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.dwg@ac1018", extension: ".dwg", media_type: "image/vnd.dwg", binary: true })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::export::encode_dwg(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::import::decode_dwg(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+    }
+
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<DwgAc1018Editor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/✏️editor/🦀️.rs",
@@ -265,7 +282,7 @@ impl editing::SnapshotEditingEditor for DwgAc1018Editor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_dwg_ac1018_editor() -> semio_framework_plugin::AppDefinition {
-    let builder = Editor::builder(DWG_AC1018_DIALECT).document(["stdio", "dwgac1018"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::DWG_AC1018_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
+    let builder = Editor::builder(DWG_AC1018_DIALECT).document(["stdio", "dwgac1018"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::DWG_AC1018_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Main")).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_dwg_examples::examples::demo::ID, semio_s_artifact_stdio_dwg_examples::examples::demo::label())], semio_s_artifact_stdio_dwg_examples::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())

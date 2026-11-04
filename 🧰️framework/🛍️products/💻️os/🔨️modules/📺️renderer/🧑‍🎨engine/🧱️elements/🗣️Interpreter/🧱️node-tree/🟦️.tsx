@@ -3,6 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
  */
 
+import { TreeStatusAnnouncement } from "./📢️status-announcement/🟦️.tsx";
 import {
   useCallback,
   useEffect,
@@ -200,6 +201,7 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
   const ownsScroll = record.layout.kind === "scroll";
   return (
     <div ref={rootRef} data-ui-node-id={record.id} data-ui-node-key={record.key} className={ownsScroll ? "min-h-0 min-w-0 flex-1" : "contents"} style={ownsScroll ? layoutSpecStyle(record.layout) : undefined}>
+      {sections.length > 0 ? null : <TreeStatusAnnouncement text={treeStatusSection(store, record).label} busy={record.activity === "loading" || record.activity === "waiting"} />}
       <Tree
         className={ownsScroll ? "min-h-0 min-w-0" : "min-h-0 min-w-0 flex-1 overflow-auto"}
         presentation={(record.component as Extract<Component, { type: "tree" }>).presentation}

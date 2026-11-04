@@ -15,7 +15,7 @@
       "rows": 20,
       "valueBytes": 595,
       "sourceSnapshot": {
-        "schema": "s.stdio.semio.table",
+        "schema": "stdio.semio.table",
         "columns": [
           {
             "name": "null",
@@ -82,7 +82,7 @@
       "rows": 7,
       "valueBytes": 233,
       "sourceSnapshot": {
-        "schema": "s.stdio.semio.table",
+        "schema": "stdio.semio.table",
         "columns": [
           {
             "name": "null",

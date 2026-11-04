@@ -89,6 +89,21 @@ pub struct En1993Artifact {
     #[dsl(table)]
     #[state(artifact)]
     pub frame_member_bases: Vec<FrameMemberBasis>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub fatigue_stresses: Vec<FatigueStress>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub buckling_lengths: Vec<BucklingLength>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub forming_gains: Vec<FormingGain>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub material_ductility: Vec<MaterialDuctility>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub fastened_joints: Vec<FastenedJoint>,
 }
 //#endregion 🔖️Artifact
 
@@ -127,12 +142,12 @@ impl En1993Artifact {
             placements: self.placements.clone(),
             joint_plates: self.joint_plates.clone(),
             foundation_blocks: self.foundation_blocks.clone(),
-            material_ductility: vec![],
-            forming_gains: vec![],
-            buckling_lengths: vec![],
-            fatigue_stresses: vec![],
+            material_ductility: self.material_ductility.clone(),
+            forming_gains: self.forming_gains.clone(),
+            buckling_lengths: self.buckling_lengths.clone(),
+            fatigue_stresses: self.fatigue_stresses.clone(),
             frame_member_bases: self.frame_member_bases.clone(),
-            fastened_joints: vec![],
+            fastened_joints: self.fastened_joints.clone(),
             frame_actions: self.frame_actions.clone(),
         }
     }
@@ -170,12 +185,12 @@ impl En1993Artifact {
             placements: snapshot.placements,
             joint_plates: snapshot.joint_plates,
             foundation_blocks: snapshot.foundation_blocks,
-            material_ductility: vec![],
-            forming_gains: vec![],
-            buckling_lengths: vec![],
-            fatigue_stresses: vec![],
+            material_ductility: snapshot.material_ductility,
+            forming_gains: snapshot.forming_gains,
+            buckling_lengths: snapshot.buckling_lengths,
+            fatigue_stresses: snapshot.fatigue_stresses,
             frame_member_bases: snapshot.frame_member_bases,
-            fastened_joints: vec![],
+            fastened_joints: snapshot.fastened_joints,
             frame_actions: snapshot.frame_actions,
         }
     }

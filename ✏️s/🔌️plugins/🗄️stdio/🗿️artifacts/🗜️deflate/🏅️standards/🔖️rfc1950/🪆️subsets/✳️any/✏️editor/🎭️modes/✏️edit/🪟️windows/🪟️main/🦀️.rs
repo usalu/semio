@@ -1,7 +1,7 @@
 //! 🗜️ Deflate editor — the `main` window: the RFC1950 zlib container's typed header metadata as an
 //! editable `key=value` text summary, built from the framework `TextWindowKit` (contract §2.6).
 //! Scope note: only the header fields (`method`, `windowBits`, `levelHint`, `presetDictionary`) are
-//! editable through `replace-text`; the decompressed `payload` itself is shown ONLY as a trailing
+//! editable through `textEdit`; the decompressed `payload` itself is shown ONLY as a trailing
 //! `#`-prefixed byte-count comment, never as editable text — a compressed byte stream has no honest
 //! text representation, so real payload editing is out of this first pass's scope (documented,
 //! matching the ticket brief's own container/opaque framing for this kind).
@@ -29,7 +29,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Codec
 /// 📐️ `DeflateLevelHint <-> lowercase keyword` — shared by `render`'s summary line and the surface
-/// root's `parse_level_hint` (`replace-text` reverse direction).
+/// root's `parse_level_hint` (`textEdit` reverse direction).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn level_hint_keyword(hint: DeflateLevelHint) -> &'static str {
     match hint {
@@ -41,7 +41,7 @@ pub fn level_hint_keyword(hint: DeflateLevelHint) -> &'static str {
 }
 
 /// 📐️ Inverse of [`level_hint_keyword`]. `None` on an unrecognized keyword — the surface root
-/// treats that as a malformed `replace-text` (documented no-op), never a panic.
+/// treats that as a malformed `textEdit` (documented no-op), never a panic.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_level_hint(keyword: &str) -> Option<DeflateLevelHint> {
     match keyword {
@@ -65,7 +65,7 @@ pub fn preset_dictionary_text(dict_id: Option<u32>) -> String {
 
 //#region 🔖️Render
 /// ✏️ Real `DeflateSnapshot -> BuiltNode`: a `key=value` line per header field plus a trailing `#`-prefixed comment line stating
-/// the payload byte count (informational only — `#`-prefixed lines are never parsed back on `replace-text`), as the kit's
+/// the payload byte count (informational only — `#`-prefixed lines are never parsed back on `textEdit`), as the kit's
 /// explicit draft (structured text: edited locally, ONE `textEdit` on Apply).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &DeflateSnapshot, locale: Locale, publication_revision: semio_framework_plugin::UiPublicationRevision) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {

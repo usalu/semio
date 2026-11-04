@@ -4,7 +4,7 @@
    preamble line + its trailing newline are stripped by store::semio_format::split_text_preamble
    BEFORE this grammar's `document` production runs. *)
 document      = artifact mark, schema line, nodes line, edges line ;
-artifact mark = "s.stdio.semio.graph" ;
+artifact mark = "stdio.semio.graph" ;
 schema line   = "schema", "=", hex ;
 
 nodes line    = "nodes", "=", "[", [ node list ], "]" ;

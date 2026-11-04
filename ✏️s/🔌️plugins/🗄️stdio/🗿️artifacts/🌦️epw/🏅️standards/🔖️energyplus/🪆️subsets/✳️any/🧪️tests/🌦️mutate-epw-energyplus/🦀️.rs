@@ -146,7 +146,7 @@ mod subject {
 
     fn decode(bytes: &[u8]) -> Result<EpwSnapshot, String> {
         let text = String::from_utf8(bytes.to_vec()).map_err(|error| format!("input is not UTF-8: {error}"))?;
-        decode_epw(&text)
+        decode_epw(&text).map_err(String::from)
     }
 
     fn outcome(snapshot: &EpwSnapshot) -> Result<Outcome, String> {

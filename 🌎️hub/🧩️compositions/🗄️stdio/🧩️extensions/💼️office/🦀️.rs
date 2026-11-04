@@ -29,6 +29,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
         XlsxStrictViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_xlsx_strict::viewer::xlsx::standards::v_ecma_376::subsets::strict::XlsxStrictViewer>>),
         XlsxTransitionalEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_xlsx_transitional::editor::xlsx::standards::v_ecma_376::subsets::transitional::XlsxTransitionalEditor>>),
         XlsxTransitionalViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_xlsx_transitional::viewer::xlsx::standards::v_ecma_376::subsets::transitional::XlsxTransitionalViewer>>),
+        IdmlEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_idml_any::editor::IdmlEditor>>),
+        IdmlViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_idml_any::viewer::IdmlViewer>>),
     }
 }
 
@@ -38,6 +40,7 @@ pub fn plugin() -> Result<Plugin<StdioOfficeApps>, PluginAssemblyError> {
     builder = builder.host_artifact(semio_s_artifact_stdio_docx::declaration(semio_s_artifact_stdio_docx::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_pptx::declaration(semio_s_artifact_stdio_pptx::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_xlsx::declaration(semio_s_artifact_stdio_xlsx::definition()?).map_err(PluginAssemblyError::definition)?);
+    builder = builder.host_artifact(semio_s_artifact_stdio_idml::declaration(semio_s_artifact_stdio_idml::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.editor::<semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::DocxEditor>(semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::create_docx_editor());
     builder = builder.viewer::<semio_s_artifact_stdio_docx_base::viewer::docx::standards::v_ecma_376::subsets::base::DocxViewer>(semio_s_artifact_stdio_docx_base::viewer::docx::standards::v_ecma_376::subsets::base::create_docx_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_docx_strict::editor::docx::standards::v_ecma_376::subsets::strict::DocxStrictEditor>(semio_s_artifact_stdio_docx_strict::editor::docx::standards::v_ecma_376::subsets::strict::create_docx_strict_editor());
@@ -56,9 +59,12 @@ pub fn plugin() -> Result<Plugin<StdioOfficeApps>, PluginAssemblyError> {
     builder = builder.viewer::<semio_s_artifact_stdio_xlsx_strict::viewer::xlsx::standards::v_ecma_376::subsets::strict::XlsxStrictViewer>(semio_s_artifact_stdio_xlsx_strict::viewer::xlsx::standards::v_ecma_376::subsets::strict::create_xlsx_strict_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_xlsx_transitional::editor::xlsx::standards::v_ecma_376::subsets::transitional::XlsxTransitionalEditor>(semio_s_artifact_stdio_xlsx_transitional::editor::xlsx::standards::v_ecma_376::subsets::transitional::create_xlsx_transitional_editor());
     builder = builder.viewer::<semio_s_artifact_stdio_xlsx_transitional::viewer::xlsx::standards::v_ecma_376::subsets::transitional::XlsxTransitionalViewer>(semio_s_artifact_stdio_xlsx_transitional::viewer::xlsx::standards::v_ecma_376::subsets::transitional::create_xlsx_transitional_viewer());
+    builder = builder.editor::<semio_s_artifact_stdio_idml_any::editor::IdmlEditor>(semio_s_artifact_stdio_idml_any::editor::create_idml_editor());
+    builder = builder.viewer::<semio_s_artifact_stdio_idml_any::viewer::IdmlViewer>(semio_s_artifact_stdio_idml_any::viewer::create_idml_viewer());
     builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_docx::artifact_kind().id });
     builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_pptx::artifact_kind().id });
     builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_xlsx::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_idml::artifact_kind().id });
     builder = builder.execution(ExecutionMode::Isolated).requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist contributed editor operations to the open document".into(), optional: false });
     builder.try_build()
 }

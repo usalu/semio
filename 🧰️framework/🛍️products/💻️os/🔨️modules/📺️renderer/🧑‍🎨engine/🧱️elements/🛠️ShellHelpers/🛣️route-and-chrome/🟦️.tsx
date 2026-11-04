@@ -895,6 +895,15 @@ export type BrowserActorUiStoresV1 = Readonly<{ windows: Map<string, UiDocumentS
  * key (`framework.section.*`) — the local refresh's own section binding (`UI_REFRESH_SECTIONS`). */
 export const BROWSER_ACTOR_SECTION_KEYS: ReadonlySet<string> = new Set(UI_REFRESH_SECTIONS.map(({ bodyKey }) => bodyKey));
 
+/** 🩺️ The reason a rejected surface patch reports: the rejection type, and for an unnamed control the node key, so the window fault the exhausted resend loop raises names the defect (`invariantViolated:unnamedControl:<key>`). */
+export function patchRejectionReasonV1(patch: UiPatch, rejection: { readonly type: string; readonly violations?: readonly { readonly type: string; readonly node?: number }[] }): string {
+  if (rejection.type !== "invariantViolated") return rejection.type;
+  const unnamed = rejection.violations?.find((violation) => violation.type === "unnamedControl");
+  if (unnamed?.node === undefined) return rejection.type;
+  const upserted = patch.ops.find((op) => op.type === "upsert" && op.id === unnamed.node);
+  return `${rejection.type}:unnamedControl:${upserted !== undefined && upserted.type === "upsert" ? upserted.key : `#${unnamed.node}`}`;
+}
+
 /** 🩹️ Applies one browser-actor patch offer surface by surface and answers one verdict per patch, in offer order
  * — the guest acknowledges and resends per surface (`patch-ack` / `patch-rejected`), so one stale panel never
  * costs a window its frame. Every window kind of the app, every bodied panel and every reserved refresh section is a
@@ -925,7 +934,7 @@ export function applyBrowserActorUiPatchesV1(
     const applied = store.applyPatch(patch);
     if (applied.ok) return { surface: patch.surface, outcome: "acknowledged", revision: store.getRevisionSnapshot() };
     store.reset();
-    return { surface: patch.surface, outcome: "rejected", revision: 0, reason: applied.rejection.type };
+    return { surface: patch.surface, outcome: "rejected", revision: 0, reason: patchRejectionReasonV1(patch, applied.rejection) };
   });
   if (retained !== null || verdicts.some((verdict) => windowKeys.has(verdict.surface) && verdict.outcome === "acknowledged"))
     return { verdicts, stores: { windows, panels, sections }, surfacesAdded, sectionsChanged: verdicts.some((verdict) => BROWSER_ACTOR_SECTION_KEYS.has(verdict.surface) && verdict.outcome === "acknowledged") };

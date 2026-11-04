@@ -225,6 +225,8 @@ impl ArtifactEditor for SemioBrepEditor {
     const DIALECT: Dialect = SEMIO_BREP_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_BREP_DOCUMENT_SCHEMA;
 
+    semio_s_artifact_stdio_semio_base::semio_natural_file!(SemioBrepSnapshot, "stdio.semio.brep");
+
     semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
         owner_file: "semio/v1/brep/editor",
         controller: "s.stdio.semio@v1/brep#editor",

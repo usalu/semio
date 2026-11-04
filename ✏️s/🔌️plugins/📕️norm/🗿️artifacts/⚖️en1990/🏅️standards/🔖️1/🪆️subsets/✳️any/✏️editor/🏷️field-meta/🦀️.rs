@@ -206,6 +206,7 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("reliabilityAnalyses[].actionDistribution", FieldSpec::choice("Action distribution", "Verteilung der Einwirkung", DISTRIBUTIONS)),
     ("reliabilityAnalyses[].actionMean", FieldSpec::quantity("Action mean μ_E", "Mittelwert Einwirkung μ_E", UnitId::Newton)),
     ("reliabilityAnalyses[].actionSd", FieldSpec::quantity("Action standard deviation σ_E", "Standardabweichung Einwirkung σ_E", UnitId::Newton)),
+    ("reliabilityAnalyses[].memberId", FieldSpec::new("Member (empty = whole project)", "Bauteil (leer = ganzes Projekt)")),
     ("testSeries", FieldSpec::new("Test series", "Versuchsreihen")),
     ("testSeries[].id", FieldSpec::new("Test series id", "Versuchsreihen-Id")),
     ("testSeries[].quantity", FieldSpec::new("Tested quantity", "Geprüfte Größe")),

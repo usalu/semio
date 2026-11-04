@@ -19,7 +19,7 @@ extern crate semio_framework_schema as schema;
 /// 🧩️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (design map §4: "raster→C:image layers
 /// R:drawing"): a pixel layer's real image bytes used to live INLINE on `RasterSnapshot.assets:
 /// BTreeMap<String, RasterImageAsset>` (a duplicated bytes-blob type, never `s.stdio.semio/v1/image`
-/// itself). `assets` is now `BTreeMap<String, RasterAssetChild>` — one composed `s.stdio.semio.image`
+/// itself). `assets` is now `BTreeMap<String, RasterAssetChild>` — one composed `stdio.semio.image`
 /// CHILD per asset id, content-addressed, never embedded bytes. `image_key: Option<String>` on
 /// `RasterLayerNode::Pixel` is UNCHANGED — it still addresses into this same id-keyed collection, only
 /// the map's VALUE type changed from bytes to a handle. `drawing` (`SemioDrawingSnapshot`, used by

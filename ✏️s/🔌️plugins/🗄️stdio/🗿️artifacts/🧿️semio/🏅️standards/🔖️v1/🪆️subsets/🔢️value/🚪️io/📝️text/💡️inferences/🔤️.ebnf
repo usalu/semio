@@ -1,3 +1,3 @@
-(* ebnf s.stdio.semio.value.inference *)
+(* ebnf stdio.semio.value.inference *)
 document = header, body ;
-header = 'schema', space, 's.stdio.semio.value.inference', newline ;
+header = 'schema', space, 'stdio.semio.value.inference', newline ;

@@ -218,3 +218,29 @@ async fn decode_encode_round_trips_the_real_ffmpeg_fixtures_strh_and_nested_chun
     assert_eq!(round_tripped, snap, "decode -> encode -> decode must be a fixed point, including the 56-byte strh width and the nested hdrl/strl auxiliaries");
 }
 //#endregion real_ffmpeg_fixture
+
+/// 🔬️ Runs the independent `ffprobe` binary over `bytes` and returns its exact `key=value` report; a missing `ffprobe` is a hard failure because this cross-check is required.
+fn ffprobe_fields(bytes: &[u8], suffix: &str, arguments: &[&str]) -> std::collections::BTreeMap<String, String> {
+    static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let path = std::env::temp_dir().join(format!("semio-{}-{}.{suffix}", std::process::id(), NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)));
+    std::fs::write(&path, bytes).expect("temporary stream is writable");
+    let output = std::process::Command::new("ffprobe").args(["-v", "error", "-of", "default=noprint_wrappers=1"]).args(arguments).arg(&path).output().expect("ffprobe is required for this cross-check and must be installed");
+    let _ = std::fs::remove_file(&path);
+    assert!(output.status.success(), "ffprobe rejected the stream: {}", String::from_utf8_lossy(&output.stderr));
+    String::from_utf8_lossy(&output.stdout).lines().filter_map(|line| line.split_once('=')).map(|(key, value)| (key.to_string(), value.to_string())).collect()
+}
+
+#[test]
+fn ffprobe_counts_exactly_the_frames_left_by_a_frame_boundary_trim() {
+    let mut trimmed = decode_avi(*REAL_FFMPEG_AVI).expect("decode the real ffmpeg fixture");
+    let kept = 15u32;
+    trimmed.streams[0].chunks.truncate(kept as usize);
+    trimmed.streams[0].strh.length = kept;
+    trimmed.main_header.total_frames = kept;
+    let bytes = encode_avi(&trimmed);
+    assert_eq!(decode_avi(&bytes).expect("trimmed stream reopens"), trimmed);
+    let report = ffprobe_fields(&bytes, "avi", &["-count_packets", "-select_streams", "v:0", "-show_entries", "stream=codec_name,nb_frames,nb_read_packets"]);
+    assert_eq!(report["codec_name"], "mjpeg");
+    assert_eq!(report["nb_frames"], kept.to_string());
+    assert_eq!(report["nb_read_packets"], kept.to_string());
+}

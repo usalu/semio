@@ -284,7 +284,7 @@ test("Rewriting exact twenty-eight scenario roster owns all eighteen closed type
    expect(row.steps.some(step=>step.text==="the replacement working child "+uri)).toBe(true);
    expect(payload.newWorkingGraph.content).toEqual({childId:"nakagin-core-only-content",target:{artifactId:"nakagin-core-only-content",dialect:{artifactKind:"s.stdio.semio",standard:"v1",subset:"graph"}}});
    expect(payload.newWorkingGraph.camera).toEqual({x:{bits:"0000000000000000"},y:{bits:"0000000000000000"},zoom:{bits:"3ff0000000000000"}});
-   const replacement=read("../../../../🧪️tests/🧫️fixtures/♻️mutate-rewrite-1/🔁️core-only/🪆️content/🔣️.snapshot.json");expect(childSchema(replacement)).toBe(true);expect(replacement).toEqual({schema:"s.stdio.semio.graph",nodes:[],edges:[]});
+   const replacement=read("../../../../🧪️tests/🧫️fixtures/♻️mutate-rewrite-1/🔁️core-only/🪆️content/🔣️.snapshot.json");expect(childSchema(replacement)).toBe(true);expect(replacement).toEqual({schema:"stdio.semio.graph",nodes:[],edges:[]});
   }
  }
 });

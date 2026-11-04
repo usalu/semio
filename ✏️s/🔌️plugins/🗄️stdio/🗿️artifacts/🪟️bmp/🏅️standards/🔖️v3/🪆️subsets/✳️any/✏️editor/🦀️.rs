@@ -349,6 +349,7 @@ impl editing::SnapshotEditingEditor for BmpEditor {
     fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
         use crate::schema::mutations::{BmpMutation, ReplaceSamples};
         use crate::schema::snapshot::{BmpNativeSample, BmpPixels, BmpRegion};
+        if let Some(mutations) = palette_edit(event, snapshot)? { return Ok(Some(mutations)); }
         let editing::SnapshotEditEvent::SetValue { path, value: semio_framework_value::DslValue::Number(number) } = event else { return Ok(None) };
         let image = &snapshot.image;
         let value = u32::try_from(number.as_u64().ok_or_else(|| Fault::from("a BMP sample is an unsigned integer"))?).map_err(|_| Fault::from("a BMP sample is a 32-bit unsigned integer"))?;
@@ -384,6 +385,48 @@ impl editing::SnapshotEditingEditor for BmpEditor {
     }
 }
 
+/// 🌈️ Palette gestures of the Details pane: a channel edit sets one entry, an insert adds an entry in front of a position (`-` appends) and a remove drops an entry no sample uses; the header's `colors_used` follows the palette length.
+fn palette_edit(event: &editing::SnapshotEditEvent, snapshot: &BmpSnapshot) -> Result<Option<Vec<BmpMutation>>, Fault> {
+    use crate::schema::mutations::{InsertPaletteEntry, RemovePaletteEntry, SetPaletteEntry};
+    let image = &snapshot.image;
+    let number = |value: &semio_framework_value::DslValue, what: &str| -> Result<u8, Fault> {
+        let semio_framework_value::DslValue::Number(number) = value else { return Err(Fault::from(format!("a palette {what} is a number"))) };
+        number.as_u64().and_then(|value| u8::try_from(value).ok()).ok_or_else(|| Fault::from(format!("a palette {what} is an 8-bit unsigned integer")))
+    };
+    let colors_used_for = |length: usize| -> u32 { if length == 1usize << image.profile.bits_per_pixel() { 0 } else { length as u32 } };
+    let position = |rest: &str| -> Option<usize> { if rest == "-" { Some(image.palette.len()) } else { rest.parse::<usize>().ok() } };
+    match event {
+        editing::SnapshotEditEvent::SetValue { path, value } => {
+            let Some(rest) = path.strip_prefix("/image/palette/") else { return Ok(None) };
+            let Some((ordinal, channel)) = rest.split_once('/') else { return Ok(None) };
+            let Ok(index) = ordinal.parse::<usize>() else { return Ok(None) };
+            let entry = image.palette.get(index).ok_or_else(|| Fault::from(format!("palette entry {index} is absent")))?;
+            let (mut red, mut green, mut blue, mut reserved) = (entry.r, entry.g, entry.b, entry.reserved);
+            match channel {
+                "r" => red = number(value, "channel")?,
+                "g" => green = number(value, "channel")?,
+                "b" => blue = number(value, "channel")?,
+                "reserved" => reserved = number(value, "reserved byte")?,
+                _ => return Ok(None),
+            }
+            Ok(Some(vec![BmpMutation::SetPaletteEntry(SetPaletteEntry { index: index as u32, red, green, blue, reserved })]))
+        }
+        editing::SnapshotEditEvent::InsertValue { path, value } => {
+            let Some(index) = path.strip_prefix("/image/palette/").and_then(position) else { return Ok(None) };
+            let semio_framework_value::DslValue::Object(fields) = value else { return Err(Fault::from("a palette entry is an object with r, g and b")) };
+            let channel = |name: &str| fields.iter().find(|(key, _)| key == name).map(|(_, value)| number(value, "channel")).transpose();
+            let (Some(red), Some(green), Some(blue)) = (channel("r")?, channel("g")?, channel("b")?) else { return Err(Fault::from("a palette entry needs r, g and b")) };
+            let reserved = channel("reserved")?.unwrap_or(0);
+            Ok(Some(vec![BmpMutation::InsertPaletteEntry(InsertPaletteEntry { index: index as u32, red, green, blue, reserved, colors_used: colors_used_for(image.palette.len() + 1) })]))
+        }
+        editing::SnapshotEditEvent::RemoveValue { path } => {
+            let Some(index) = path.strip_prefix("/image/palette/").and_then(|rest| rest.parse::<usize>().ok()) else { return Ok(None) };
+            Ok(Some(vec![BmpMutation::RemovePaletteEntry(RemovePaletteEntry { index: index as u32, colors_used: colors_used_for(image.palette.len().saturating_sub(1)) })]))
+        }
+        _ => Ok(None),
+    }
+}
+
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_bmp_editor() -> semio_framework_plugin::AppDefinition {
@@ -394,7 +437,7 @@ pub fn create_bmp_editor() -> semio_framework_plugin::AppDefinition {
         .default_mode_id(edit::MODE_ID)
         .window_kind_def(main::definition())
         .window_kind_def(editing::snapshot_details_window_definition())
-        .default_layout(edit::layout())
+        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Main"))
         .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
@@ -448,6 +491,27 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 }
 }
 //#endregion 🧩️ArtifactItems5
+
+//#region 🧩️ArtifactItems6
+pub mod artifact_items_6 {
+use crate::{artifact_kind, STDIO_BMP_DOCUMENT_SCHEMA};
+use crate::schema::mutations::BmpMutation;
+use crate::schema::snapshot::BmpSnapshot;
+
+/// 💾️ Durable native document codec; its pack schema hash is the SHA-256 of the binary snapshot protocol.
+pub fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::bare_artifact_codec::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA);
+    codec.extension = "bmp";
+    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("../🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
+    codec
+}
+
+/// 🧷️ The native factory the schema-owned codec binding resolves.
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.bmp.v1", artifact: "bmp", kind: artifact_kind, codec: native_codec }]
+}
+}
+//#endregion 🧩️ArtifactItems6
 
 //#region 🧩️ArtifactItems7
 pub mod artifact_items_7 {

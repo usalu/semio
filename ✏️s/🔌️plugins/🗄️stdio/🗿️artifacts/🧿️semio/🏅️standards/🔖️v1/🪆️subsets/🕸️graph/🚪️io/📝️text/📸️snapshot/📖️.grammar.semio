@@ -11,7 +11,7 @@ start document
 # s.stdio.semio.graph.dsl v1` preamble stripped and replaced with the bare `envelope_id()` token —
 # `artifact-mark` below — before recognition, same convention every other semio subset's own
 # grammar uses).
-artifact-mark = "s.stdio.semio.graph"
+artifact-mark = "stdio.semio.graph"
 document = artifact-mark schema-line nodes-line edges-line
 
 schema-line = "schema" "=" hex

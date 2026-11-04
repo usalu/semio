@@ -72,7 +72,7 @@ pub const STDIO_SEMIOFLOW_DOCUMENT_SCHEMA: &str = "stdio.semio.flow";
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.flow")]
+#[artifact_schema(id = "stdio.semio.flow")]
 pub struct SemioFlowSnapshot {
     #[state(artifact)]
     pub schema: String,

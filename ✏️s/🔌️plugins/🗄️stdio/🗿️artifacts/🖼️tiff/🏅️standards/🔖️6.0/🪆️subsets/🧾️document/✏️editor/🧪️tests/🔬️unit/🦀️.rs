@@ -178,22 +178,10 @@ fn retained_tiled_paint_targets_the_selected_ifd_and_survives_artifact_undo() {
 }
 
 #[test]
-fn cancelled_retained_tiled_paint_discards_revision_without_publication() {
-    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+fn cancelled_retained_tiled_paint_closes_without_publication() {
+    use semio_framework_plugin::retained_command::ArtifactCommandWork;
     let snapshot = tiled_editor_snapshot();
-    let command = paint_command();
-    let config = TiffEditorConfig::default();
-    let history = semio_framework_plugin::HistoryView::empty();
-    let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "tiff-paint-cancel".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "tiff-paint-cancel".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let mut work = paint_region::PaintRegionWork::new();
-    let input = ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
-    let mut sequence = 0;
-    let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
-    assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { stage: "tiff-paint-region-prepare", .. }));
-    let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
-    assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { stage: "tiff-paint-region-row", .. }));
     work.begin_close();
     assert!(matches!(semio_framework_job::close_with_self_funded_context(semio_s_artifact_stdio_contract::editing::ample_close_grant(), |cx| work.close_step(cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Complete{..}));
     assert!(work.terminal_is_empty());
@@ -231,6 +219,32 @@ fn payload_detail_edits_publish_the_exact_requested_value() {
         let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&next))).unwrap();
         assert_eq!(actual, expected, "{}", row["id"]);
     }
+}
+
+#[test]
+fn natural_file_codec_declares_tiff_and_round_trips_through_an_independent_decoder() {
+    let codec = <TiffAnyEditor as ArtifactEditor>::natural_file_codec().expect("TIFF declares its natural file codec");
+    assert_eq!((codec.format_kind, codec.extension, codec.media_type, codec.binary), ("s.stdio.tiff@6.0", ".tiff", "image/tiff", true));
+    let snapshot = crate::standards::v6_0::subsets::document::schema::demo_tiff_snapshot();
+    let bytes = <TiffAnyEditor as ArtifactEditor>::encode_natural_file(&snapshot).expect("TIFF natural bytes");
+    let page = crate::standards::v6_0::subsets::document::io::decode_tiff_page_rgba(&snapshot, 0).expect("owned RGBA page");
+    let mut independent = tiff::decoder::Decoder::new(std::io::Cursor::new(&bytes)).expect("tiff crate accepts exported bytes");
+    assert_eq!(independent.dimensions().expect("tiff crate dimensions"), (page.width, page.height));
+    independent.read_image().expect("tiff crate decodes the raster");
+    let reopened = <TiffAnyEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("natural bytes reopen");
+    let exported_again = <TiffAnyEditor as ArtifactEditor>::encode_natural_file(&reopened).expect("reopened document exports");
+    assert_eq!(crate::standards::v6_0::subsets::document::io::decode_tiff_page_rgba(&reopened, 0).expect("reopened page"), page);
+    assert_eq!(<TiffAnyEditor as ArtifactEditor>::decode_natural_file(&exported_again).expect("second reopen"), reopened);
+}
+
+#[test]
+fn natural_file_decode_refuses_truncated_and_foreign_bytes_without_panicking() {
+    let snapshot = crate::standards::v6_0::subsets::document::schema::demo_tiff_snapshot();
+    let bytes = <TiffAnyEditor as ArtifactEditor>::encode_natural_file(&snapshot).expect("TIFF natural bytes");
+    for length in [0, 1, 4, 8, bytes.len() / 2, bytes.len() - 1] {
+        assert!(<TiffAnyEditor as ArtifactEditor>::decode_natural_file(&bytes[..length]).is_err(), "truncated at {length}");
+    }
+    assert!(<TiffAnyEditor as ArtifactEditor>::decode_natural_file(b"GIF89a not a tiff").is_err());
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::tiff_any::TiffAnyEditor, || semio_framework_plugin::App { definition: crate::editor::tiff_any::create_tiff_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document");

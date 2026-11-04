@@ -19,7 +19,7 @@ start document
 # `presentation` matches the fixture-honesty harness's own reconstructed body shape (mandatory
 # `semio stdio.semio.presentation.dsl v1` preamble stripped and replaced with the bare
 # `envelope_id()` token — `artifact-mark` below).
-artifact-mark = "s.stdio.semio.presentation"
+artifact-mark = "stdio.semio.presentation"
 document = artifact-mark schema-line masters-line layouts-line slides-line
 
 schema-line = "schema" "=" hex

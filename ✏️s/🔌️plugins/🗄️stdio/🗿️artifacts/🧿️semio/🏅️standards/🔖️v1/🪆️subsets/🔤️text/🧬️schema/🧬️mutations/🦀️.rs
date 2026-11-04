@@ -38,7 +38,7 @@ use super::reorder_runs;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioTextSnapshot, diff = SemioTextDiff, schema = "s.stdio.semio.text", reference = SemioTextSnapshot, reference_diff = SemioTextDiff)]
+#[mutations(snapshot = SemioTextSnapshot, diff = SemioTextDiff, schema = "stdio.semio.text", reference = SemioTextSnapshot, reference_diff = SemioTextDiff)]
 pub enum SemioTextMutation {
     InsertRun(insert_run::InsertRun),
     RemoveRun(remove_run::RemoveRun),

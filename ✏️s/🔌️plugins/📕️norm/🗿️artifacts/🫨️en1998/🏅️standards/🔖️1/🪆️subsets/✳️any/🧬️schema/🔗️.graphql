@@ -231,6 +231,7 @@ type En1998Assessment {
   shearCrackingBeforeYield: Float!
   shearForceDemandN: Float!
   intermediateSteelAreaM2: Float!
+  analysisMethod: AnalysisMethodChoice!
 }
 type En1998Silo {
   id: String!
@@ -457,4 +458,11 @@ type En1998Slope {
   circleCentreX: Float!
   circleCentreZ: Float!
   circleRadius: Float!
+}
+enum AnalysisMethodChoice {
+  derived
+  lf
+  mrs
+  pushover
+  nlth
 }

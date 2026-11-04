@@ -19,6 +19,8 @@
  * instance — two spawned instances of the same app declare the same window kinds. */
 // #endregion 🧲️Header
 
+import { localizedLabelTextV1 } from "../📣️replay-refusal/🟦️.ts";
+
 //#region 🪟️SpawnedWindowIdentity
 /** 🪟️ Separates a spawned instance's own id from the window KIND id it owns. `::` is refused by
  * `isSpacePanelState`'s identifier rule for neither half, so the split is done against the known
@@ -412,10 +414,9 @@ export const SPAWN_PROGRAM_REFUSAL_LABELS_V1: Readonly<Record<SpawnProgramRefusa
   "open-failed": { en: "“{program}” could not be opened.", de: "„{program}“ konnte nicht geöffnet werden." },
 };
 
-/** 🗣️ The localized notice for one refusal; only an unknown locale falls back to English. */
+/** 🗣️ The localized notice for one refusal; an unknown locale renders every language joined by ` | `. */
 export function spawnProgramRefusalNoticeTextV1(reason: SpawnProgramRefusalReasonV1, program: string, locale: string): string {
-  const label = SPAWN_PROGRAM_REFUSAL_LABELS_V1[reason];
-  return (locale === "de" ? label.de : label.en).replace("{program}", program);
+  return localizedLabelTextV1(SPAWN_PROGRAM_REFUSAL_LABELS_V1[reason], locale).replaceAll("{program}", program);
 }
 
 /** 🩺️ The notice's fault code, shared by the notice, the console line and every probe. */

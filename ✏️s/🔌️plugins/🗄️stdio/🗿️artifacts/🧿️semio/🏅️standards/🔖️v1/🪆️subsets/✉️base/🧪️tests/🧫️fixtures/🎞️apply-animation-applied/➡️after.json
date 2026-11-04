@@ -1,7 +1,7 @@
 {
   "schema": "stdio.semio",
   "subset": {
-    "schema": "s.stdio.semio.animation",
+    "schema": "stdio.semio.animation",
     "timelines": [
       {
         "name": "walk",

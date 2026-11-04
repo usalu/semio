@@ -65,5 +65,11 @@
       "prefix": ""
     }
   ],
-  "nativeFactories": []
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.wav.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"
+    }
+  ]
 }

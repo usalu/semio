@@ -93,6 +93,8 @@ fn an_applied_change_set_is_exactly_the_corpus_byte_ranges() {
             let inverse = <BinaryMutation as protocol::ColdMutation<BinarySnapshot>>::inverse(leaf, &source).unwrap_or_default();
             assert!(inverse.len() <= 1, "{id}: one splice, one inverse");
         }
+        let after: String = next.bytes.iter().map(|byte| format!("{byte:02x}")).collect();
+        assert_eq!(Some(after.as_str()), case["after"].as_str(), "{id}: the bytes Python slicing computes");
     }
 }
 
@@ -120,3 +122,14 @@ fn a_document_details_edit_is_one_byte_splice() {
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::binary::BinaryEditor, || semio_framework_plugin::App { definition: crate::editor::binary::create_binary_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️raw/🪆️subsets/✳️any");
+
+#[semio_framework_async_macros::async_test]
+async fn natural_binary_files_are_the_exact_bytes_and_survive_a_byte_edit() {
+    let codec = <BinaryEditor as ArtifactEditor>::natural_file_codec().expect("binary declares its natural file");
+    assert_eq!((codec.extension, codec.media_type, codec.binary), (".bin", "application/octet-stream", true));
+    let bytes: Vec<u8> = (0..=255u8).chain([0, 0, 255]).collect();
+    let snapshot = <BinaryEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("every byte string is a binary document");
+    assert_eq!(snapshot.bytes, bytes);
+    assert_eq!(<BinaryEditor as ArtifactEditor>::encode_natural_file(&snapshot).expect("encode"), bytes);
+    assert!(<BinaryEditor as ArtifactEditor>::decode_natural_file(&[]).expect("empty file").bytes.is_empty());
+}

@@ -178,7 +178,7 @@ impl Default for DocBlockDiff {
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.document.diff")]
+#[artifact_schema(id = "stdio.semio.document.diff")]
 pub struct SemioDocumentDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]

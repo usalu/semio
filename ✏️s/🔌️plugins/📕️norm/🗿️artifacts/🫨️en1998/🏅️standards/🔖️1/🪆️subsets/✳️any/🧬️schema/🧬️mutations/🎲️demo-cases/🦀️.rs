@@ -54,6 +54,7 @@ use semio_s_artifact_norm_en1998_mut_bridges_towers::change_bridge_permanent_gk_
 use semio_s_artifact_norm_en1998_mut_bridges_towers::change_bridge_correlated_occupancy::ChangeBridgeCorrelatedOccupancy;
 use semio_s_artifact_norm_en1998_mut_members::change_assessment_knowledge_level::ChangeAssessmentKnowledgeLevel;
 use semio_s_artifact_norm_en1998_mut_members::change_assessment_limit_state::ChangeAssessmentLimitState;
+use semio_s_artifact_norm_en1998_mut_members::change_assessment_analysis_method::ChangeAssessmentAnalysisMethod;
 use semio_s_artifact_norm_en1998_mut_members::change_assessment_supported_building_id::ChangeAssessmentSupportedBuildingId;
 use semio_s_artifact_norm_en1998_mut_members::change_assessment_gamma_el::ChangeAssessmentGammaEl;
 use semio_s_artifact_norm_en1998_mut_bridges_towers::change_tower_height_m::ChangeTowerHeightM;
@@ -368,6 +369,7 @@ use semio_s_artifact_norm_en1998_mut_bridges_towers::change_bridge_permanent_gk_
 use semio_s_artifact_norm_en1998_mut_bridges_towers::change_bridge_correlated_occupancy;
 use semio_s_artifact_norm_en1998_mut_members::change_assessment_knowledge_level;
 use semio_s_artifact_norm_en1998_mut_members::change_assessment_limit_state;
+use semio_s_artifact_norm_en1998_mut_members::change_assessment_analysis_method;
 use semio_s_artifact_norm_en1998_mut_members::change_assessment_supported_building_id;
 use semio_s_artifact_norm_en1998_mut_members::change_assessment_gamma_el;
 use semio_s_artifact_norm_en1998_mut_bridges_towers::change_tower_height_m;
@@ -880,6 +882,7 @@ pub fn demo_mutation_cases() -> Vec<En1998Mutation> {
         En1998Mutation::ChangeBridgeCorrelatedOccupancy(ChangeBridgeCorrelatedOccupancy { id: String::from("bridge-1"), new_correlated_occupancy: false }),
         En1998Mutation::ChangeAssessmentKnowledgeLevel(ChangeAssessmentKnowledgeLevel { id: String::from("assessment-1"), new_knowledge_level: semio_s_artifact_norm_en1998_model::KnowledgeLevel::Kl1 }),
         En1998Mutation::ChangeAssessmentLimitState(ChangeAssessmentLimitState { id: String::from("assessment-1"), new_limit_state: semio_s_artifact_norm_en1998_model::LimitState::Sd }),
+        En1998Mutation::ChangeAssessmentAnalysisMethod(ChangeAssessmentAnalysisMethod { id: String::from("assessment-1"), new_analysis_method_choice: semio_s_artifact_norm_en1998_model::AnalysisMethodChoice::Sd }),
         En1998Mutation::ChangeAssessmentSupportedBuildingId(ChangeAssessmentSupportedBuildingId { id: String::from("assessment-1"), new_supported_building_id: String::from("bldg-office2") }),
         En1998Mutation::ChangeAssessmentGammaEl(ChangeAssessmentGammaEl { id: String::from("assessment-1"), new_gamma_el: 2.0 }),
         En1998Mutation::ChangeTowerHeightM(ChangeTowerHeightM { id: String::from("tower-1"), new_height_m: 90.0 }),

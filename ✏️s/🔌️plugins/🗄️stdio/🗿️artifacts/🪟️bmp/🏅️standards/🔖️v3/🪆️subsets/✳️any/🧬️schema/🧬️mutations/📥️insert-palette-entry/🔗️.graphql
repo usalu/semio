@@ -1,0 +1,8 @@
+input InsertPaletteEntryInput {
+  index: Int!
+  red: Int!
+  green: Int!
+  blue: Int!
+  reserved: Int!
+  colorsUsed: Int!
+}

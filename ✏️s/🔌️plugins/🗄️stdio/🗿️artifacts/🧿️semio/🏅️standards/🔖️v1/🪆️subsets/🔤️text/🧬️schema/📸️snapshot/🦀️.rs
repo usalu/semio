@@ -19,7 +19,7 @@ use framework_schema::ArtifactSchema;
 /// 🏷️ Document schema / DSL envelope id AND `ArtifactSchema` descriptor id — same literal for
 /// both, per the master plan's "Schema descriptor ids `s.stdio.semio` + `s.stdio.semio.<subset>`"
 /// convention, one per subset.
-pub const STDIO_SEMIOTEXT_DOCUMENT_SCHEMA: &str = "s.stdio.semio.text";
+pub const STDIO_SEMIOTEXT_DOCUMENT_SCHEMA: &str = "stdio.semio.text";
 //#endregion 🔖️Ids
 
 //#region 🔖️MarkKind
@@ -74,7 +74,7 @@ pub struct SemioTextRun {
 #[dsl(layout = "lines")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.text")]
+#[artifact_schema(id = "stdio.semio.text")]
 pub struct SemioTextSnapshot {
     #[state(artifact)]
     pub schema: String,
@@ -150,7 +150,7 @@ impl Default for SemioTextSnapshot {
 //#endregion 🔖️Wire
 
 //#region 🔖️Demo
-/// 🌱 The demo `s.stdio.semio.text` document — three runs (plain, bold, and a link mark) across
+/// 🌱 The demo `stdio.semio.text` document — three runs (plain, bold, and a link mark) across
 /// two languages, exercising every leaf/collection shape at least once. Single source of truth for
 /// `📚️examples/…/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` and for the conformance-law
 /// tests in `🚪️io/🦀️.rs`.

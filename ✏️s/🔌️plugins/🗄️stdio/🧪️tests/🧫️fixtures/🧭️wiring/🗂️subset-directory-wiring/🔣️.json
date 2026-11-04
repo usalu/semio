@@ -3,7 +3,7 @@
   "artifact": "semio",
   "standard": "v1",
   "subset": "mesh",
-  "schema": "s.stdio.semio.mesh",
+  "schema": "stdio.semio.mesh",
   "canonicalDirectory": "🔺️mesh",
   "cases": [
     {

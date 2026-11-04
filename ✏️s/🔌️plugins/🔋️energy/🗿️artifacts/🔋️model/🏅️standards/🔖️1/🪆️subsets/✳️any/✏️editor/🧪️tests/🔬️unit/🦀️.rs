@@ -79,3 +79,22 @@ async fn the_load_document_effect_carries_the_model_it_was_given() {
     assert_eq!(model_value(&loaded), plain_value(&model));
     assert_eq!(loaded.schema.get().as_str(), ENERGY_MODEL_DOCUMENT_SCHEMA);
 }
+
+#[test]
+fn natural_idf_file_opens_in_the_energy_editor_and_saves_back_identically() {
+    let model_json = include_str!("../../../🧪️tests/🧫️fixtures/🏛️bestest-600/🔋️model.json");
+    let idf = semio_s_artifact_energy_model_export::idf::idf_from_model_json(model_json).expect("the BESTEST 600 model exports to IDF");
+    let codec = <EnergyModelEditor as ArtifactEditor>::natural_file_codec().expect("the energy editor declares the IDF representation");
+    assert_eq!((codec.format_kind, codec.extension), ("s.stdio.idf@25.2", ".idf"));
+    let opened = <EnergyModelEditor as ArtifactEditor>::decode_natural_file(idf.as_bytes()).expect("a real IDF opens");
+    let saved = <EnergyModelEditor as ArtifactEditor>::encode_natural_file(&opened).expect("save");
+    assert_eq!(String::from_utf8(saved).expect("IDF is text"), idf);
+}
+
+#[test]
+fn natural_idf_file_with_diagnostics_is_refused_with_the_diagnostic_named() {
+    let error = <EnergyModelEditor as ArtifactEditor>::decode_natural_file(b"Version,25.2;UnknownObject,Named;").expect_err("an unsupported object is not dropped silently");
+    assert!(error.to_string().contains("UnknownObject"), "{error}");
+    let error = <EnergyModelEditor as ArtifactEditor>::decode_natural_file(&[0xff, 0xfe]).expect_err("binary is refused");
+    assert!(error.to_string().contains("UTF-8"), "{error}");
+}

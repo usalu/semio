@@ -1,5 +1,6 @@
 {
   "name": "@semio-tech/assets",
+  "private": true,
   "version": "1.0.0",
   "type": "module",
   "$schema": "https://json.schemastore.org/package.json",

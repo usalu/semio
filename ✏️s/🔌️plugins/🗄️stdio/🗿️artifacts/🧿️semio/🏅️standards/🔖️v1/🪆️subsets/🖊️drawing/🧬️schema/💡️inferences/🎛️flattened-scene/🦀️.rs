@@ -125,7 +125,7 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
     type Dependency = semio_framework_value::DslValue;
     type Key = String;
     type Value = FlattenedNode;
-    const FIELD_ID: &'static str = "s.stdio.semio.drawing.inference.flattenedScene";
+    const FIELD_ID: &'static str = "stdio.semio.drawing.inference.flattenedScene";
     const SCHEMA_VERSION: u32 = 1;
 
     fn reads() -> &'static [&'static str] {

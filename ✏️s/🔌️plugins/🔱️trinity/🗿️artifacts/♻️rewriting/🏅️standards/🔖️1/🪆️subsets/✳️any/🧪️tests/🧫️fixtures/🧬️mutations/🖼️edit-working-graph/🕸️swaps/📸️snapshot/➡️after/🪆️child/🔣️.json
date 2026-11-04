@@ -1,5 +1,5 @@
 {
-  "schema": "s.stdio.semio.graph",
+  "schema": "stdio.semio.graph",
   "nodes": [
     {
       "id": {

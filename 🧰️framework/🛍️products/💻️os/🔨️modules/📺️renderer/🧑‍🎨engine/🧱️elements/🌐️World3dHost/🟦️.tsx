@@ -8,7 +8,9 @@
  * file keeps the scene-less fallback and the JSX. */
 // #endregion 🧲️Header
 
-import { Suspense } from "../⚛️react-port/🟦️.ts";
+import { Suspense, useMemo, useRef, useState } from "../⚛️react-port/🟦️.ts";
+import { createLongPressV1 } from "../👆️long-press/🟦️.ts";
+import { localizedLabelTextV1 } from "../🏛️ShellHost/📣️replay-refusal/🟦️.ts";
 
 // #region 🔌️Adapters
 import { cn, ContextMenuController, glassClass, IconShotFrame, SelectionMarquee, sunPositionFromAzimuthElevation, chromePanelSafeAreaStyle, windowChromeClearedTopOffset } from "@semio-tech/ui-react";
@@ -31,7 +33,7 @@ import { CanvasPresenceOverlayV1, usePresenceRuntimeKeyV1 } from "../👕️canv
 import { isTransparentWorldBackground, WORLD3D_FRAME_BOUNDS_MARGIN, world3dCameraDomJson, world3dSunDomJson } from "./🔭️scene-schema/🟦️.ts";
 import { WorldAcceptedFrameDiagnostics, WorldAutoFit, WorldProjectionContentFrame } from "./🎨️mesh-render/🟦️.tsx";
 import { BrushMeshRegistrar } from "./🧩️glb-surface/🟦️.tsx";
-import { resolveWorldContextMenuTarget, world3dContextMenuSurfaceV1, world3dSuggestionsAltHeld, world3dSuggestionsGestureArmed, world3dSuggestionsGestureConsumesContextMenu, worldInstancePickBlocked, worldSurfaceGuestSelectionDomV1, worldSurfaceSelectionDomV1 } from "./🔗️instance-selection/🟦️.ts";
+import { resolveWorldContextMenuTarget, world3dContextMenuSurfaceV1, WORLD3D_SUGGESTIONS_LABELS_V1, world3dSuggestionsAltHeld, world3dSuggestionsGestureArmed, world3dSuggestionsGestureTarget, world3dSuggestionsKeyChord, world3dSuggestionsGestureConsumesContextMenu, worldInstancePickBlocked, worldSurfaceGuestSelectionDomV1, worldSurfaceSelectionDomV1 } from "./🔗️instance-selection/🟦️.ts";
 import { isWorldTransformGumballMode } from "./🧮️gumball-math/🟦️.ts";
 import { WorldInstancesLayer } from "./🧱️instance-layers/🟦️.tsx";
 import { WorldPointCloudLayer } from "./🧱️instance-layers/☁️point-cloud-layer/🟦️.tsx";
@@ -72,6 +74,26 @@ export function World3dHost(props: ComponentSceneHostProps) {
   Object.assign(core, useWorldMarqueeAndGumball(core));
   Object.assign(core, useWorldPointerAndDrop(core));
   const { activeUtility, altHeldRef, publishWorldPresenceView, annotationLayer, annotationStore, attractions, autoFitBounds, autoFitKey, autoFitUserMoved, brushMeshRevisions, brushMeshUrls, brushMode, cameraRef, cameraSeedKey, cameraState, catalogueDropPreview, colors, computeStatus, connectDragHoverPosition, connectDragSource, contentBounds, contextMenu, contextMenuOpenEpochRef, contextMenuTitleLabel, dismissContextMenu, dispatch, emptySceneLabel, engagementPreview, environment, externalPendingProjectionSpec, faceDragSession, fit, fitProjectionContent, frame, geometryRevisionRef, gridFactor, gridSnapEnabled, gumballDragActive, gumballLiveDispatch, gumballTransformPreviewSourceId, handleAutoFitCameraChange, handleBrushPlace, handleCameraChange, handleCameraNavigate, handleComponentHover, handleConnectDragDrop, handleConnectDragHover, handleEmptyClick, handleFaceDragStart, handleGizmoCameraChange, handleGumballDrag, handleGumballDragEnd, handleGumballDragStart, handleInstancePointerDown, handleInstancePointerMove, handlePaintAt, handlePointerDown, handlePointerMove, handlePointerUp, handleProjectionContentFrame, handleProjectionKindChange, handleReferenceHover, handleReferenceSelect, handleRegisterBrushMesh, handleSuggestionClose, handleTargetVolumeRelocate, handleTargetVolumeSelect, handleVortexHover, handleVortexPointerArm, handleVortexPointerMove, handleVortexPointerUp, handleVortexSelect, handleWorldOrbitRightPointerDown, handleWorldPick, heatmap, hostRef, hoveredVortexFullIdRef, instances, instancesGroupRef, interaction, interactionDomainId, localPresenceActor, lod, lodRef, mapWorldContextMenuSpecs, marqueeCoverage, marqueeDown, marqueeDragActive, marqueeEnd, marqueePath, marqueeStart, meshStylePalette, meshVisuals, meshes, method, modellingOptions, node, onCatalogueDragEnter, onCatalogueDragLeave, onCatalogueDragOver, onCatalogueDrop, overlayRailRef, overlayRailSafeArea, paintMode, pendingProjectionSpec, pendingProjectionSpecRef, persistentSelectionMode, presenceObjectWorldPositions, presenceWindowId, previewAttractions, previewVortices, projectionContentFrameMounted, projectionFramePending, publishHoverPaint, referenceHoveredId, referenceSelectedIds, references, releaseLocalHover, requestContextMenu, scalarField, scene, sceneCamera, sectionCapHex, sectionExtent, selection, selectionMode, setContextMenu, setExternalPendingProjectionSpec, setGumballDragActive, setPendingProjectionSpec, sharedGumballTransformPreview, shellContextMenuFallback, shellScope, subElementPaint, subscribeLocalHoverRelease, suggestionFocus, suggestionMenuTitleLabel, suggestionPopupOwnsThisWindow, suggestionRows, suggestionsRightDownDispatchedAtRef, targetVolumeSelectedIds, targetVolumes, toolRunTrace, visibleSelectionPreview, volumeBrushMode, volumeGumballConfig, volumeLayersInteractive, vortices, voxelHoverOrigin, windowInstanceId, worldOrbitConstraints, worldProjectionSpec , presenceRuntimeKey } = core;
+
+  const [suggestionsAnnouncement, setSuggestionsAnnouncement] = useState("");
+  const suggestionsLocale = typeof document !== "undefined" && document.documentElement.lang !== "" ? document.documentElement.lang : "en";
+  const openSuggestionsAt = (x: number, y: number): void => {
+    const fullId = world3dSuggestionsGestureTarget(hoveredVortexFullIdRef.current);
+    if (fullId === null) {
+      setSuggestionsAnnouncement(localizedLabelTextV1(WORLD3D_SUGGESTIONS_LABELS_V1.noTarget, suggestionsLocale));
+      return;
+    }
+    setSuggestionsAnnouncement("");
+    dispatch("openVortexSuggestions", { fullId, x, y, windowId: windowInstanceId ?? undefined });
+  };
+  const openSuggestionsAtRef = useRef(openSuggestionsAt);
+  openSuggestionsAtRef.current = openSuggestionsAt;
+  const suggestionsLongPress = useMemo(() => createLongPressV1({
+    holdMs: 500,
+    slopPx: 10,
+    setTimer: (callback, milliseconds) => { const handle = window.setTimeout(callback, milliseconds); return () => window.clearTimeout(handle); },
+    onLongPress: (x, y) => openSuggestionsAtRef.current(x, y),
+  }), []);
 
   if (!scene) return <div className="semio-world-3d-empty">{emptySceneLabel}</div>;
 
@@ -139,16 +161,27 @@ export function World3dHost(props: ComponentSceneHostProps) {
           setContextMenu({ x: event.clientX, y: event.clientY, ...menu, suggestTarget: suggest.target });
         })();
       }}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
+      tabIndex={0}
+      aria-description={localizedLabelTextV1(WORLD3D_SUGGESTIONS_LABELS_V1.hint, suggestionsLocale)}
+      aria-keyshortcuts="ContextMenu Shift+F10"
+      onKeyDown={(event) => {
+        if (!world3dSuggestionsKeyChord(event.nativeEvent)) return;
+        const rect = event.currentTarget.getBoundingClientRect();
+        event.preventDefault();
+        event.stopPropagation();
+        openSuggestionsAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      }}
+      onPointerDown={(event) => { if (event.pointerType === "touch") suggestionsLongPress.down(event.clientX, event.clientY); handlePointerDown(event); }}
+      onPointerMove={(event) => { if (event.pointerType === "touch") suggestionsLongPress.move(event.clientX, event.clientY); handlePointerMove(event); }}
+      onPointerUp={(event) => { suggestionsLongPress.up(); handlePointerUp(event); }}
+      onPointerCancel={(event) => { suggestionsLongPress.cancel(); handlePointerUp(event); }}
       onPointerLeave={() => { releaseLocalHover(); publishWorldPresenceView(null); }}
       onDragEnter={onCatalogueDragEnter}
       onDragLeave={onCatalogueDragLeave}
       onDragOver={onCatalogueDragOver}
       onDrop={onCatalogueDrop}
     >
+      <span role="status" aria-live="polite" className="sr-only">{suggestionsAnnouncement}</span>
       <WorldCanvas
         className="h-full w-full"
         cameraUp={(cameraState.up as [number, number, number] | undefined) ?? [0, 0, 1]}

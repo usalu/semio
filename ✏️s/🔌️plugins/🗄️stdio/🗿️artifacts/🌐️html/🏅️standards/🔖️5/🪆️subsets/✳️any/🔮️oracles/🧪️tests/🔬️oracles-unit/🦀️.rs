@@ -168,6 +168,7 @@ mod tests {
             ("set-text", obj(vec![("path", Json::Array(vec![Json::Number(0.0), Json::Number(9.0), Json::Number(0.0)])), ("text", Json::String("Wave 7 Mutation Testing".into()))])),
             ("set-comment", obj(vec![("path", Json::Array(vec![Json::Number(0.0), Json::Number(5.0)])), ("text", Json::String(" Wave 7 replaced comment ".into()))])),
             ("set-raw-text", obj(vec![("path", Json::Array(vec![Json::Number(2.0), Json::Number(29.0), Json::Number(0.0)])), ("text", Json::String("console.log('wave7');".into()))])),
+            ("splice-source", obj(vec![("splices", Json::Array(vec![obj(vec![("offset", Json::Number(27.0)), ("delete", Json::Number(2.0)), ("insert", Json::String("en".into()))])]))])),
         ];
         assert_eq!(cases.len(), super::super::KINDS.len(), "this sweep must cover every declared kind exactly once");
         for (kind, params) in &cases {

@@ -40,7 +40,7 @@ pub use artifact_mailbox::{
 #[path = "📡️actor-message-bytes-status-and-events/🦀️.rs"]
 mod actor_message_bytes_status_and_events;
 pub use actor_message_bytes_status_and_events::{
-    artifact_actor_message_bytes, ArtifactEvent, ArtifactSyncStatus, RemoteState,
+    artifact_actor_message_bytes, ArtifactEvent, ArtifactSyncStatus, RemoteState, SyncWriteFailure,
 };
 
 #[path = "🧭️backbone-retention-bootstrap-and-command-acks/🦀️.rs"]

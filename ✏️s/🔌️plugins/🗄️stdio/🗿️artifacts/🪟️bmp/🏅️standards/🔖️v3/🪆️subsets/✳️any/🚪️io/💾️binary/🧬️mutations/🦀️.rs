@@ -12,7 +12,7 @@ pub struct Entry {
     pub encode: BmpMutationPayloadEncoder,
     pub decode: fn(&[u8]) -> Result<BmpMutation, protocol::ProtocolError>,
 }
-pub const REGISTRY: &[Entry] = &[paint_indexed_region::CODEC, paint_direct_region::CODEC, replace_image::CODEC, replace_samples::CODEC];
+pub const REGISTRY: &[Entry] = &[paint_indexed_region::CODEC, paint_direct_region::CODEC, replace_image::CODEC, replace_samples::CODEC, set_palette_entry::CODEC, insert_palette_entry::CODEC, remove_palette_entry::CODEC];
 //#endregion Registry
 
 //#region Framing
@@ -44,3 +44,12 @@ pub mod replace_image;
 
 #[path = "🧩️replace-samples/🦀️.rs"]
 pub mod replace_samples;
+
+#[path = "🌈️set-palette-entry/🦀️.rs"]
+pub mod set_palette_entry;
+
+#[path = "📥️insert-palette-entry/🦀️.rs"]
+pub mod insert_palette_entry;
+
+#[path = "📤️remove-palette-entry/🦀️.rs"]
+pub mod remove_palette_entry;

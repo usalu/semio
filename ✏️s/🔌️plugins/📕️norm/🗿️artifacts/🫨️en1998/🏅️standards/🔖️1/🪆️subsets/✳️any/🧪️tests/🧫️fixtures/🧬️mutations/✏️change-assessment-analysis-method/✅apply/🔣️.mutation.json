@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentAnalysisMethod",
+  "id": "",
+  "newAnalysisMethodChoice": "lf"
+}

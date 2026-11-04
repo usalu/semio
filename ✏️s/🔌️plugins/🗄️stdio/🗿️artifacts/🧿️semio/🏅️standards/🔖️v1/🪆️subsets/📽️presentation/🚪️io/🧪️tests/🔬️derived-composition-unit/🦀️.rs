@@ -6,7 +6,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn clean_snapshot() -> SemioPresentationSnapshot {
         SemioPresentationSnapshot {
-            schema: "s.stdio.semio.presentation".into(),
+            schema: "stdio.semio.presentation".into(),
             masters: vec![SlideMaster { id: "m1".into(), shapes: Vec::new() }],
             layouts: vec![SlideLayout { id: "l1".into(), master_id: "m1".into(), shapes: Vec::new() }],
             slides: vec![Slide { id: "s1".into(), layout_id: Some("l1".into()), shapes: Vec::new(), notes: Vec::new() }],
@@ -58,7 +58,7 @@ mod tests {
 
 
     //#region 🔖️ConformanceLaws
-    /// 🧪️ Per-artifact conformance laws (grammar recipe §4 item 8) for `s.stdio.semio.presentation`'s
+    /// 🧪️ Per-artifact conformance laws (grammar recipe §4 item 8) for `stdio.semio.presentation`'s
     /// three facets — ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION presentation
     /// wave, following the flow/model/brep/drawing/document pilots' proven pattern. Lives in
     /// this composer's own test region: presentation has no per-standard `⚙️engine` dir the way

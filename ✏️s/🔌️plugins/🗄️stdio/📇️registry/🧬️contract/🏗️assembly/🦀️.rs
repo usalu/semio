@@ -75,6 +75,7 @@ pub struct NativeCodecFactoryReceipt {
     pub artifact_kind: String,
     pub schema: String,
     pub pack_schema_hash: [u8; 32],
+    /// 🔑 Codec key (`ArtifactDsl::EXTENSION`), never a file-name extension.
     pub extension: String,
     pub factory: fn() -> kernel::os_store::serialization::ArtifactCodec,
 }
@@ -237,6 +238,18 @@ struct Representation {
     aliases: Vec<String>,
     neutral: bool,
     status: String,
+    #[value(default)]
+    owner: bool,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    sniff: Option<RepresentationSniff>,
+}
+
+/// 🔬 Cheap bounded content check naming one revision among representations that share a claim set: any `contains` ASCII needle inside the first `window` bytes selects it.
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
+struct RepresentationSniff {
+    window: u32,
+    contains: Vec<String>,
 }
 
 #[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
@@ -251,6 +264,7 @@ struct Codec {
     native_factory: Option<NativeCodecBinding>,
 }
 
+/// 🪢 Schema binding of one native codec. `extension` is the CODEC key of the artifact's `ArtifactDsl::EXTENSION`, not a file extension: it may be `semio` (the DSL text snapshot of a binary format such as avi, bcf, mp3, mp4) and is deliberately independent of `representations[].extensions`, whose declared order alone decides file-name resolution and export naming.
 #[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
 #[value(deny_unknown_fields)]
 struct NativeCodecBinding {
@@ -501,6 +515,23 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
         }
         id(&item.id)?;
     }
+    let mut owners_by_claims: BTreeMap<BTreeSet<(String, String)>, (usize, usize)> = BTreeMap::new();
+    for item in &source.representations {
+        let entry = owners_by_claims.entry(representation_claims(item)).or_default();
+        entry.0 += 1;
+        entry.1 += usize::from(item.owner);
+    }
+    let mut needles: BTreeMap<BTreeSet<(String, String)>, BTreeSet<&str>> = BTreeMap::new();
+    for item in &source.representations {
+        let Some(sniff) = &item.sniff else { continue };
+        let owned = needles.entry(representation_claims(item)).or_default();
+        if sniff.window == 0 || sniff.window > 65536 || sniff.contains.is_empty() || sniff.contains.iter().any(|needle| needle.is_empty() || !needle.is_ascii() || needle.len() > sniff.window as usize || !owned.insert(needle.as_str())) {
+            return Err(failure(format!("representation {} declares an unbounded, empty, non-ASCII or shared sniff", item.id)));
+        }
+    }
+    if owners_by_claims.values().any(|(members, owners)| *owners > 1 || (*members > 1 && *owners != 1)) {
+        return Err(failure(format!("{owner} must declare exactly one owner among representations sharing a claim set")));
+    }
     if standards != source.representations.iter().map(|item| item.standard.clone()).collect::<BTreeSet<_>>() {
         return Err(failure(format!("{owner} must give every declared standard its own representation")));
     }
@@ -745,7 +776,7 @@ fn source_format_descriptors(source: &Source) -> Result<Vec<FormatDescriptor>, P
         .runtime_capabilities
         .iter()
         .filter(|capability| capability.category == "representation")
-        .filter_map(|capability| source.representations.iter().filter(|representation| representation_claims(representation) == runtime_claims(capability)).min_by(|left, right| left.id.cmp(&right.id)))
+        .filter_map(|capability| source.representations.iter().filter(|representation| representation_claims(representation) == runtime_claims(capability)).min_by(|left, right| (!left.owner, &left.id).cmp(&(!right.owner, &right.id))))
         .map(|representation| {
             let english = source.localized_descriptors.iter().find(|item| item.locale == "en").ok_or_else(|| failure(format!("{} has no English descriptor", source.id)))?;
             Ok(FormatDescriptor {

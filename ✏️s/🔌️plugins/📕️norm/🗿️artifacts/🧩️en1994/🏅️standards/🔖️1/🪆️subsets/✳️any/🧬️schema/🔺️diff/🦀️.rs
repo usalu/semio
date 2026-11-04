@@ -159,7 +159,7 @@ pub struct En1994Diff {
     #[state(artifact)]
     pub reliability_class: Option<semio_s_plugin_norm_compliance::ReliabilityClass>,
     #[state(artifact)]
-    pub cases: semio_s_plugin_norm_compliance::design_case::CaseRowDelta,
+    pub cases: Option<semio_s_plugin_norm_compliance::design_case::CaseRowDelta>,
 }
 
 //#region 🍃️FacetLeaves

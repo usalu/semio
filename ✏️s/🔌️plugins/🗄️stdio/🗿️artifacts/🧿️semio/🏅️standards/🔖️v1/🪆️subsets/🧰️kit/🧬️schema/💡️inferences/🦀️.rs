@@ -16,7 +16,7 @@ use super::entries::compute_semio_kit_entries;
 /// `💡️inferences/` (currently: `entries`, backed by the `🗃️entries/` slug dir).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.kit.inference")]
+#[artifact_schema(id = "stdio.semio.kit.inference")]
 pub struct SemioKitInference {
     #[derived]
     pub entries: SemioKitEntries,
@@ -45,24 +45,24 @@ impl Default for SemioKitInference {
 
 impl protocol::InferenceSpec<SemioKitSnapshot> for SemioKitInference {
     fn inference_schema_id() -> &'static str {
-        "s.stdio.semio.kit.inference"
+        "stdio.semio.kit.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.semio.kit.inference.entries", reads: &["types", "designs", "objects", "models", "properties", "representations"] }]
+        &[protocol::InferenceFieldSpec { id: "stdio.semio.kit.inference.entries", reads: &["types", "designs", "objects", "models", "properties", "representations"] }]
     }
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.stdio.semio.kit.inference`'s facet leaves into the OS-wide inference catalog —
+/// 💡️ Registers `stdio.semio.kit.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `semio_kit_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_kit_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.stdio.semio.kit.inference",
+        id: "stdio.semio.kit.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

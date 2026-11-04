@@ -584,6 +584,21 @@ pub fn encode_pdf(snapshot: &PdfSnapshot) -> Result<Vec<u8>, String> {
 }
 //#endregion 🔖️Encode
 
+//#region 🔖️LosslessOpen
+/// 🛡️ Opens a natural PDF file only when this page-tree model reproduces it byte for byte (its own deterministic output).
+/// The model keeps page size and shown text only, so any other file would silently lose fonts, images, vector graphics,
+/// annotations, outlines and metadata on the next save; those files are refused with an accurate message instead.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_pdf_lossless(data: &[u8]) -> Result<PdfSnapshot, String> {
+    let snapshot = decode_pdf(data)?;
+    if encode_pdf(&snapshot)?.as_slice() == data {
+        Ok(snapshot)
+    } else {
+        Err("pdf 1.4: this page model keeps only page size and text; saving would drop the fonts, images, graphics, annotations or metadata of this file, so it is not opened here; open it with the PDF 1.7 editor for lossless editing".to_string())
+    }
+}
+//#endregion 🔖️LosslessOpen
+
 //#region 🎬️DemoSnapshot
 /// 📄️ The demo `stdio.pdf` document — the single source of truth for `📚️examples/🎬️demo/🖼️assets/
 /// 🗣️.dsl.semio`/`🎒️.pack.semio` (both are literally this snapshot's `print_dsl`/

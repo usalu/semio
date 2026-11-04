@@ -10,7 +10,7 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
 use framework_schema::ArtifactSchema;
 //#region 🔖️Ids
-pub const STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA: &str = "s.stdio.semio.animation";
+pub const STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA: &str = "stdio.semio.animation";
 //#endregion 🔖️Ids
 //#region 🔖️Target
 /// 🎯️ Which property of a node a channel drives — gltf `channel.target.path`, widened with a
@@ -123,7 +123,7 @@ pub struct AnimTimeline {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(layout = "lines")]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.animation")]
+#[artifact_schema(id = "stdio.semio.animation")]
 pub struct SemioAnimationSnapshot {
     #[state(artifact)]
     pub schema: String,
@@ -146,7 +146,7 @@ impl Default for SemioAnimationSnapshot {
 //#endregion 🔖️DslFreeFunctions
 //#endregion 🔖️HandcraftedArtifactCodecs
 //#region 🔖️Demo
-/// 🌱 The demo `s.stdio.semio.animation` document — one timeline exercising every `AnimValue`
+/// 🌱 The demo `stdio.semio.animation` document — one timeline exercising every `AnimValue`
 /// variant (`Scalar`/`Vec3`/`Quat`/`Weights`) and every `AnimTargetProperty` kind (incl. `Custom`).
 /// Single source of truth for `📚️examples/🚶️walk/🖼️assets/🗣️.dsl.semio`/
 /// `🎒️.pack.semio` and for the conformance-law tests in `🎹️composer/🦀️.rs`.

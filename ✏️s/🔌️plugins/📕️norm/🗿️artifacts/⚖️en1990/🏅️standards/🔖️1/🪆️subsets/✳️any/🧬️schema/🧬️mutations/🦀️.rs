@@ -148,6 +148,7 @@ use semio_s_artifact_norm_en1990_mut_factor_overrides_rows::insert_factor_overri
 use semio_s_artifact_norm_en1990_mut_factor_overrides_rows::remove_factor_override;
 use semio_s_artifact_norm_en1990_mut_traffic_groups::change_traffic_group_group;
 use semio_s_artifact_norm_en1990_mut_traffic_groups::change_traffic_group_variable_id;
+use semio_s_artifact_norm_en1990_mut_traffic_groups::change_reliability_member_id;
 use semio_s_artifact_norm_en1990_mut_traffic_groups_rows::insert_traffic_group;
 use semio_s_artifact_norm_en1990_mut_traffic_groups_rows::remove_traffic_group;
 //#endregion 🔖️Leaves
@@ -290,6 +291,7 @@ pub enum En1990Mutation {
     RemoveFactorOverride(remove_factor_override::RemoveFactorOverride),
     ChangeTrafficGroupGroup(change_traffic_group_group::ChangeTrafficGroupGroup),
     ChangeTrafficGroupVariableId(change_traffic_group_variable_id::ChangeTrafficGroupVariableId),
+    ChangeReliabilityMemberId(change_reliability_member_id::ChangeReliabilityMemberId),
     InsertTrafficGroup(insert_traffic_group::InsertTrafficGroup),
     RemoveTrafficGroup(remove_traffic_group::RemoveTrafficGroup),
 }
@@ -426,6 +428,7 @@ pub const KINDS: &[&str] = &[
     "remove-factor-override",
     "change-traffic-group-group",
     "change-traffic-group-variable-id",
+    "change-reliability-member-id",
     "insert-traffic-group",
     "remove-traffic-group",
 ];

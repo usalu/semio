@@ -3,6 +3,7 @@
 use crate::En1990Mutation;
 use semio_s_artifact_norm_en1990_mut_traffic_groups::change_traffic_group_group;
 use semio_s_artifact_norm_en1990_mut_traffic_groups::change_traffic_group_variable_id;
+use semio_s_artifact_norm_en1990_mut_traffic_groups::change_reliability_member_id;
 use semio_s_artifact_norm_en1990_mut_traffic_groups_rows::insert_traffic_group;
 use semio_s_artifact_norm_en1990_mut_traffic_groups_rows::remove_traffic_group;
 use semio_s_artifact_norm_en1990_mut_members_material::change_member_material_strength_k;
@@ -345,6 +346,7 @@ fn print_en1990_mutation(mutation: &En1990Mutation) -> String {
         En1990Mutation::RemoveFactorOverride(p) => format!("remove-factor-override index={}", enc_json(&p.index)),
         En1990Mutation::ChangeTrafficGroupGroup(p) => format!("change-traffic-group-group id={} new-group={}", enc_json(&p.id), enc_json(&p.new_group)),
         En1990Mutation::ChangeTrafficGroupVariableId(p) => format!("change-traffic-group-variable-id id={} new-variable-id={}", enc_json(&p.id), enc_json(&p.new_variable_id)),
+        En1990Mutation::ChangeReliabilityMemberId(p) => format!("change-reliability-member-id id={} new-member-id={}", enc_json(&p.id), enc_json(&p.new_member_id)),
         En1990Mutation::InsertTrafficGroup(p) => format!("insert-traffic-group index={} item={}", enc_json(&p.index), enc_json(&p.item)),
         En1990Mutation::RemoveTrafficGroup(p) => format!("remove-traffic-group index={}", enc_json(&p.index)),
     }
@@ -487,6 +489,7 @@ fn parse_en1990_mutation(text: &str) -> Result<En1990Mutation, String> {
         "remove-factor-override" => Ok(En1990Mutation::RemoveFactorOverride(remove_factor_override::RemoveFactorOverride { index: dec_json(arg("index")?)? })),
         "change-traffic-group-group" => Ok(En1990Mutation::ChangeTrafficGroupGroup(change_traffic_group_group::ChangeTrafficGroupGroup { id: dec_json(arg("id")?)?, new_group: dec_json(arg("new-group")?)? })),
         "change-traffic-group-variable-id" => Ok(En1990Mutation::ChangeTrafficGroupVariableId(change_traffic_group_variable_id::ChangeTrafficGroupVariableId { id: dec_json(arg("id")?)?, new_variable_id: dec_json(arg("new-variable-id")?)? })),
+        "change-reliability-member-id" => Ok(En1990Mutation::ChangeReliabilityMemberId(change_reliability_member_id::ChangeReliabilityMemberId { id: dec_json(arg("id")?)?, new_member_id: dec_json(arg("new-member-id")?)? })),
         "insert-traffic-group" => Ok(En1990Mutation::InsertTrafficGroup(insert_traffic_group::InsertTrafficGroup { index: opt_index(&args)?, item: dec_json(arg("item")?)? })),
         "remove-traffic-group" => Ok(En1990Mutation::RemoveTrafficGroup(remove_traffic_group::RemoveTrafficGroup { index: dec_json(arg("index")?)? })),
         other => Err(format!("unknown keyword {other}")),

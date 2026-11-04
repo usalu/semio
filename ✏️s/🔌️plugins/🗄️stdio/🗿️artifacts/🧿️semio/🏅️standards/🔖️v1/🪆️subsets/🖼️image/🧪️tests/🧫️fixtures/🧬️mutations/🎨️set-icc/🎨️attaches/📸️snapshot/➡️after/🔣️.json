@@ -1,5 +1,5 @@
 {
-  "schema": "s.stdio.semio.image",
+  "schema": "stdio.semio.image",
   "width": 2,
   "height": 1,
   "colorspace": "rgb",

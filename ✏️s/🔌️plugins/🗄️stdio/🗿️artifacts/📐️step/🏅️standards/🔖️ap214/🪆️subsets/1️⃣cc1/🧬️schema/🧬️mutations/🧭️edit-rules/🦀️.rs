@@ -11,8 +11,20 @@ use semio_s_artifact_stdio_contract::editing::{EditRules, EntityRule, SnapshotEd
 /// 📚 The header slot this class edits.
 pub const EDIT_RULES: EditRules = EditRules { entities: &[EntityRule::new("/header/fileSchema/schemas", "set-file-schema", "schemas")], inserts: &[], removes: &[] };
 
-/// 🎯 The `restore-entities` mutation of an edit below `/entities/<row>`; `None` hands the edit on to the table.
+/// 🎯 The kind of the product identity gesture (`/product`), of a shape representation gesture (`/shapeRepresentations/<id>`) and the `restore-entities` mutation of an edit below `/entities/<row>`; `None` hands the edit on to the table.
 pub fn special(event: &SnapshotEditEvent, snapshot: &StepSnapshot) -> Result<Option<Vec<StepCc1Mutation>>, SnapshotEditError> {
+    if let Some(rows) = ladder::transform_restore_rows(event, snapshot)? {
+        return Ok(Some(restored(rows)));
+    }
+    if let Some(identity) = ladder::product_identity_edit(event, snapshot)? {
+        return Ok(Some(vec![StepCc1Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity })]));
+    }
+    if let Some(edit) = ladder::shape_representation_edit(event, snapshot)? {
+        return match edit {
+            ladder::ShapeRepresentationEdit::Set { .. } => Err(SnapshotEditError::new("snapshot-edit.unsupported-path", "/shapeRepresentations", "class 1 carries no shape representation; remove it or raise the class")),
+            ladder::ShapeRepresentationEdit::Remove { id } => Ok(Some(vec![StepCc1Mutation::RemoveShapeRepresentation(remove_shape_representation::RemoveShapeRepresentation { id })])),
+        };
+    }
     Ok(ladder::edit_restore_rows(event, snapshot)?.map(restored))
 }
 

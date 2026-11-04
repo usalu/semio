@@ -165,13 +165,13 @@ impl DocBlock {
 }
 //#endregion 🔖️DocumentModel
 //#region 🔖️Ids
-pub const STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA: &str = "s.stdio.semio.document";
+pub const STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA: &str = "stdio.semio.document";
 //#endregion 🔖️Ids
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(layout = "lines")]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.document")]
+#[artifact_schema(id = "stdio.semio.document")]
 pub struct SemioDocumentSnapshot {
     #[state(artifact)]
     pub schema: String,
@@ -204,7 +204,7 @@ impl Default for SemioDocumentSnapshot {
 //#region 🌉️ExternalCodecBridge
 //#endregion 🌉️ExternalCodecBridge
 //#region 🔖️Demo
-/// 🌱 The demo `s.stdio.semio.document` snapshot — one style, one image, and one block of every
+/// 🌱 The demo `stdio.semio.document` snapshot — one style, one image, and one block of every
 /// kind (Heading/Paragraph/List/Table/Code/Quote/Image/PageBreak), exercising every leaf shape at
 /// least once. Single source of truth for `📚️examples/🗒️memo/🖼️assets/🗣️.dsl.semio`/
 /// `🎒️.pack.semio` and for the conformance-law tests in `🎹️composer/🦀️.rs`.

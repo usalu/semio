@@ -71,6 +71,7 @@ Feature: Apply every typed EN 1990 mutation against an independent Python implem
       | change-annex                        | 🌍️change-annex                       | ✅apply  |
       | change-traffic-group-group | 🚦️change-traffic-group-group | ✅apply  |
       | change-traffic-group-variable-id | 🚦️change-traffic-group-variable-id | ✅apply  |
+      | change-reliability-member-id | 🚦️change-reliability-member-id | ✅apply  |
       | insert-traffic-group | 🚦️insert-traffic-group | ✅apply  |
       | remove-traffic-group | 🚦️remove-traffic-group | ✅apply  |
       | change-member-material-strength-k | 🏗️change-member-material-strength-k | ✅apply  |
@@ -234,6 +235,7 @@ Feature: Apply every typed EN 1990 mutation against an independent Python implem
       | change-annex                        | 🌍️change-annex                       | ✅apply  |
       | change-traffic-group-group | 🚦️change-traffic-group-group | ✅apply  |
       | change-traffic-group-variable-id | 🚦️change-traffic-group-variable-id | ✅apply  |
+      | change-reliability-member-id | 🚦️change-reliability-member-id | ✅apply  |
       | insert-traffic-group | 🚦️insert-traffic-group | ✅apply  |
       | remove-traffic-group | 🚦️remove-traffic-group | ✅apply  |
       | change-member-material-strength-k | 🏗️change-member-material-strength-k | ✅apply  |

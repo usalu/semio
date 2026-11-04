@@ -150,13 +150,13 @@ impl En1991Outline {
             + snapshot.rail_dynamics.len()
             + snapshot.load_dispersals.len()
             + snapshot.bulk_solids.len()
-            + snapshot.rotating_machines.len()) as u32;
-            + snapshot.dust_explosions.len()) as u32;
-            + snapshot.rail_load_groups.len()) as u32;
-            + snapshot.rail_derailments.len()) as u32;
-            + snapshot.fatigue_models.len()) as u32;
-            + snapshot.support_collisions.len()) as u32;
-            + snapshot.local_fires.len()) as u32;
+            + snapshot.rotating_machines.len()
+            + snapshot.dust_explosions.len()
+            + snapshot.rail_load_groups.len()
+            + snapshot.rail_derailments.len()
+            + snapshot.fatigue_models.len()
+            + snapshot.support_collisions.len()
+            + snapshot.local_fires.len()
             + snapshot.snow_guards.len()) as u32;
         Self { section_outline, field_count, entry_count }
     }

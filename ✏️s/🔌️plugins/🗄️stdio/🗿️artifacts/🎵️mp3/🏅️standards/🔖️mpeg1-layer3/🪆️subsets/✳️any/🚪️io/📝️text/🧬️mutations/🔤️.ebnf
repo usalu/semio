@@ -1,3 +1,10 @@
-(* 🚧 scaffolded by W1b — full grammar lands in W2/W3 *)
-document = marker ;
-marker = "stdio.mp3.mutations" ;
+(* The one-line text of a mutation op is JSON; the "mutation" member names setId3v2, setFrames, setId3v1 or patchFrames. *)
+op = object ;
+object = "{" , [ member , { "," , member } ] , "}" ;
+member = string , ":" , value ;
+value = object | array | string | number | "true" | "false" | "null" ;
+array = "[" , [ value , { "," , value } ] , "]" ;
+string = '"' , { character } , '"' ;
+character = ? any character except '"' and '\\' ? | "\\" , ? any character ? ;
+number = [ "-" ] , digit , { digit } , [ "." , digit , { digit } ] ;
+digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;

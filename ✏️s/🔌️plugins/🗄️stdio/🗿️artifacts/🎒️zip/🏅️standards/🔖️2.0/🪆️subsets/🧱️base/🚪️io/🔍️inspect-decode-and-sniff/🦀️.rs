@@ -188,6 +188,7 @@ pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
             Some(payload) => decode_unicode_extra(payload, central_name_bytes, "central directory filename")?,
             None => decode_zip_text(central_name_bytes, utf8, "central directory filename")?,
         };
+        check_entry_name(&name)?;
         let comment = match central_unicode_comment {
             Some(payload) => decode_unicode_extra(payload, central_comment_bytes, "central directory comment")?,
             None => decode_zip_text(central_comment_bytes, utf8, "central directory comment")?,

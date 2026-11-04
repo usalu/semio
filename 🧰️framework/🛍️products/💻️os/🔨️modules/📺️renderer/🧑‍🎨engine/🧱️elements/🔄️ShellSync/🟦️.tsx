@@ -14,6 +14,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { deriveSavedStateV1 } from "../🛠️ShellHelpers/💾️saved-state/🟦️.ts";
 import { type ReactElement } from "../⚛️react-port/🟦️.ts";
 import { Button, Icon, Input, Popover, PopoverAnchor, PopoverContent, useLabel, type IconName } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type Conflict, type UtilityNode } from "@semio-tech/framework";
@@ -85,7 +86,7 @@ export interface SyncStatusTextsV1 {
 export function syncStatusLabelV1(status: ArtifactSyncStatus | null, texts: SyncStatusTextsV1): string | null {
   if (!status) return null;
   const remote = status.remote.kind === "live" ? `${texts.live} · ${texts.peers}` : status.remote.kind === "connecting" ? texts.connecting : status.remote.kind === "backoff" ? texts.reconnecting : texts.offline;
-  const persisted = status.persisted ? texts.saved : texts.unsaved;
+  const persisted = deriveSavedStateV1(status).kind === "saved" ? texts.saved : texts.unsaved;
   return `${remote} · ${persisted}${status.pendingMutations > 0 ? ` · ${texts.pending}` : ""}`;
 }
 

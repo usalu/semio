@@ -265,3 +265,30 @@ fn an_unmodelled_sample_entry_is_rejected_by_name() {
     assert_eq!(decode_mp4(&bytes).expect_err("vp09 is not modelled"), "unsupported MP4 sample entry vp09");
 }
 //#endregion sample_entry_formats
+
+/// 🔬️ Runs the independent `ffprobe` binary over `bytes` and returns its exact `key=value` report; a missing `ffprobe` is a hard failure because this cross-check is required.
+fn ffprobe_fields(bytes: &[u8], suffix: &str, arguments: &[&str]) -> std::collections::BTreeMap<String, String> {
+    static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let path = std::env::temp_dir().join(format!("semio-{}-{}.{suffix}", std::process::id(), NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)));
+    std::fs::write(&path, bytes).expect("temporary stream is writable");
+    let output = std::process::Command::new("ffprobe").args(["-v", "error", "-of", "default=noprint_wrappers=1"]).args(arguments).arg(&path).output().expect("ffprobe is required for this cross-check and must be installed");
+    let _ = std::fs::remove_file(&path);
+    assert!(output.status.success(), "ffprobe rejected the stream: {}", String::from_utf8_lossy(&output.stderr));
+    String::from_utf8_lossy(&output.stdout).lines().filter_map(|line| line.split_once('=')).map(|(key, value)| (key.to_string(), value.to_string())).collect()
+}
+
+#[test]
+fn ffprobe_counts_exactly_the_samples_left_by_a_sample_boundary_trim() {
+    let bytes = std::fs::read(fixture_path!("../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable");
+    let mut trimmed = decode_mp4(&bytes).expect("decode exact MP4 fixture");
+    let kept = 12usize;
+    assert!(trimmed.tracks[0].samples[0].sync && trimmed.tracks[0].samples.len() > kept);
+    trimmed.tracks[0].samples.truncate(kept);
+    let edited = encode_mp4(&trimmed);
+    let reopened = decode_mp4(&edited).expect("trimmed stream reopens");
+    assert_eq!(reopened.tracks[0].samples, trimmed.tracks[0].samples);
+    let report = ffprobe_fields(&edited, "mp4", &["-count_packets", "-select_streams", "v:0", "-show_entries", "stream=codec_name,nb_frames,nb_read_packets"]);
+    assert_eq!(report["codec_name"], "h264");
+    assert_eq!(report["nb_frames"], kept.to_string());
+    assert_eq!(report["nb_read_packets"], kept.to_string());
+}

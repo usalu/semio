@@ -747,6 +747,7 @@ pub fn requested(rows: u32) -> ViewModel {
             capability: MediaCapabilityStatus::Loading,
             capability_reason: None,
             host_content_height: 360.0,
+            trim: None,
         };
         let node = MediaWindowKit::render(&view).expect("bounded fixture");
         let Component::Extension(extension) = node.component else { panic!("expected Extension") };

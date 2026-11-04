@@ -7,6 +7,7 @@ const fixture = await Bun.file(new URL("🧫️fixtures/🎚️natural-edit/🔣
   insertChannel: Readonly<{ channel: number; expectedData: readonly number[]; expectedChannels: number; expectedBlockAlign: number; expectedByteRate: number }>;
   setSample: Readonly<{ frame: number; channel: number; value: string; expectedData: readonly number[] }>;
   insertFrame: Readonly<{ frame: number; expectedData: readonly number[] }>;
+  cutFrames: Readonly<{ range: string; expectedData: readonly number[]; refused: readonly string[] }>;
 }>;
 
 const apply = (source: WavSnapshot, mutations: readonly WavMutation[]): WavSnapshot => mutations.reduce<WavSnapshot>((snapshot, mutation) => {
@@ -53,6 +54,12 @@ describe("WAV natural audio editing", () => {
     if (edited.data.kind !== "float32") throw new Error("float sample kind changed");
     expect(edited.data.value.map(word => word.bits)).toEqual(corpus.ieee754Binary32Bits.flatMap((bits, index) => index % 2 === 0 ? [bits, 0] : [bits]));
     expect([edited.fmt.channels, edited.fmt.blockAlign, edited.fmt.byteRate]).toEqual([3, 12, source.fmt.sampleRate * 12]);
+  });
+
+  it("cuts a frame range as one reversible patch and refuses invalid ranges", () => {
+    const mutations = wavAudioEditMutations({ kind: "cutFrames", revision: "r", value: fixture.cutFrames.range }, fixture.before);
+    expect(apply(fixture.before, mutations).data.value).toEqual(fixture.cutFrames.expectedData);
+    for (const value of fixture.cutFrames.refused) expect(() => wavAudioEditMutations({ kind: "cutFrames", revision: "r", value }, fixture.before)).toThrow(/Frame range/u);
   });
 
   it("pages wide frames within the retained payload bound", () => {

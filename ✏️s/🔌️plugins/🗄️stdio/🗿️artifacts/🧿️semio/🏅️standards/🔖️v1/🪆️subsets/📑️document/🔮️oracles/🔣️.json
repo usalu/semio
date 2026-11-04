@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution: a mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.stdio.semio.document`'s oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.document` is a semio-NATIVE format, so its reference is a second IMPLEMENTATION written in another language from the committed grammars and the committed binary protocol rather than a third-party package.",
+  "_comment": "🧩️ This subset's own contribution: a mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `stdio.semio.document`'s oracle registration and catalog live here rather than in a shared manifest. `stdio.semio.document` is a semio-NATIVE format, so its reference is a second IMPLEMENTATION written in another language from the committed grammars and the committed binary protocol rather than a third-party package.",
   "oracles": [
     {
       "id": "semio-document-python-independent",

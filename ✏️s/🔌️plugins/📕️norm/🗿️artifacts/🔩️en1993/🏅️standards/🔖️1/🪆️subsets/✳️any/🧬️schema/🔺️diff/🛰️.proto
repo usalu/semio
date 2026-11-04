@@ -58,13 +58,23 @@ message En1993Diff {
   // @state artifact
   optional string reliability_class = 28;
   // @state artifact
-  optional bytes joint_plates = 29;
+  bytes joint_plates = 29;
   // @state artifact
-  optional bytes foundation_blocks = 30;
+  bytes foundation_blocks = 30;
   // @state artifact
-  optional bytes frame_actions = 31;
+  bytes material_ductility = 33;
   // @state artifact
-  optional bytes frame_member_bases = 32;
+  bytes forming_gains = 34;
+  // @state artifact
+  bytes buckling_lengths = 35;
+  // @state artifact
+  bytes fatigue_stresses = 36;
+  // @state artifact
+  bytes frame_actions = 31;
+  // @state artifact
+  bytes frame_member_bases = 32;
+  // @state artifact
+  bytes fastened_joints = 37;
 }
 message En1993MaterialDelta {
   repeated En1993MaterialRemoval removed = 1;

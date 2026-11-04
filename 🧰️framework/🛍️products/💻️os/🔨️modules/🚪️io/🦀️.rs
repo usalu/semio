@@ -124,6 +124,10 @@ pub use wire_framing::*;
 mod format_registry;
 pub use format_registry::*;
 
+#[path = "🧭️format-resolution/🦀️.rs"]
+mod format_resolution;
+pub use format_resolution::*;
+
 //#endregion 🔖️ErasedRegistry
 //#region 🔖️Tests
 //#endregion 🔖️Tests

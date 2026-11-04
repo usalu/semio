@@ -89,7 +89,7 @@ pub const STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA: &str = "stdio.semio.video";
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(layout = "lines")]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.video")]
+#[artifact_schema(id = "stdio.semio.video")]
 pub struct SemioVideoSnapshot {
     #[state(artifact)]
     pub schema: String,

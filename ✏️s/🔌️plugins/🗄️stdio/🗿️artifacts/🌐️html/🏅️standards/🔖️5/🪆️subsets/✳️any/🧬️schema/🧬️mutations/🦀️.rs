@@ -30,6 +30,8 @@ use semio_s_artifact_stdio_contract::deserialize_double_option;
 pub mod insert_node;
 #[path = "➖remove-node/🦀️.rs"]
 pub mod remove_node;
+#[path = "✂️splice-source/🦀️.rs"]
+pub mod splice_source;
 #[path = "🔖set-attribute/🦀️.rs"]
 pub mod set_attribute;
 #[path = "💬set-comment/🦀️.rs"]
@@ -74,13 +76,16 @@ pub enum HtmlMutation {
     /// 📄️ Replaces the literal text of the `RawText` node at `path` (its `parent_kind` — whether
     /// it belongs to a `<script>` or `<style>` element — is left unchanged).
     SetRawText(set_raw_text::SetRawText),
+    /// ✂️ Applies the ranges an editor made to the HTML source text (the document's canonical serialization): the edited source is parsed again
+    /// and the document's doctype and root take its value; an unparsable source is refused.
+    SpliceSource(splice_source::SpliceSource),
 }
 
 /// 📇️ Kebab-case spelling of every `HtmlMutation` variant, in declaration order -- the exhaustive
 /// mutation catalog `../🔣️oracle.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
-pub const KINDS: &[&str] = &["set-doctype", "insert-node", "remove-node", "set-element-name", "set-attribute", "set-text", "set-comment", "set-raw-text"];
+pub const KINDS: &[&str] = &["set-doctype", "insert-node", "remove-node", "set-element-name", "set-attribute", "set-text", "set-comment", "set-raw-text", "splice-source"];
 //#endregion 🔖️Mutations
 
 

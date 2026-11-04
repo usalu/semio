@@ -1,4 +1,4 @@
-use crate::standards::v5::subsets::any::schema::mutations::HtmlMutation;
+use crate::standards::v5::subsets::any::schema::mutations::{splice_source, HtmlMutation};
 use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 use crate::{HTML_DIALECT, STDIO_HTML_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ArtifactEditor;
@@ -14,8 +14,10 @@ use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::s
 #[test]
 fn text_edit_requires_an_explicit_text_value_and_allows_empty_documents() {
     assert!(html_command_from_action(HTML_KIT_ACTION_ID, None).is_err());
-    let args = semio_framework_value::DslValue::object([("text".into(), semio_framework_value::DslValue::String(String::new()))]);
-    assert_eq!(html_command_from_action(HTML_KIT_ACTION_ID, Some(&args)).expect("explicit empty text"), HtmlEditCommand::LoadText { text: String::new() });
+    let only_revision = semio_framework_value::DslValue::object([("revision".into(), semio_framework_value::DslValue::String("r".into()))]);
+    assert!(html_command_from_action(HTML_KIT_ACTION_ID, Some(&only_revision)).is_err());
+    let args = semio_framework_value::DslValue::object([("revision".into(), semio_framework_value::DslValue::String("r".into())), ("splices".into(), semio_framework_value::DslValue::String("[]".into()))]);
+    assert_eq!(html_command_from_action(HTML_KIT_ACTION_ID, Some(&args)).expect("explicit empty change set"), HtmlEditCommand::SpliceText { revision: "r".into(), splices: "[]".into() });
 }
 
 #[test]
@@ -27,6 +29,15 @@ fn natural_file_route_exports_html5_and_reopens_the_same_document() {
     assert_eq!(oracle(&bytes).expect("html5ever reads exported HTML"), oracle(source).expect("html5ever reads expected HTML"));
     let reopened = <HtmlEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("HTML natural bytes reopen");
     assert_eq!(reopened, edited);
+}
+
+#[test]
+fn natural_file_import_refuses_invalid_utf8_and_keeps_padded_text_through_the_dsl() {
+    assert!(<HtmlEditor as ArtifactEditor>::decode_natural_file(&[0x3c, 0x70, 0x3e, 0xff]).is_err());
+    let source = "<!doctype html><html><head><title>t</title></head><body><p>  padded  </p></body></html>";
+    let edited = semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::text::snapshot::parse_html_document(source).expect("HTML fixture");
+    let printed = <HtmlSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&edited);
+    assert_eq!(<HtmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).expect("DSL reopens"), edited);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -123,37 +134,100 @@ async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, 
     semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, cx).await).map(|_| ()).map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
 }
 
-/// ⚖️ LAW: `textEdit` — the verb the `TextWindowKit` mints for `🪟️main` — reaches the host through this
-/// editor's exact retained factory and loads the parsed document. Unregistered, the reactor refused it inside `s` with
-/// `interactive-job.missing-factory` (S15, session 11).
+/// 🧾️ The change set JSON the editor sends: `(offset, delete, insert)` ranges of Unicode scalars of the source it started from.
+fn splices_json(ranges: &[(usize, usize, &str)]) -> String {
+    serde_json::Value::Array(ranges.iter().map(|(offset, delete, insert)| serde_json::json!({ "offset": offset, "delete": delete, "insert": insert })).collect()).to_string()
+}
+
+fn source_of(snapshot: &HtmlSnapshot) -> String {
+    semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::text::snapshot::write_html_document(snapshot)
+}
+
+fn parsed(source: &str) -> HtmlSnapshot {
+    semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::text::snapshot::parse_html_document(source).expect("HTML fixture")
+}
+
+/// ⚖️ LAW: `textEdit` — the verb the `TextWindowKit` mints for `🪟️main` — reaches the document through this
+/// editor's exact retained factory as ONE undoable `splice-source` edit; one undo restores the committed document.
 #[semio_framework_async_macros::async_test]
-async fn the_kit_verb_loads_the_document_through_its_exact_retained_factory() {
-    let target = html_example_snapshot(semio_s_artifact_stdio_html_inferences::examples::demo::ID);
-    let (mut app, mut scope) = kit_fixture_holding(&HtmlSnapshot::default()).await;
-    dispatch_settled(&mut app, "textEdit", &[("text", &<HtmlSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&target))], scope.cx()).await.expect("textEdit settles");
-    assert_eq!(app.snapshot().expect("html snapshot"), target);
+async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory_and_undoes() {
+    use semio_framework_plugin::PluginApp;
+    let base = parsed("<!DOCTYPE html>\n<html><head><title>T</title></head><body><p id=\"a\">Hello</p></body></html>");
+    let (mut app, mut scope) = kit_fixture_holding(&base).await;
+    let edits = app.edit_transactions().len();
+    let offset = source_of(&base).find("Hello").expect("the text");
+    let changes = splices_json(&[(source_of(&base)[..offset].chars().count(), 5, "World")]);
+    dispatch_settled(&mut app, "textEdit", &[("revision", &semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&base)), ("splices", &changes)], scope.cx()).await.expect("textEdit settles");
+    assert_eq!(app.snapshot().expect("html snapshot"), parsed(&source_of(&base).replace("Hello", "World")));
+    assert_eq!(app.edit_transactions().len(), edits + 1, "one Apply, one edit");
+    let rows: Vec<_> = app.history_snapshot().await.expect("history").upserts.into_iter().filter(|row| row.edit_id.is_some()).collect();
+    let row = rows.iter().max_by_key(|row| row.seq).expect("the applied change set's row");
+    assert_eq!(row.mutations.len(), 1, "one change set is one leaf: {:?}", row.mutations);
+    assert_eq!(row.mutations[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Edit source");
+    assert_eq!(row.mutations[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Quelltext bearbeiten");
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
+    assert_eq!(app.snapshot().expect("html snapshot"), base, "one undo restores the committed document");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 
-/// ⚖️ LAW: `textEdit` with text that is not this artifact's DSL is refused loudly with
-/// `stdio.html.invalid-text` and leaves the document untouched.
+/// ⚖️ LAW: a change set whose edited source is not well-formed HTML is refused loudly with `stdio.html.invalid-source`
+/// and leaves the document untouched.
 #[semio_framework_async_macros::async_test]
-async fn text_edit_refuses_text_that_is_not_the_artifacts_dsl() {
-    let example = html_example_snapshot(semio_s_artifact_stdio_html_inferences::examples::demo::ID);
-    let (mut app, mut scope) = kit_fixture_holding(&example).await;
-    let fault = dispatch_settled(&mut app, "textEdit", &[("text", "not a dsl document")], scope.cx()).await.expect_err("invalid text is refused");
-    assert!(format!("{fault:?}").contains("stdio.html.invalid-text"), "{fault:?}");
-    assert_eq!(app.snapshot().expect("html snapshot"), example);
+async fn text_edit_refuses_source_that_is_not_html_and_keeps_the_document() {
+    let base = parsed("<!DOCTYPE html>\n<html><head></head><body><p>x</p></body></html>");
+    let (mut app, mut scope) = kit_fixture_holding(&base).await;
+    let offset = source_of(&base).find("</body>").expect("the body end");
+    let changes = splices_json(&[(source_of(&base)[..offset].chars().count(), 0, "<div>")]);
+    let fault = dispatch_settled(&mut app, "textEdit", &[("revision", &semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&base)), ("splices", &changes)], scope.cx()).await.expect_err("invalid source is refused");
+    assert!(format!("{fault:?}").contains("stdio.html.invalid-source"), "{fault:?}");
+    assert_eq!(app.snapshot().expect("html snapshot"), base);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 
-/// ⚖️ LAW: the window's DSL envelope is a whole-document dump, so an Apply is a load and publishes no mutation row.
+static SPLICE_SOURCE: &str = include_str!("../../../🧪️tests/🧫️fixtures/✂️splice-source/🔣️.json");
+
+/// ⚖️ LAW (language-agnostic corpus `🧫️fixtures/✂️splice-source`, cross-checked by html5ever): the ranges of a case carry the committed
+/// document to exactly the parse of the source they mean, the leaf's concrete inverse carries it back, and a malformed result is refused.
 #[test]
-fn an_applied_envelope_is_a_load_and_publishes_no_mutation() {
-    let next = html_example_snapshot(semio_s_artifact_stdio_html_inferences::examples::demo::ID);
-    let emit = html_emit(&HtmlEditCommand::LoadText { text: <HtmlSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&next) }).expect("the envelope parses");
-    assert!(emit.artifact_mutations.is_empty());
-    assert!(matches!(emit.effects.as_slice(), [semio_framework_plugin::Effect::LoadDocument { .. }]));
+fn the_corpus_ranges_reach_exactly_the_source_they_mean_and_undo() {
+    let corpus: serde_json::Value = serde_json::from_str(SPLICE_SOURCE).expect("splice-source corpus");
+    let oracle = semio_s_artifact_stdio_html_test_oracle::standards::v5::subsets::any::project_html_5;
+    for case in corpus["cases"].as_array().expect("cases") {
+        let id = case["id"].as_str().expect("id");
+        let base = parsed(case["before"].as_str().expect("before"));
+        assert_eq!(source_of(&base), case["before"].as_str().expect("before"), "{id}: the corpus source is the source the window shows");
+        let ranges = case["splices"].as_array().expect("splices").iter().map(|range| splice_source::SourceSplice { offset: range["offset"].as_u64().expect("offset") as u32, delete: range["delete"].as_u64().expect("delete") as u32, insert: range["insert"].as_str().expect("insert").into() }).collect();
+        let leaf = HtmlMutation::SpliceSource(splice_source::SpliceSource { splices: ranges });
+        let mut state = base.clone();
+        let applied = semio_s_artifact_stdio_contract::apply_mutation(&mut state, &leaf);
+        if case["refused"].as_bool() == Some(true) {
+            assert!(applied.messages().iter().any(|message| message.level == semio_framework_diagnostic::Severity::Fatal), "{id}: a malformed source is refused");
+            assert_eq!(state, base, "{id}: a refused edit leaves the document");
+            continue;
+        }
+        let inverse = protocol::ColdMutation::inverse(&leaf, &base).expect("valid retained mutation inverse fixture");
+        assert!(applied.messages().iter().all(|message| message.level != semio_framework_diagnostic::Severity::Fatal), "{id}: the ranges apply");
+        let after = case["after"].as_str().expect("after");
+        assert_eq!(state, parsed(after), "{id}: the ranges reach exactly the source they mean");
+        assert_eq!(oracle(source_of(&state).as_bytes()).expect("html5ever reads the edited document"), oracle(after.as_bytes()).expect("html5ever reads the expected document"), "{id}: html5ever agrees");
+        for row in inverse.iter().rev() {
+            semio_s_artifact_stdio_contract::apply_mutation(&mut state, row);
+        }
+        assert_eq!(state, base, "{id}: the concrete inverse restores the committed document");
+    }
+}
+
+/// ⚖️ LAW: an empty change set is no edit, a stale revision is refused, and a range beyond the source is refused by the leaf's own diff.
+#[test]
+fn empty_stale_and_unrepresentable_change_sets_publish_nothing() {
+    let snapshot = parsed("<!DOCTYPE html>\n<html><head></head><body><p>x</p></body></html>");
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    let command = |revision: &str, splices: String| HtmlEditCommand::SpliceText { revision: revision.into(), splices };
+    assert!(html_emit(&command(&revision, "[]".into()), &snapshot, None).expect("empty").artifact_mutations.is_empty());
+    assert_eq!(html_emit(&command("stale", "[]".into()), &snapshot, None).err().expect("stale").code.0, "stdio.html.stale-text-edit");
+    assert!(html_emit(&command(&revision, splices_json(&[(10_000, 0, "x")])), &snapshot, None).is_err());
+    let identical = splices_json(&[(2, 7, "DOCTYPE")]);
+    assert!(html_emit(&command(&revision, identical), &snapshot, None).expect("identical").artifact_mutations.is_empty());
 }
 //#endregion 🪟️KitVerbLaws
 

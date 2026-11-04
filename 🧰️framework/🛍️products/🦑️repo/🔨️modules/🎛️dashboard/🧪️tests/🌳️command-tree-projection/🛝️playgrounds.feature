@@ -8,6 +8,6 @@ Feature: Playground Command Projection
 
     Examples:
       | renderer    | target                           |
-      | react       | dev-variant-react-dev             |
-      | wgpu-wasm   | dev-variant-wgpu-dev              |
-      | wgpu-native | run-variant-native-dev            |
+      | react       | dev-variant-react-prototype             |
+      | wgpu-wasm   | dev-variant-wgpu-prototype              |
+      | wgpu-native | run-variant-native-prototype            |

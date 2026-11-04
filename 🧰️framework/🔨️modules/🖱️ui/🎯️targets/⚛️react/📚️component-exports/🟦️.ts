@@ -40,7 +40,7 @@ import { getTreeItemOrderedIds, getTreeSiblingGapPx, treeCompactSiblingGapPx, tr
 import { markGhostTreeInteraction, resolveHoverRow } from "@semio-tech/ui/elements/Tree/hover-path";
 import { mergeTreeSectionOrder } from "@semio-tech/ui/elements/Tree/props";
 import { syncTreeSelectionPath } from "@semio-tech/ui/elements/Tree/path-marking";
-import { Panel, staticTreePanelDefinition, usePointerDrag, useNativeDragAndDrop, PanelTreeUnitsPane, PanelEmptyDockZone, type PanelProps } from "@semio-tech/ui/elements/Panel";
+import { Panel, panelFitV1, staticTreePanelDefinition, usePointerDrag, useNativeDragAndDrop, PanelTreeUnitsPane, PanelEmptyDockZone, type PanelProps } from "@semio-tech/ui/elements/Panel";
 import type { TreePanelConfig, TreePanelDefinition, TreePanelSource } from "@semio-tech/ui/elements/Panel/tree-source";
 import { RibbonZone, RibbonDivider, RibbonGroup, RibbonItem, Ribbon, type RibbonDirection, type RibbonRow, type RibbonProps } from "@semio-tech/ui/elements/Ribbon";
 
@@ -245,7 +245,7 @@ export type {
   WindowPaneChromeToggleProps,
 };
 export { liveTreePanelDefinition } from "@semio-tech/ui/elements/Panel";
-export { Panel, staticTreePanelDefinition, usePointerDrag, useNativeDragAndDrop, PanelTreeUnitsPane, PanelEmptyDockZone };
+export { Panel, panelFitV1, staticTreePanelDefinition, usePointerDrag, useNativeDragAndDrop, PanelTreeUnitsPane, PanelEmptyDockZone };
 export type { PanelProps, TreePanelConfig, TreePanelDefinition, TreePanelSource };
 export { RibbonZone, RibbonDivider, RibbonGroup, RibbonItem };
 

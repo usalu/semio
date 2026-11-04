@@ -1,3 +1,3 @@
-; abnf s.stdio.semio.animation.inference
+; abnf stdio.semio.animation.inference
 document = payload
 payload = *OCTET

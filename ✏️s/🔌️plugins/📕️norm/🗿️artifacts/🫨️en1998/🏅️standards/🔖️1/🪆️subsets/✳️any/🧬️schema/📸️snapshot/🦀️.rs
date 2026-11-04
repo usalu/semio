@@ -313,6 +313,7 @@ impl En1998Snapshot {
             shear_cracking_before_yield: 0.0,
             shear_force_demand_n: 0.0,
             intermediate_steel_area_m2: 0.0,
+            analysis_method: AnalysisMethodChoice::Derived,
         }];
         s.silos = vec![En1998Silo {
             id: "si-1".into(),
@@ -467,6 +468,7 @@ impl En1998Snapshot {
             shear_cracking_before_yield: 0.0,
             shear_force_demand_n: 0.0,
             intermediate_steel_area_m2: 0.0,
+            analysis_method: AnalysisMethodChoice::Derived,
         }];
         s.silos = vec![En1998Silo {
             id: "si-weak".into(),
@@ -1190,6 +1192,33 @@ pub enum LimitState {
     Dl,
 }
 
+/// 🔤 AnalysisMethodChoice.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub enum AnalysisMethodChoice {
+    Derived,
+    Lf,
+    Mrs,
+    Pushover,
+    Nlth,
+}
+
+impl AnalysisMethodChoice {
+    /// 🔤 Wire token of the variant.
+    pub const fn token(self) -> &'static str {
+        match self {
+            Self::Derived => "derived",
+            Self::Lf => "lf",
+            Self::Mrs => "mrs",
+            Self::Pushover => "pushover",
+            Self::Nlth => "nlth",
+        }
+    }
+}
+
 /// 🔍 Knowledge level KL1 to KL3 of an existing building (EN 1998-3 3.3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -1244,6 +1273,8 @@ pub struct En1998Assessment {
     /// 🧱 Area of the longitudinal reinforcement between the tension and the compression layer (side and web bars), counted with both end layers in the total longitudinal ratio rho_tot of the cyclic shear capacity (EN 1998-3 A.3.3); 0 = none.
     #[dsl(unit = "m2")]
     pub intermediate_steel_area_m2: f64,
+    /// 🧭 Analysis method of the assessment (EN 1998-3 4.3): lateral force, modal response spectrum, nonlinear static (pushover) or nonlinear time history; gated by the knowledge level (Table 3.1); `derived` takes the method from the model (pushover when every storey has a shear resistance, else lateral force).
+    pub analysis_method: AnalysisMethodChoice,
 }
 
 /// 🫙 Silo for EN 1998-4.

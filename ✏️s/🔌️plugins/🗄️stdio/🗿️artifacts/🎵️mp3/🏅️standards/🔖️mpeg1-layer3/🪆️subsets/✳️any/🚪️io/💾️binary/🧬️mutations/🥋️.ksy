@@ -1,8 +1,13 @@
 meta:
   id: mp3_mutations
-  endian: le
+  imports:
+    - vlq_base128_le
 doc: |
-  🚧 scaffolded by W1b — full field layout lands in W2/W3.
+  A binary mutation op: format octet, variant tag (varint; 1 setId3v2, 2 setFrames, 3 setId3v1, 4 patchFrames, 5 setId3Frame, 6 removeId3Frame, see 📡️.protocol.semio), then the variant's wire value.
 seq:
-  - id: magic
-    contents: "stdio.mp3.mutations"
+  - id: format
+    type: u1
+  - id: tag
+    type: vlq_base128_le
+  - id: payload
+    size-eos: true

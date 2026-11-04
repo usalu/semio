@@ -1,4 +1,4 @@
-(* ISO/IEC 14977 EBNF mirror (descriptive, not test-parsed) for s.stdio.semio.object.diff. *)
+(* ISO/IEC 14977 EBNF mirror (descriptive, not test-parsed) for stdio.semio.object.diff. *)
 diff        = [ field list ] ;
 field list  = field, { ";", field } ;
 field       = "t", "=", transform value | "b", "=", child | "m", "=", child | "p", "=", child ;

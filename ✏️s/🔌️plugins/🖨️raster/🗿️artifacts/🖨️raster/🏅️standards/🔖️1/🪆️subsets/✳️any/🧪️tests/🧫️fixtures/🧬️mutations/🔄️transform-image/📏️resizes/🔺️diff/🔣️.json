@@ -3,7 +3,7 @@
     "entries": {
       "pixels-paint-01ea8a91d34c90b8": null,
       "pixels-paint-0b419e31493cea19": {
-        "schema": "s.stdio.semio.image",
+        "schema": "stdio.semio.image",
         "width": 12,
         "height": 8,
         "colorspace": "rgba",

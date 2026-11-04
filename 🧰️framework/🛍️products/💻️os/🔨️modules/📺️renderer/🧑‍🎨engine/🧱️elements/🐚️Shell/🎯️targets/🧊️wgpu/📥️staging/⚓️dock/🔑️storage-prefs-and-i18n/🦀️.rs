@@ -37,3 +37,53 @@ thread_local! {
 }
 //#endregion 🌉️AgentBridgeConfigDoor
 //#endregion ShellChrome
+
+//#region 🎞️MediaActionInbox
+/// 📏️ Most media actions the page may leave for one frame turn; a full inbox refuses instead of growing.
+pub const MEDIA_ACTION_INBOX_CAPACITY: usize = 16;
+
+thread_local! {
+    /// 🎞️ Media-window actions the page host handed over (the trim "Cut selection" button), waiting for the shell's next turn.
+    pub static MEDIA_ACTION_INBOX: std::cell::RefCell<std::collections::VecDeque<ActionDescriptor>> = const { std::cell::RefCell::new(std::collections::VecDeque::new()) };
+}
+
+/// 🎞️ Parses `{windowId, controllerId, action, args}` into the one `ActionDescriptor` the UI intents use; `windowId` rides in `args` exactly as the window's own controls send it, so the normal dispatch scopes the action to that window.
+pub fn parse_media_action(json: &str) -> Result<ActionDescriptor, &'static str> {
+    let value: serde_json::Value = serde_json::from_str(json).map_err(|_| "media-action.invalid-json")?;
+    let record = value.as_object().ok_or("media-action.invalid-shape")?;
+    let text = |key: &str| record.get(key).and_then(serde_json::Value::as_str).filter(|text| !text.is_empty()).ok_or("media-action.missing-field");
+    let (window_id, controller_id, action) = (text("windowId")?, text("controllerId")?, text("action")?);
+    let mut args = match record.get("args") {
+        None | Some(serde_json::Value::Null) => serde_json::Map::new(),
+        Some(serde_json::Value::Object(args)) => args.clone(),
+        Some(_) => return Err("media-action.invalid-args"),
+    };
+    args.insert("windowId".into(), serde_json::Value::String(window_id.to_string()));
+    Ok(ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: Some(semio_framework_value::DslValue::from(serde_json::Value::Object(args))) })
+}
+
+/// 🎞️ Leaves one media action for the shell's next turn; refuses a malformed one or a full inbox.
+pub fn push_media_action(json: &str) -> Result<(), &'static str> {
+    let action = parse_media_action(json)?;
+    MEDIA_ACTION_INBOX.with(|inbox| {
+        let mut inbox = inbox.borrow_mut();
+        if inbox.len() >= MEDIA_ACTION_INBOX_CAPACITY {
+            return Err("media-action.inbox-full");
+        }
+        inbox.push_back(action);
+        Ok(())
+    })
+}
+
+/// 🎞️ Takes every waiting media action, oldest first, exactly once.
+pub fn take_media_actions() -> Vec<ActionDescriptor> {
+    MEDIA_ACTION_INBOX.with(|inbox| inbox.borrow_mut().drain(..).collect())
+}
+
+impl ShellDockState {
+    /// 🎞️ The media actions the page left for this turn, oldest first.
+    pub fn drain_media_actions(&self) -> Vec<ActionDescriptor> {
+        take_media_actions()
+    }
+}
+//#endregion 🎞️MediaActionInbox

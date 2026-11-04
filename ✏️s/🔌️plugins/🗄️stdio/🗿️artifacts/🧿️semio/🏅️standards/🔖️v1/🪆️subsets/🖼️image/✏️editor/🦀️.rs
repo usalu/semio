@@ -45,7 +45,7 @@ use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Dialect
 pub const SEMIO_IMAGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
-pub const SEMIO_IMAGE_DOCUMENT_SCHEMA: &str = "s.stdio.semio.image";
+pub const SEMIO_IMAGE_DOCUMENT_SCHEMA: &str = "stdio.semio.image";
 //#endregion 🔖️Dialect
 
 //#region 🔖️Command
@@ -155,6 +155,8 @@ impl ArtifactOwnedToolJobFactory for SemioImageEditorExampleFactory {
     type Owner = EditorApp<SemioImageEditor>;
     const TOOL_IDS: &'static [&'static str] = SEMIO_IMAGE_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_IMAGE_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_semio_base::semio_natural_file!(SemioImageSnapshot, "stdio.semio.image");
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_IMAGE_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 #[path = "🧭️edit-rules/🦀️.rs"]
@@ -188,7 +190,7 @@ impl ArtifactEditor for SemioImageEditor {
         owner: EditorApp<SemioImageEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/✏️editor/🦀️.rs",
         controller: "s.stdio.semio@v1/image#editor",
-        artifact_schema: "s.stdio.semio.image",
+        artifact_schema: "stdio.semio.image",
         factory: "SemioImageEditorExampleFactory",
         factory_type: SemioImageEditorExampleFactory,
         contract: ToolExecutionContract::bounded_first_step(SEMIO_IMAGE_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500),

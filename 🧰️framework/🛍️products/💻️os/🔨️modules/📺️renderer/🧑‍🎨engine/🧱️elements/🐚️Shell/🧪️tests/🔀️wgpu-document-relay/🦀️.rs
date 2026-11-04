@@ -251,7 +251,7 @@ fn the_footer_speaks_its_live_sync_pill_and_names_its_status_chips() {
     let pill = shell_sync_pill_text(shell.sync.sync_pill(), false);
     shell.dock.dock_tabs.tabs_mut(PanelAnchor::BottomLeft).push(DockTabNode::leaf(FRAMEWORK_SYNC_PANEL_TAB_ID, pill, "refresh-cw", 0));
     let detached = shell.dock.dock_tabs.tabs(PanelAnchor::BottomLeft)[0].label.clone();
-    shell.sync.sync_status = Some(ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote: RemoteState::Live { peer_count: 1 }, acknowledged_head: None });
+    shell.sync.sync_status = Some(ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote: RemoteState::Live { peer_count: 1 }, acknowledged_head: None, write_failure: None });
     shell.dock.relabel_sync_tab(&shell.prefs, &shell.sync);
     let live = shell.dock.dock_tabs.tabs(PanelAnchor::BottomLeft)[0].label.clone();
     assert_ne!(live, detached, "a live document never keeps the detached pill");
@@ -261,4 +261,60 @@ fn the_footer_speaks_its_live_sync_pill_and_names_its_status_chips() {
     assert_eq!(roster.role, "status");
     assert!(!roster.focusable && !roster.actionable, "a status is read, never a tab stop");
     assert_eq!(roster.label.as_deref(), Some(semio_framework_ui_wgpu_light::presence_bar::presence_empty_label(Locale::En).as_str()));
+}
+
+#[test]
+fn a_relay_without_a_resolved_owner_is_refused_and_never_seeds_the_mounted_session() {
+    assert_eq!(relay_open_plan(None, Some(("home", "s.home.home@1/*#editor"))), RelayOpenPlan::Refuse);
+    assert_eq!(relay_open_plan(None, None), RelayOpenPlan::Refuse);
+}
+
+#[test]
+fn a_resolved_owner_seeds_only_itself_and_otherwise_switches() {
+    let owner = ("stdio-image", "s.stdio.png@1.2/*#viewer");
+    assert_eq!(relay_open_plan(Some(owner), Some(owner)), RelayOpenPlan::SeedMounted);
+    assert_eq!(relay_open_plan(Some(owner), Some(("stdio-image", "s.stdio.png@1.2/*#editor"))), RelayOpenPlan::Switch);
+    assert_eq!(relay_open_plan(Some(owner), None), RelayOpenPlan::Switch);
+}
+
+#[test]
+fn a_refused_open_speaks_the_shared_localized_notice() {
+    assert_eq!(ReplayRefusalReasonV1::OpenRejected.notice_text("de"), "Dieses Dokument konnte nicht geöffnet werden.");
+    assert_eq!(ReplayRefusalReasonV1::OpenRejected.notice_text("en"), "That document could not be opened.");
+}
+
+#[test]
+fn a_pin_resolves_by_dialect_and_role_and_a_malformed_pin_never_applies() {
+    let mut pins = std::collections::HashMap::new();
+    pins.insert("s.stdio.png@1.2/*/editor".to_string(), "stdio-image s.stdio.png@1.2/*#editor".to_string());
+    pins.insert("s.stdio.png@1.2/*/viewer".to_string(), "broken".to_string());
+    assert_eq!(pinned_app_for(&pins, "s.stdio.png@1.2/*", "editor"), Some(("stdio-image".to_string(), "s.stdio.png@1.2/*#editor".to_string())));
+    assert_eq!(pinned_app_for(&pins, "s.stdio.png@1.2/*", "viewer"), None);
+    assert_eq!(pinned_app_for(&pins, "s.stdio.jpg@jfif-1.01/*", "editor"), None);
+}
+
+#[test]
+fn a_media_action_from_the_page_parses_into_the_ui_action_with_its_window() {
+    let action = parse_media_action(r#"{"windowId":"framework.window.media","controllerId":"s.stdio.mp3@mpeg1-layer3/*#editor","action":"trim-audio","args":{"revision":"r1","value":"0-5"}}"#).expect("a well-formed media action");
+    assert_eq!(action.controller_id, "s.stdio.mp3@mpeg1-layer3/*#editor");
+    assert_eq!(action.action, "trim-audio");
+    let args = action.args.as_ref().expect("args");
+    assert_eq!(args.get("windowId").and_then(|value| value.as_str()), Some("framework.window.media"));
+    assert_eq!(args.get("value").and_then(|value| value.as_str()), Some("0-5"));
+}
+
+#[test]
+fn a_malformed_media_action_is_refused_and_the_inbox_is_bounded_and_fifo() {
+    for bad in ["not json", "[]", r#"{"controllerId":"c","action":"a"}"#, r#"{"windowId":"w","controllerId":"c","action":"a","args":3}"#] {
+        assert!(parse_media_action(bad).is_err(), "{bad}");
+    }
+    let _ = take_media_actions();
+    for index in 0..MEDIA_ACTION_INBOX_CAPACITY {
+        push_media_action(&format!(r#"{{"windowId":"w","controllerId":"c","action":"a{index}"}}"#)).expect("room");
+    }
+    assert_eq!(push_media_action(r#"{"windowId":"w","controllerId":"c","action":"extra"}"#), Err("media-action.inbox-full"));
+    let taken = take_media_actions();
+    assert_eq!(taken.len(), MEDIA_ACTION_INBOX_CAPACITY);
+    assert_eq!(taken[0].action, "a0");
+    assert!(take_media_actions().is_empty());
 }

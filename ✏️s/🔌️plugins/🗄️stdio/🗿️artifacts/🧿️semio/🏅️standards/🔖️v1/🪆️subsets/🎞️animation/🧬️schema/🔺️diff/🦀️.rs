@@ -372,11 +372,11 @@ impl AnimTimelineDiff {
 //#endregion 🔖️TimelineDiff
 
 //#region 🔖️Diff
-/// 🔺️ Diff for `s.stdio.semio.animation`. No `replacement: Option<SemioAnimationSnapshot>`
+/// 🔺️ Diff for `stdio.semio.animation`. No `replacement: Option<SemioAnimationSnapshot>`
 /// full-replace slot anywhere — a single sparse `timelines` collection-triple field.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.animation.diff")]
+#[artifact_schema(id = "stdio.semio.animation.diff")]
 pub struct SemioAnimationDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]

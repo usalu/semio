@@ -19,7 +19,9 @@
       },
       "style": {},
       "activity": "idle",
-      "accessibility": {}
+      "accessibility": {
+        "label": "Count"
+      }
     }
   ],
   "layoutEpoch": 0

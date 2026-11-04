@@ -29,6 +29,18 @@ impl ArtifactEditor for EnergyModelEditor {
     const DIALECT: Dialect = MODEL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;
 
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.idf@25.2", extension: ".idf", media_type: "text/plain", binary: false })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_energy_model_export::idf::serialize_bytes(snapshot).map_err(|detail| semio_framework_plugin::MediaError::Payload("artifact:native".into(), detail))
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        semio_s_artifact_energy_model_import::idf::deserialize_bytes(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+    }
+
     /// 🌱️ A fresh editor is born on the canonical empty model, the real empty document.
     fn reference_birth() -> Option<semio_framework_plugin::ReferenceArtifactAppBirth<Self::Snapshot>> { Some(|| Ok(EnergyModelSnapshot::default())) }
 

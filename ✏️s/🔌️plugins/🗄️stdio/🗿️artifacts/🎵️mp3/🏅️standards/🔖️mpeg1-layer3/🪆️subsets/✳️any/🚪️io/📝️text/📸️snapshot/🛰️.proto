@@ -1,7 +1,6 @@
 syntax = "proto3";
-// 🚧 scaffolded by W1b — generic facet mirror.
 package semio.stdio_mp3_snapshot.text;
+// The facet carries the snapshot text as one UTF-8 string.
 message Semio_mp3_snapshot {
-  string schema = 1;
-  string entries_wire = 2;
+  string line = 1;
 }

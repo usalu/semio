@@ -1,9 +1,10 @@
+import { formatMediaTime, mediaKeyCommand, mediaTimeValueText, seekedMediaPosition, trimValueForSelection } from "../../../../../🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts";
 import { collectMediaTransportBytes, type MediaTransportPort } from "../../🚚️lifecycle/🟦️.ts";
 import { mediaSlotAuthorityKey, type PresentedMediaSlot } from "../🟦️.ts";
 
 type MediaHost = { readonly element: HTMLDivElement; readonly authority: string; place: (slot: PresentedMediaSlot) => void; dispose: () => void };
 
-function createHost(slot: PresentedMediaSlot, port: MediaTransportPort): MediaHost {
+function createHost(slot: PresentedMediaSlot, port: MediaTransportPort, apply?: (action: string, args: Readonly<Record<string, unknown>>) => void): MediaHost {
   const props = slot.props;
   const element = document.createElement("div");
   element.dataset.mediaSlot = slot.token;
@@ -14,7 +15,7 @@ function createHost(slot: PresentedMediaSlot, port: MediaTransportPort): MediaHo
   element.dataset.uiNodeKey = slot.nodeKey;
   element.lang = props.locale;
   element.style.cssText = "position:absolute;pointer-events:auto;overflow:hidden;display:flex;flex-direction:column;gap:4px;padding:4px;box-sizing:border-box;background:var(--base,Canvas);color:var(--foreground,CanvasText);";
-  for (const type of ["pointerdown", "pointerup", "pointermove", "pointercancel", "click", "dblclick", "wheel", "contextmenu", "keydown", "keyup", "input", "change"]) element.addEventListener(type, (event) => event.stopPropagation());
+  for (const type of ["pointerdown", "pointerup", "pointermove", "pointercancel", "click", "dblclick", "wheel", "contextmenu", "input", "change"]) element.addEventListener(type, (event) => event.stopPropagation());
   let active = true;
   let cancelled = false;
   let url: string | null = null;
@@ -77,6 +78,16 @@ function createHost(slot: PresentedMediaSlot, port: MediaTransportPort): MediaHo
     endLabel.append(props.labels.selectionEnd, end);
     const selectionControls = document.createElement("div");
     selectionControls.append(startLabel, endLabel);
+    const cut = document.createElement("button");
+    cut.type = "button";
+    cut.textContent = props.labels.cutSelection;
+    cut.setAttribute("aria-label", props.labels.cutSelection);
+    cut.hidden = !(props.trim && apply);
+    cut.addEventListener("click", () => {
+      const selected = selection ?? [0, duration ?? 1];
+      const value = props.trim ? trimValueForSelection(props.trim, selected[0], selected[1]) : null;
+      if (props.trim && apply && value !== null) apply(props.trim.actionId, { revision: props.trim.revision, value });
+    });
     const update = (): void => {
       const maximum = Math.max(1, duration ?? 1);
       const selected = selection ?? [0, maximum];
@@ -84,16 +95,23 @@ function createHost(slot: PresentedMediaSlot, port: MediaTransportPort): MediaHo
       button.setAttribute("aria-label", button.textContent);
       seek.max = String(maximum);
       seek.value = String(Math.min(maximum, position));
+      seek.setAttribute("aria-valuetext", mediaTimeValueText(position, props.locale, props.labels));
       seek.disabled = duration === null;
-      positionOutput.textContent = String(position);
-      durationOutput.textContent = duration === null ? props.labels.unknownDuration : String(duration);
+      positionOutput.textContent = formatMediaTime(position, props.locale);
+      positionOutput.setAttribute("aria-valuetext", mediaTimeValueText(position, props.locale, props.labels));
+      durationOutput.textContent = duration === null ? props.labels.unknownDuration : formatMediaTime(duration, props.locale);
+      if (duration === null) durationOutput.removeAttribute("aria-valuetext");
+      else durationOutput.setAttribute("aria-valuetext", mediaTimeValueText(duration, props.locale, props.labels));
       selectionControls.hidden = duration === null;
+      cut.disabled = !props.trim || duration === null || trimValueForSelection(props.trim, (selection ?? [0, duration])[0], (selection ?? [0, duration])[1]) === null;
       start.min = "0";
       start.max = String(Math.max(0, selected[1] - 1));
       start.value = String(selected[0]);
+      start.setAttribute("aria-valuetext", mediaTimeValueText(selected[0], props.locale, props.labels));
       end.min = String(Math.min(maximum, selected[0] + 1));
       end.max = String(maximum);
       end.value = String(selected[1]);
+      end.setAttribute("aria-valuetext", mediaTimeValueText(selected[1], props.locale, props.labels));
     };
     button.addEventListener("click", () => {
       if (player.paused) void player.play().catch((error: unknown) => { if (active && !(error instanceof DOMException && error.name === "AbortError")) failed(); });
@@ -113,10 +131,30 @@ function createHost(slot: PresentedMediaSlot, port: MediaTransportPort): MediaHo
       }
     });
     player.addEventListener("error", failed);
+    element.tabIndex = 0;
+    element.setAttribute("aria-keyshortcuts", "Space ArrowLeft ArrowRight Home End");
+    element.addEventListener("keydown", (event) => {
+      const target = event.target as HTMLElement;
+      const command = mediaKeyCommand({ key: event.key, shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, altKey: event.altKey, metaKey: event.metaKey, targetTag: target.tagName, targetType: target instanceof HTMLInputElement ? target.type : null }, duration);
+      if (!command) {
+        if (target instanceof HTMLInputElement && target.type === "range" && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(event.key)) event.stopPropagation();
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      if (command.kind === "toggle") {
+        if (player.paused) void player.play().catch((error: unknown) => { if (active && !(error instanceof DOMException && error.name === "AbortError")) failed(); });
+        else player.pause();
+        return;
+      }
+      position = seekedMediaPosition(command, Math.round(player.currentTime * 1000), duration);
+      player.currentTime = position / 1000;
+      update();
+    });
     element.dataset.mediaState = "ready";
     element.removeAttribute("role");
     element.removeAttribute("aria-live");
-    element.replaceChildren(player, button, seekLabel, positionOutput, durationOutput, selectionControls);
+    element.replaceChildren(player, button, seekLabel, positionOutput, durationOutput, selectionControls, cut);
     update();
   };
   if (props.capability.status !== "ready" || !props.resource) status(props.capability.status, props.capability.reason ?? (props.capability.status === "loading" ? props.labels.loading : props.labels.unsupported));
@@ -132,7 +170,7 @@ function createHost(slot: PresentedMediaSlot, port: MediaTransportPort): MediaHo
     void collectMediaTransportBytes({ instanceId: slot.appInstanceId, parentDocumentId: slot.parentDocumentId, revision: BigInt(props.resource.revision), generation: BigInt(props.resource.generation), mediaType: props.mediaType, port, cancelled: () => cancelled || !active, progress: (value) => {
       if (active) progress.dataset.appliedProgress = String(value.applied_progress);
     } }).then((bytes) => {
-      if (!active || cancelled || !bytes) { if (active) status("cancelled", props.labels.cancel); return; }
+      if (!active || cancelled || !bytes) { if (active) status("cancelled", props.labels.cancelled); return; }
       url = URL.createObjectURL(new Blob(bytes.chunks.map((chunk) => chunk.slice().buffer as ArrayBuffer), { type: bytes.mediaType }));
       if (!active) { release(); return; }
       ready();
@@ -167,7 +205,7 @@ function createHost(slot: PresentedMediaSlot, port: MediaTransportPort): MediaHo
 }
 
 /** 🎛️ Reconciles real media controls from the GPU-accepted slot list without remounting stable resources. */
-export function createBrowserMediaOverlay(root: HTMLElement, portForSlot: (slot: PresentedMediaSlot) => MediaTransportPort): { readonly accept: (slots: readonly PresentedMediaSlot[]) => void; readonly owns: (windowId: string, nodeId: number, nodeKey: string) => boolean; readonly dispose: () => void } {
+export function createBrowserMediaOverlay(root: HTMLElement, portForSlot: (slot: PresentedMediaSlot) => MediaTransportPort, applyForSlot?: (slot: PresentedMediaSlot) => ((action: string, args: Readonly<Record<string, unknown>>) => void) | undefined): { readonly accept: (slots: readonly PresentedMediaSlot[]) => void; readonly owns: (windowId: string, nodeId: number, nodeKey: string) => boolean; readonly dispose: () => void } {
   const overlay = document.createElement("div");
   overlay.dataset.wgpuMediaOverlay = "true";
   overlay.style.cssText = "position:absolute;inset:0;pointer-events:none;overflow:hidden;";
@@ -188,7 +226,7 @@ export function createBrowserMediaOverlay(root: HTMLElement, portForSlot: (slot:
       for (const slot of next) {
         let host = hosts.get(slot.token);
         if (host && host.authority !== mediaSlotAuthorityKey(slot)) { host.dispose(); hosts.delete(slot.token); host = undefined; }
-        if (!host) { host = createHost(slot, portForSlot(slot)); hosts.set(slot.token, host); overlay.append(host.element); }
+        if (!host) { host = createHost(slot, portForSlot(slot), applyForSlot?.(slot)); hosts.set(slot.token, host); overlay.append(host.element); }
         host.place(slot);
       }
       slots = next;

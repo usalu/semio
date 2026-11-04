@@ -17,7 +17,7 @@
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image",
-      "rationale": "🔮️ Independent owner implementation of the four owned BMP mutations, with image-rs providing native indexed and visual decoding. The test model retains precise native samples, palette reserved bytes, masks, resolution and opaque metadata independently of production. Mutation and FNV revision semantics are implemented by this test owner; those semantic calculations remain cross-semio evidence rather than an image-rs mutation API.",
+      "rationale": "🔮️ Independent owner implementation of the seven owned BMP mutations (region paints, palette set, insert and remove), with image-rs providing native indexed and visual decoding. The test model retains precise native samples, palette reserved bytes, masks, resolution and opaque metadata independently of production. Mutation and FNV revision semantics are implemented by this test owner; those semantic calculations remain cross-semio evidence rather than an image-rs mutation API.",
       "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
@@ -140,7 +140,10 @@
       "vectors": [],
       "kinds": [
         "paint-indexed-region",
-        "paint-direct-region"
+        "paint-direct-region",
+        "set-palette-entry",
+        "insert-palette-entry",
+        "remove-palette-entry"
       ]
     }
   ],
@@ -504,6 +507,69 @@
             "operation": "paint-direct-region",
             "bridgeVersion": 1,
             "variant": "PaintDirectRegion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bmp-3-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "image-bmp-3-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "set-palette-entry",
+          "capability": "bmp-3-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-palette-entry",
+            "bridgeVersion": 1,
+            "variant": "SetPaletteEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bmp-3-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "image-bmp-3-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "insert-palette-entry",
+          "capability": "bmp-3-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-palette-entry",
+            "bridgeVersion": 1,
+            "variant": "InsertPaletteEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bmp-3-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "image-bmp-3-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "remove-palette-entry",
+          "capability": "bmp-3-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-palette-entry",
+            "bridgeVersion": 1,
+            "variant": "RemovePaletteEntry"
           },
           "oracleRequirements": [
             {

@@ -1,10 +1,4 @@
-/** 🧬️ Semio_mp3_diff schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_mp3_diff
- * `🦀️.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_mp3_diffEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ Semio_mp3_diff: the facet carries the one-line diff as one UTF-8 string; the `🦀️.rs` sibling holds the codec. */
 export interface Semio_mp3_diff {
-  /** 🔺️ @state artifact */ schema: string;
-  /** 🔄️ @state artifact */ entries: Semio_mp3_diffEntry[];
+  readonly line: string;
 }

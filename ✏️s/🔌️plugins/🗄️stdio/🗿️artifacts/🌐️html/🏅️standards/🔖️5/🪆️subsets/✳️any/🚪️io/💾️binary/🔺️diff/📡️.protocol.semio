@@ -1,4 +1,11 @@
 dialect protocol
-stdio.html.diff
-magic = %x00
-payload = diff-text-utf8 ; UTF-8 bytes of print_diff's output verbatim, not a distinct wire format.
+protocol stdio.html.diff
+version 1
+schema stdio.html
+start record
+
+# `HtmlDiff` carries `doctype` (unchanged, removed or set) and `root` (unchanged, a sparse element/text/attribute edit, or a wholesale
+# `Replace` of the root node). Its binary form is the UTF-8 bytes of `print_diff`'s bracket-token text, verbatim: `encode_diff` and
+# `decode_diff` in the sibling `🦀️.rs` are a pure text-to-bytes passthrough, so the frame is exactly one opaque payload.
+framing record
+chain payload bytes

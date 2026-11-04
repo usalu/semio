@@ -926,7 +926,8 @@
       "diagonalReinforcementRatio": 0.0,
       "shearCrackingBeforeYield": 0.0,
       "shearForceDemandN": 0.0,
-      "intermediateSteelAreaM2": 0.0
+      "intermediateSteelAreaM2": 0.0,
+      "analysisMethod": "derived"
     },
     {
       "id": "as-2",
@@ -958,7 +959,8 @@
       "diagonalReinforcementRatio": 0.0,
       "shearCrackingBeforeYield": 0.0,
       "shearForceDemandN": 100000.0,
-      "intermediateSteelAreaM2": 0.0
+      "intermediateSteelAreaM2": 0.0,
+      "analysisMethod": "derived"
     },
     {
       "id": "as-3",
@@ -990,7 +992,8 @@
       "diagonalReinforcementRatio": 0.0,
       "shearCrackingBeforeYield": 0.0,
       "shearForceDemandN": 80000.0,
-      "intermediateSteelAreaM2": 0.0
+      "intermediateSteelAreaM2": 0.0,
+      "analysisMethod": "derived"
     }
   ],
   "silos": [

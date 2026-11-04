@@ -88,11 +88,29 @@ class McpClientEndToEndScript extends BundleScript {
     if(flag>=0){if(!selected)throw new Error("Selected MCP workspace required");await run(join(this.repoRoot,selected),phase);}else await withMcpClientWorkspaceV1(this.invocation,phase,run);
   }
 }
+class StdioFormatClaimsScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length > 1 || (args[0] !== undefined && args[0] !== "check")) throw new Error("stdio-format-claims accepts check");
+    const { STDIO_FORMAT_CLAIMS_PATH, stdioFormatClaimsTextV1 } = await import("../🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧭️format-claims/📜️generate.ts");
+    const { mkdirSync, readFileSync, writeFileSync, existsSync } = await import("node:fs");
+    const { dirname } = await import("node:path");
+    const target = resolve(this.repoRoot, STDIO_FORMAT_CLAIMS_PATH);
+    const text = stdioFormatClaimsTextV1(this.repoRoot);
+    if (args[0] === "check") {
+      if (!existsSync(target) || readFileSync(target, "utf8") !== text) throw new Error(`stdio-format-claims is stale: run the generate-stdio-format-claims target (${STDIO_FORMAT_CLAIMS_PATH})`);
+      console.log("[s-dev] stdio format claims are current");
+      return;
+    }
+    mkdirSync(dirname(target), { recursive: true });
+    if (!existsSync(target) || readFileSync(target, "utf8") !== text) writeFileSync(target, text);
+    console.log(`[s-dev] generated ${STDIO_FORMAT_CLAIMS_PATH}`);
+  }
+}
 /** 🪁️ `typecheck` — every TypeScript source of `✏️s/` (all plugins, modules and the dev layer) against the compiler in one program (`../tsconfig.json`), so no plugin package needs a `tsconfig.json` of its own. */
 class TypecheckScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control: createIssuedResourceControlV1(this.invocation, "typecheck:entry", 0), cwd: this.root, project: "../tsconfig.json", owner: "s:typescript", args, timeoutMs: 1_800_000 });
   }
 }
-const router = new ScriptRouter(import.meta.dir,resolve(import.meta.dir,"../..")).register("composition-check", CompositionScript).register("mcp-client-e2e", McpClientEndToEndScript).register("source-check", SourceScript).register("catalog-check", CatalogScript).register("catalog-publication-test",CatalogPublicationTestScript).register("catalog-exports-test",CatalogExportsTestScript).register("jack-graph-check", JackGraphScript).register("playground-session", PlaygroundSessionScript).register("typecheck", TypecheckScript);
+const router = new ScriptRouter(import.meta.dir,resolve(import.meta.dir,"../..")).register("composition-check", CompositionScript).register("mcp-client-e2e", McpClientEndToEndScript).register("source-check", SourceScript).register("catalog-check", CatalogScript).register("catalog-publication-test",CatalogPublicationTestScript).register("catalog-exports-test",CatalogExportsTestScript).register("jack-graph-check", JackGraphScript).register("playground-session", PlaygroundSessionScript).register("stdio-format-claims", StdioFormatClaimsScript).register("typecheck", TypecheckScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

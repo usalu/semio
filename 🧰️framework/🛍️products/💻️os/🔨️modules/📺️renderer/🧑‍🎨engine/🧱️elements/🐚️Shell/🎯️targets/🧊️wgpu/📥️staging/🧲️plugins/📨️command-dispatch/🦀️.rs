@@ -193,13 +193,24 @@ impl PluginState {
     /// Both targets: the table is generated into this crate and the install is [`Self::install_plugin`],
     /// which O2 made target-neutral.
     pub async fn resolve_activation_owner_app(&mut self, dialect: &semio_framework_artifact_reference::ArtifactDialect, role: semio_framework::manifest::AppRole) -> Option<(String, AppDefinition)> {
+        use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
+        if let Some((plugin_id, app_id)) = pinned_app_for(&self.default_app_pins, &dialect.to_coordinate(), role.as_str()) {
+            match self.install_plugin(&plugin_id).await {
+                Ok(()) => {
+                    if let Some(app) = self.plugins.iter().find(|entry| entry.plugin_id == plugin_id).and_then(|program| program.manifest.apps.iter().find(|app| app.id == app_id && &app.dialect == dialect && app.role == role)) {
+                        return Some((plugin_id, app.clone()));
+                    }
+                }
+                Err(error) => debug_log(&format!("[TRACE] wgpu shell os.open-artifact could not install pinned {plugin_id}: {error}")),
+            }
+        }
         let owner = semio_framework_os_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner(&dialect.artifact_kind, semio_framework_os_renderer_wgpu_program_bridge::plugin_artifact_kind_activations())?;
         if let Err(error) = self.install_plugin(owner).await {
             debug_log(&format!("[TRACE] wgpu shell os.open-artifact could not install {owner}: {error}"));
             return None;
         }
         let program = self.plugins.iter().find(|entry| entry.plugin_id == owner)?;
-        let app = find_dialect_app(program, dialect, role).or_else(|| find_dialect_app(program, dialect, semio_framework::manifest::AppRole::Editor))?;
+        let app = find_dialect_app(program, dialect, role)?;
         Some((owner.to_string(), app.clone()))
     }
 }

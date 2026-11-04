@@ -84,6 +84,7 @@ const STDIO_WAV_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
     edit_audio::INSERT_CHANNEL_ACTION_ID,
     semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID,
     edit_audio::SET_SAMPLE_RATE_ACTION_ID,
+    edit_audio::CUT_FRAMES_ACTION_ID,
     editing::SET_SNAPSHOT_VALUE_ACTION_ID,
     editing::INSERT_SNAPSHOT_VALUE_ACTION_ID,
     editing::REMOVE_SNAPSHOT_VALUE_ACTION_ID,
@@ -331,6 +332,7 @@ const WAV_AUDIO_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: edit_audio::INSERT_CHANNEL_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: edit_audio::SET_SAMPLE_RATE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: edit_audio::CUT_FRAMES_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
 const fn wav_editor_audio_execution_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(edit_audio::MAXIMUM_RAW_BYTES, 64, edit_audio::CAPACITY.work_items() as u64, 65_536, 7_500)
@@ -586,11 +588,36 @@ pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../📜�
 pub mod artifact_items_4 {
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
+use crate::{native_codecs};
+
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
+    let factories = native_codecs();
+    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
+    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
 }
 }
 //#endregion 🧩️ArtifactItems4
+
+//#region 🧩️ArtifactItems6
+pub mod artifact_items_6 {
+use crate::{artifact_kind};
+use crate::{STDIO_WAV_DOCUMENT_SCHEMA};
+pub use crate::standards::riff_pcm::subsets::any::schema::mutations::WavMutation;
+pub use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
+
+/// 💾️ The durable native pack codec: the document persists under the shared binary-media `semio` codec key.
+pub fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::bare_artifact_codec::<WavSnapshot, WavMutation>(STDIO_WAV_DOCUMENT_SCHEMA);
+    codec.extension = "semio";
+    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("../🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
+    codec
+}
+
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.wav.v1", artifact: "wav", kind: artifact_kind, codec: native_codec }]
+}
+}
+//#endregion 🧩️ArtifactItems6
 
 //#region 🧩️ArtifactItems5
 pub mod artifact_items_5 {

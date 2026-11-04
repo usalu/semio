@@ -1,4 +1,4 @@
-/** 📝️ Text representation for `s.stdio.semio.animation.inference`. */
+/** 📝️ Text representation for `stdio.semio.animation.inference`. */
 export type SemioAnimationInferenceText = string;
 
 //#region 🚪️Parsers

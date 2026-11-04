@@ -197,7 +197,7 @@ pub struct ModelRelation {
 #[dsl(layout = "lines")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.model")]
+#[artifact_schema(id = "stdio.semio.model")]
 pub struct SemioModelSnapshot {
     #[state(artifact)]
     pub schema: String,

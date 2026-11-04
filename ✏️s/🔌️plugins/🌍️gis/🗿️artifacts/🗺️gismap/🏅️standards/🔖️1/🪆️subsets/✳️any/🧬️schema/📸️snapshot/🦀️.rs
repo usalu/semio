@@ -26,7 +26,7 @@ pub struct GisMapSnapshot {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     pub drawing: GisMapDrawingChild,
-    /// 🕸️ Composed `s.stdio.semio.image` child — always absent today (see `🔖️Composition`'s doc).
+    /// 🕸️ Composed `stdio.semio.image` child — always absent today (see `🔖️Composition`'s doc).
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none")]

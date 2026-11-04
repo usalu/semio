@@ -244,6 +244,23 @@ impl ArtifactEditor for BcfAnyEditor {
     const DIALECT: Dialect = BCF_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BCF_ANY_DOCUMENT_SCHEMA;
 
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.bcf@2.1", extension: ".bcf", media_type: "application/vnd.bcf+xml", binary: true })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        crate::standards::v2_1::subsets::any::io::encode_bcf(snapshot).map_err(|detail| semio_framework_plugin::MediaError::Payload("artifact:native".into(), detail))
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        let refuse = |detail: String| semio_framework_plugin::MediaError::Payload("artifact:native".into(), detail);
+        let snapshot = crate::standards::v2_1::subsets::any::io::decode_bcf(bytes).map_err(refuse)?;
+        if snapshot.version.is_empty() {
+            return Err(refuse("bcf: the archive has no bcf.version part, so it is not a BCF 2.1 file".into()));
+        }
+        Ok(snapshot)
+    }
+
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<BcfAnyEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/✏️editor/🦀️.rs",

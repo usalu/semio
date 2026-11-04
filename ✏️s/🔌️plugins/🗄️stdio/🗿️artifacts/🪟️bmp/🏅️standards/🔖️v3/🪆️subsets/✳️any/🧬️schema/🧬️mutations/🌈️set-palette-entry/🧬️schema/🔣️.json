@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/set-palette-entry/schema.json",
+  "title": "SetPaletteEntry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "red",
+    "green",
+    "blue",
+    "reserved"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "palette",
+        "order": 10
+      }
+    },
+    "red": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Red",
+          "de": "Rot"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "palette",
+        "order": 20
+      }
+    },
+    "green": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Green",
+          "de": "Grün"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "palette",
+        "order": 30
+      }
+    },
+    "blue": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Blue",
+          "de": "Blau"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "palette",
+        "order": 40
+      }
+    },
+    "reserved": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Reserved byte",
+          "de": "Reserviertes Byte"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "palette",
+        "order": 50
+      }
+    }
+  }
+}

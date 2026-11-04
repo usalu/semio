@@ -59,6 +59,7 @@ use semio_s_artifact_norm_en1998_mut_bridges_towers::change_bridge_permanent_gk_
 use semio_s_artifact_norm_en1998_mut_bridges_towers::change_bridge_correlated_occupancy;
 use semio_s_artifact_norm_en1998_mut_members::change_assessment_knowledge_level;
 use semio_s_artifact_norm_en1998_mut_members::change_assessment_limit_state;
+use semio_s_artifact_norm_en1998_mut_members::change_assessment_analysis_method;
 use semio_s_artifact_norm_en1998_mut_members::change_assessment_supported_building_id;
 use semio_s_artifact_norm_en1998_mut_members::change_assessment_gamma_el;
 use semio_s_artifact_norm_en1998_mut_bridges_towers::change_tower_height_m;
@@ -415,6 +416,7 @@ pub enum En1998Mutation {
     ChangeBridgeCorrelatedOccupancy(change_bridge_correlated_occupancy::ChangeBridgeCorrelatedOccupancy),
     ChangeAssessmentKnowledgeLevel(change_assessment_knowledge_level::ChangeAssessmentKnowledgeLevel),
     ChangeAssessmentLimitState(change_assessment_limit_state::ChangeAssessmentLimitState),
+    ChangeAssessmentAnalysisMethod(change_assessment_analysis_method::ChangeAssessmentAnalysisMethod),
     ChangeAssessmentSupportedBuildingId(change_assessment_supported_building_id::ChangeAssessmentSupportedBuildingId),
     ChangeAssessmentGammaEl(change_assessment_gamma_el::ChangeAssessmentGammaEl),
     ChangeTowerHeightM(change_tower_height_m::ChangeTowerHeightM),
@@ -738,6 +740,7 @@ pub const KINDS: &[&str] = &[
     "change-bridge-correlated-occupancy",
     "change-assessment-knowledge-level",
     "change-assessment-limit-state",
+    "change-assessment-analysis-method",
     "change-assessment-supported-building-id",
     "change-assessment-gamma-el",
     "change-tower-height-m",

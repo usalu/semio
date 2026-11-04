@@ -32,7 +32,8 @@ use document_limits_and_text_estimates::{
 #[path = "🚫️contract-violations-and-validation/🦀️.rs"]
 mod contract_violations_and_validation;
 pub use contract_violations_and_validation::{
-    UiContractViolation, UiContractViolations, UI_DOCUMENT_VIOLATIONS,
+    component_needs_accessible_name, control_is_named, control_is_unnamed, UiContractViolation,
+    UiContractViolations, UI_DOCUMENT_VIOLATIONS,
 };
 #[cfg(test)]
 pub use contract_violations_and_validation::validate_snapshot;
@@ -75,6 +76,10 @@ mod tests;
 #[cfg(test)]
 #[path="🧪️tests/🧩️components/🦀️.rs"]
 mod component_integration;
+
+#[cfg(test)]
+#[path="🧪️tests/♿️control-names/🦀️.rs"]
+mod control_names;
 
 #[cfg(test)]
 #[path="🧪️tests/🗺️surface/🦀️.rs"]

@@ -1,7 +1,7 @@
 //! 🧬️ Raster snapshot schema — artifact-lane fields only.
 //!
 //! `ArtifactDsl` and `ArtifactPack` carry the literal typed Raster layer and intrinsic graph. `RasterSnapshot.assets` carries `store::os_store::artifact_child::ArtifactChild<SemioImageSnapshot>`
-//! handles (composed `s.stdio.semio.image` children, one per asset id — see `🗿️artifacts/🖨️raster/🦀️.rs`'s
+//! handles (composed `stdio.semio.image` children, one per asset id — see `🗿️artifacts/🖨️raster/🦀️.rs`'s
 //! `🧩️Composition` region) in a `RasterOwnedMap`, keeping the id-keyed addressing every
 //! `add-layer-asset`/`remove-layer-asset` mutation assumes. `child_slots()` is EMPTY for `assets`: the
 //! `#[child(kind=...)]` derive only recognizes a bare `ArtifactChild<T>`/`Vec<ArtifactChild<T>>` field.

@@ -138,6 +138,7 @@ fn design_phi(c: &Case, phi_deg: f64) -> f64 {
 fn rw_01(c: &Case) -> R {
     let (gamma, h, phi) = (c.positive("gamma")?, c.positive("h")?, c.positive("phi_deg")?);
     let (delta, alpha, beta, q) = (c.o("delta_deg", 0.0), c.o("alpha_deg", 0.0), c.o("beta_deg", 0.0), c.o("q", 0.0));
+    let phi = design_phi(c, phi);
     let ka = ka_coulomb(phi, delta, alpha, beta);
     let ea = 0.5 * gamma * h * h * ka + ka * q * h;
     let wall_angle = rad(alpha + delta);
@@ -154,6 +155,8 @@ fn rw_01(c: &Case) -> R {
 fn rw_02(c: &Case) -> R {
     let (gamma, h, phi) = (c.positive("gamma")?, c.positive("h")?, c.positive("phi_deg")?);
     let (beta, cohesion, z) = (c.o("beta_deg", 0.0), c.o("c", 0.0), c.o("z", c.n("h")?));
+    let phi = design_phi(c, phi);
+    let cohesion = cohesion / c.factors().gamma_c;
     let ka = ka_rankine(phi, beta);
     let z0 = if cohesion > 0.0 { 2.0 * cohesion / (gamma * ka.sqrt()) } else { 0.0 };
     let e_z = (ka * gamma * z - 2.0 * cohesion * ka.sqrt()).max(0.0);

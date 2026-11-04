@@ -1,13 +1,14 @@
 /** 🔶️ The scope phase of useDocumentTransferAndTabs. */
-import { type Severity } from "@semio-tech/framework";
+import { type AppDefinition, type Severity } from "@semio-tech/framework";
 import { decodePackValue } from "@semio-tech/framework/packs";
 import { decodeDocumentArchiveBytes, encodeDocumentArchiveBytes, type DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
-import { DOCUMENT_ARCHIVE_FILE_EXTENSION, DOCUMENT_ARCHIVE_MEDIA_TYPE, documentArchiveFileNameV1, naturalFileNameV1, naturalFileFormatV1, naturalMediaDescriptorMatchesV1, openNaturalFileOwnerV1, bytesOfDataUrlV1, documentTransferNoticeTextV1, documentTransferNoticeCodeV1, type DocumentTransferNoticeV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { DOCUMENT_ARCHIVE_FILE_EXTENSION, DOCUMENT_ARCHIVE_MEDIA_TYPE, documentArchiveFileNameV1, beginDocumentTransferV1, naturalFileNameV1, naturalFileFormatV1, naturalMediaDescriptorMatchesV1, openNaturalFileOwnerV1, bytesOfDataUrlV1, documentTransferNoticeTextV1, documentTransferNoticeCodeV1, type DocumentTransferNoticeV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import { NATURAL_FILE_BROWSER_MAXIMUM_BYTES_V1, NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1, readBlobBytesBoundedV1, requestFileSelectionV1, downloadMediaExportBytes, requestFileOpen } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
 import { buildSpacePanelState, parsePanelState, studioPanelFocusingSpawned } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { type PluginWasmHandle } from "../../../🔌️PluginRuntime/🟦️.tsx";
 import { documentTransferTasksV1, type TaskManagerDocumentTransferV1 } from "../../../🧵️TaskManager/🟦️.tsx";
+import { openPickedFileV1, pickedFileRefusalCodeV1, pickedFileRefusalTextV1, readPickedFileHeadV1, routePickedFileV1 } from "../../📂️picked-file-opening/🟦️.ts";
 import { requiredHostPanelLeafId } from "../../🧱️built-node-stores/🟦️.ts";
 import type { ShellCoreAfterThemeDriverSettings } from "../../🎨️theme-driver-settings/🟦️.tsx";
 
@@ -21,12 +22,23 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
     foldSpaceDirectoryRef, panel, focusedApp, focusedSpawnedId, focusedPanelBodyStores, focusedWindowInstancesRef,
     activeUtilityByWindowIdRef, activeToolIdRef, utilityGenerationFor, toolGeneration, activeWindowIdRef,
     effectiveModeLayoutRef, actionPaneExpandedByWindowIdRef, actionPaneStagedArgsByKeyRef, updateSpacePanel,
-    resolveSyncTargetSession, onAction, onActionStable, onBrowserActorIntent, dispatchSetDefaultApp,
+    resolveSyncTargetSession, updateSpacePanelFrom, onAction, onActionStable, onBrowserActorIntent, dispatchSetDefaultApp,
     dispatchClearDefaultApp, openArtifactWithAppRef, openWithEntries, showTransientNotice, frameworkSettingsTab,
-    taskManagerListenersRef, documentTransfersRef, documentTransferTasksRef
+    taskManagerListenersRef, documentTransfersRef, documentTransferFlightRef, documentTransferTasksRef
   } = core;
   //#region FrameworkOsShell
   //#region 📤️DocumentTransfer
+  const transferInFlightRef = documentTransferFlightRef;
+  /** 🪟️ Focuses a freshly created program instance in the space panel, built from the latest panel at commit time; `false` when no session is mounted. */
+  const focusSpawnedProgram = (spawned: { readonly pluginId: string; readonly appId: string; readonly instanceId: number; readonly label: string | undefined; readonly breadcrumb: readonly string[] | undefined }): boolean =>
+    updateSpacePanelFrom((latest) => studioPanelFocusingSpawned(latest ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp)), {
+      id: `${spawned.pluginId}-${spawned.instanceId}`,
+      pluginId: spawned.pluginId,
+      instanceId: spawned.instanceId,
+      appId: spawned.appId,
+      label: spawned.label ?? spawned.appId,
+      breadcrumb: spawned.breadcrumb ?? [],
+    }));
   const publishDocumentTransfers = (): void => {
     documentTransferTasksRef.current = documentTransferTasksV1([...documentTransfersRef.current.values()].map((entry) => entry.transfer));
     for (const listener of [...taskManagerListenersRef.current]) listener();
@@ -83,9 +95,23 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
   const importDocumentArchive = async (): Promise<void> => {
     const owned = documentTransferTarget();
     if (owned === null || session === null) return notifyDocumentTransfer("no-document", "", "info");
-    const load = owned.handle.loadAppDocumentArchive;
-    const [picked] = await requestFileOpen(`${DOCUMENT_ARCHIVE_FILE_EXTENSION},${DOCUMENT_ARCHIVE_MEDIA_TYPE}`, "dataUrl", false);
+    let picked: Awaited<ReturnType<typeof requestFileOpen>>[number] | undefined;
+    try {
+      [picked] = await requestFileOpen(`${DOCUMENT_ARCHIVE_FILE_EXTENSION},${DOCUMENT_ARCHIVE_MEDIA_TYPE}`, "dataUrl", false);
+    } catch (error) {
+      console.warn(`[os-shell] ${documentTransferNoticeCodeV1("import-failed")} file selection`, error);
+      return notifyDocumentTransfer("import-failed", "", "error");
+    }
     if (picked === undefined) return;
+    if (!beginDocumentTransferV1(transferInFlightRef)) return notifyDocumentTransfer("transfer-busy", picked.name, "info");
+    try {
+      await importDocumentArchiveOnce(owned, session, picked);
+    } finally {
+      transferInFlightRef.current = false;
+    }
+  };
+  const importDocumentArchiveOnce = async (owned: NonNullable<ReturnType<typeof documentTransferTarget>>, _session: ActiveSession, picked: { readonly name: string; readonly contents: string }): Promise<void> => {
+    const load = owned.handle.loadAppDocumentArchive;
     let archive: DocumentArchivePack;
     try {
       archive = decodeDocumentArchiveBytes(bytesOfDataUrlV1(picked.contents));
@@ -100,8 +126,7 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       instanceId = await owned.handle.createApp(owned.target.app.id);
       await load(instanceId, archive, task.signal, (status) => task.progress(status.completed, status.total > 0 ? status.total : null));
       const program = spacePrograms.find((entry) => entry.pluginId === owned.target.pluginId && entry.appId === owned.target.app.id);
-      const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
-      updateSpacePanel(studioPanelFocusingSpawned(currentPanel, { id: `${owned.target.pluginId}-${instanceId}`, pluginId: owned.target.pluginId, instanceId, appId: owned.target.app.id, label: program?.label ?? owned.target.app.id, breadcrumb: program?.breadcrumb ?? [] }));
+      if (!focusSpawnedProgram({ pluginId: owned.target.pluginId, appId: owned.target.app.id, instanceId, label: program?.label, breadcrumb: program?.breadcrumb })) throw new Error("import.panel-unavailable");
       notifyDocumentTransfer("imported", picked.name, "info");
     } catch (error) {
       if (instanceId !== null) await owned.handle.destroyApp(instanceId).catch((destroyError: unknown) => console.error(`[os-shell] imported instance ${instanceId} could not be closed`, destroyError));
@@ -136,40 +161,48 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       task.finish();
     }
   };
-  const openNaturalFile = async (): Promise<void> => {
-    const owned = documentTransferTarget();
-    if (owned === null || session === null) return notifyDocumentTransfer("no-document", "", "info");
-    const format = naturalFileFormatV1(owned.target.app);
-    const importMedia = owned.handle.importAppMedia;
-    if (format === null || importMedia === undefined) return notifyDocumentTransfer("file-open-failed", "", "error");
-    const [picked] = await requestFileSelectionV1(`${format.extension},${format.mediaType}`);
-    if (picked === undefined) return;
-    const task = trackDocumentTransfer(picked.name, owned.target.pluginId);
-    let instanceId: number | null = null;
-    try {
-      if (task.signal.aborted) throw task.signal.reason;
-      const bytes = await readBlobBytesBoundedV1(picked, {
-        signal: task.signal,
-        maximumBytes: NATURAL_FILE_BROWSER_MAXIMUM_BYTES_V1,
-        chunkBytes: NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1,
-        progress: task.progress,
-      });
-      instanceId = await openNaturalFileOwnerV1({
-        signal: task.signal,
-        create: () => owned.handle.createApp(owned.target.app.id),
-        importBytes: (freshInstanceId) => importMedia(freshInstanceId, "artifact:native", { portId: "artifact:native", kindId: format.formatKind, wire: { kind: "binary", format_kind: format.formatKind } }, bytes),
-        retire: (freshInstanceId) => owned.handle.destroyApp(freshInstanceId),
-      });
-      const program = spacePrograms.find((entry) => entry.pluginId === owned.target.pluginId && entry.appId === owned.target.app.id);
-      const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
-      updateSpacePanel(studioPanelFocusingSpawned(currentPanel, { id: `${owned.target.pluginId}-${instanceId}`, pluginId: owned.target.pluginId, instanceId, appId: owned.target.app.id, label: program?.label ?? owned.target.app.id, breadcrumb: program?.breadcrumb ?? [] }));
-      notifyDocumentTransfer("file-opened", picked.name, "info");
-    } catch (error) {
-      console.warn(`[os-shell] ${documentTransferNoticeCodeV1("file-open-failed")} ${picked.name}`, error);
-      notifyDocumentTransfer("file-open-failed", picked.name, task.signal.aborted ? "info" : "error");
-    } finally {
-      task.finish();
-    }
+  /** 📂️ Open file: the picked file is matched to its format through the shared resolution law, routed to the owner editor by the `OpeningResolver`, and imported as a new document; no editor has to be chosen first. The whole gesture runs through `openPickedFileV1`, so every failure is told and every created instance is released. */
+  const openNaturalFile = (): Promise<void> => {
+    const catalog = core.hostPorts?.formatCatalog;
+    const acceptedExtensions = catalog === undefined ? "" : catalog.descriptors().flatMap((descriptor) => descriptor.extensions).join(",");
+    if (session === null) return Promise.resolve(notifyDocumentTransfer("no-document", "", "info"));
+    return openPickedFileV1<{ readonly handle: PluginWasmHandle; readonly app: AppDefinition }, File>({
+      select: async () => (await requestFileSelectionV1(acceptedExtensions))[0],
+      claim: () => beginDocumentTransferV1(transferInFlightRef),
+      release: () => { transferInFlightRef.current = false; },
+      track: (name) => trackDocumentTransfer(name, "open-file"),
+      route: (picked, signal) => routePickedFileV1(catalog, picked, (bytes) => readPickedFileHeadV1(picked, bytes, signal)),
+      resolveOwner: async (route) => {
+        const opening = await core.resolveArtifactOpeningWithActivationRef.current("os.open-artifact", { artifactRef: route.artifactRef, role: "editor" });
+        const owner = opening === null ? undefined : core.loadedPluginsRef.current.find((entry) => entry.handle.pluginId === opening.app.pluginId);
+        const app = opening === null ? undefined : owner?.manifest.apps.find((candidate) => candidate.id === opening.app.appId);
+        return owner === undefined || app === undefined ? null : { handle: owner.handle, app };
+      },
+      importInto: async (owner, picked, task) => {
+        const format = naturalFileFormatV1(owner.app);
+        const importMedia = owner.handle.importAppMedia;
+        if (format === null || importMedia === undefined) throw new Error("natural-file.importer-unavailable");
+        if (task.signal.aborted) throw task.signal.reason;
+        const bytes = await readBlobBytesBoundedV1(picked, { signal: task.signal, maximumBytes: NATURAL_FILE_BROWSER_MAXIMUM_BYTES_V1, chunkBytes: NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1, progress: task.progress });
+        return openNaturalFileOwnerV1({
+          signal: task.signal,
+          create: () => owner.handle.createApp(owner.app.id),
+          importBytes: (freshInstanceId) => importMedia(freshInstanceId, "artifact:native", { portId: "artifact:native", kindId: format.formatKind, wire: { kind: "binary", format_kind: format.formatKind } }, bytes),
+          retire: (freshInstanceId) => owner.handle.destroyApp(freshInstanceId),
+        });
+      },
+      commit: (owner, instanceId) => {
+        const program = spacePrograms.find((entry) => entry.pluginId === owner.handle.pluginId && entry.appId === owner.app.id);
+        return focusSpawnedProgram({ pluginId: owner.handle.pluginId, appId: owner.app.id, instanceId, label: program?.label, breadcrumb: program?.breadcrumb });
+      },
+      destroy: (owner, instanceId) => owner.handle.destroyApp(instanceId),
+      report: (message, error) => console.warn(`[os-shell] ${documentTransferNoticeCodeV1("file-open-failed")} ${message}`, error),
+      notify: (outcome) => {
+        if (outcome.kind === "refused") return showTransientNoticeRef.current(pickedFileRefusalTextV1(outcome.reason, outcome.name, uiLocaleRef.current), "warning", pickedFileRefusalCodeV1(outcome.reason));
+        const notice: DocumentTransferNoticeV1 = outcome.kind === "opened" ? "file-opened" : outcome.kind === "cancelled" ? "open-cancelled" : outcome.kind === "busy" ? "transfer-busy" : "file-open-failed";
+        notifyDocumentTransfer(notice, outcome.name, outcome.kind === "failed" ? "error" : "info");
+      },
+    });
   };
   return { exportDocumentArchive, importDocumentArchive, saveNaturalFile, openNaturalFile, trackDocumentTransfer, notifyDocumentTransfer, dispatch, agentBridge, session, focusedApp, focusedWindowInstancesRef, activeWindowIdRef, focusedSpawnedId, effectiveModeLayoutRef, uiKeybindingOverrides, activeUtilityByWindowIdRef, onAction, utilityGenerationFor, activeToolIdRef, toolGeneration, appLabelsOverlay, uiTerminology, uiLocale, showTransientNotice, clipboardFragmentRef, actionPaneExpandedByWindowIdRef, actionPaneStagedArgsByKeyRef, scope, openDocumentSessionsRef, localDocumentOwnerRegistry, panel, foldSpaceDirectoryRef, browserActorUiByRuntimeKeyRef, browserActorUiVersion, onBrowserActorIntent, onActionStable, focusedPanelBodyStores, treeWindowHost, panelTreeConfigCacheRef, hostMode, hostAppId, openWithFocusRole, openArtifactWithAppRef, dispatchClearDefaultApp, dispatchSetDefaultApp, openWithEntries, treeWindowGeneration, frameworkSettingsTab };
 }

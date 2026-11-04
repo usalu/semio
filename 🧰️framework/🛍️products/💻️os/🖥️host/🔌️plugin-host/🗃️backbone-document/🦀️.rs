@@ -263,22 +263,36 @@ where
     with_backbone_envelope(document, |envelope| resolve_kernel_future(materialize_document_snapshot(envelope, applied_edit_ids)))
 }
 
-/// 📤️ Exports an already-loaded backbone document as pack bytes + ops text.
-pub fn export_backbone_pack<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::os_store::serialization::ArtifactPackFiles, VcsError>
+/// 🏷️ An export of one backbone document that keeps the document name the files themselves cannot carry.
+#[derive(Clone, Debug, PartialEq)]
+pub struct BackboneExport<T> {
+    pub name: String,
+    pub files: T,
+}
+
+impl<T> BackboneExport<T> {
+    /// 🧼️ The cross-platform file stem of this export: the document name, else the document id.
+    pub fn file_stem(&self, document_id: &str) -> String {
+        semio_framework_os_host_workflow::sanitize_export_file_stem(&self.name, document_id)
+    }
+}
+
+/// 📤️ Exports an already-loaded backbone document as pack bytes + ops text, with its name.
+pub fn export_backbone_pack<P, Op>(document: &BackboneDocument<P, Op>) -> Result<BackboneExport<store::os_store::serialization::ArtifactPackFiles>, VcsError>
 where
     P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
 {
-    with_backbone_envelope(document, |envelope| resolve_kernel_future(store::os_store::text_format::print_document_pack(envelope)))
+    with_backbone_envelope(document, |envelope| resolve_kernel_future(store::os_store::text_format::print_document_pack(envelope))).map(|files| BackboneExport { name: document.name.clone(), files })
 }
 
 /// 📝️ DSL-text counterpart of `export_backbone_pack`.
-pub fn export_backbone_dsl<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::os_store::text_format::ArtifactTextFiles, VcsError>
+pub fn export_backbone_dsl<P, Op>(document: &BackboneDocument<P, Op>) -> Result<BackboneExport<store::os_store::text_format::ArtifactTextFiles>, VcsError>
 where
     P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static + pack::snapshot::ArtifactDsl,
     Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
 {
-    with_backbone_envelope(document, |envelope| resolve_kernel_future(store::os_store::text_format::print_document_text(envelope)))
+    with_backbone_envelope(document, |envelope| resolve_kernel_future(store::os_store::text_format::print_document_text(envelope))).map(|files| BackboneExport { name: document.name.clone(), files })
 }
 
 /// 📦️ Binary pack+spr payload for the whole `BackboneDocument` (name + genesis + event log)

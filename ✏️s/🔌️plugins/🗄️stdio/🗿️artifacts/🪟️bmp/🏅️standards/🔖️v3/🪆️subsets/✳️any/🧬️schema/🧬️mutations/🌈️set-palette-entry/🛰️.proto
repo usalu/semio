@@ -1,0 +1,7 @@
+message SetPaletteEntry {
+  uint32 index = 1;
+  uint32 red = 2;
+  uint32 green = 3;
+  uint32 blue = 4;
+  uint32 reserved = 5;
+}

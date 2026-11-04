@@ -464,7 +464,8 @@
       "diagonalReinforcementRatio": 0.0,
       "shearCrackingBeforeYield": 0.0,
       "shearForceDemandN": 0.0,
-      "intermediateSteelAreaM2": 0.0
+      "intermediateSteelAreaM2": 0.0,
+      "analysisMethod": "derived"
     }
   ],
   "silos": [

@@ -72,7 +72,7 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
     spacePrograms, liveDialogRef, clipboardFragmentRef, settleOperation, sessionWorkRef, sealedInstancesRef,
     dropForSealedInstance, dropForRetiredInstance, openSpaceIdRef, openInstanceIdRef, sessionRef, identityRef,
     uiLocaleRef, uiTerminologyRef, showTransientNoticeRef, replayShellOwnedCommandRef, openDocumentRef,
-    openArtifactWithAppRefRef, resolveArtifactOpeningWithActivationRef, spaceArtifactCreationOwnersRef,
+    openResolvedArtifactRef, resolveArtifactOpeningWithActivationRef, spaceArtifactCreationOwnersRef,
     setSpaceArtifactCreationUi, spaceArtifactCreationCatalogRef, spaceArtifactCreationCatalogUiRef,
     setSpaceAdministration, spaceAdministrationRef, spaceAdministrationEpochRef, localDataDir, localCatalogRef,
     rehydratedLocalDocumentsRef, segmentedDownloadAbortRef, openDocumentSessionsRef, loadDocumentPair,
@@ -152,7 +152,7 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
           continue;
         }
         if ("replayShellCommand" in effect) {
-          await applyReplayShellCommandEffect({ showTransientNoticeRef, uiLocaleRef, spaceAdministrationEpochRef, identityRef, ensureBackboneWorker, spaceAdministrationRef, setSpaceAdministration, openDocumentSessionsRef, shellStateRef, spaceArtifactCreationCatalogRef, spaceArtifactCreationCatalogUiRef, spaceArtifactCreationOwnersRef, setSpaceArtifactCreationUi, spaceDirectoryHistoriesRef, hostPorts, adoptSharedSpaceAccess, resolveArtifactOpeningWithActivationRef, openArtifactWithAppRefRef, isCurrentEffectOwner, openDocumentRef, localDataDir, writeLocalDocumentRef, recordLocalCatalogRef, loadedPluginsRef, resolvedTargetViewState, rehydratedLocalDocumentsRef, localCatalogRef, replayShellOwnedCommandRef, exampleOptionsRef, defaults, lastDispatchedExampleIdRef, dispatch, effect, baseSession, effectOrigin, effectOwner, applyHostEffects, core });
+          await applyReplayShellCommandEffect({ showTransientNoticeRef, uiLocaleRef, spaceAdministrationEpochRef, identityRef, ensureBackboneWorker, spaceAdministrationRef, setSpaceAdministration, openDocumentSessionsRef, shellStateRef, spaceArtifactCreationCatalogRef, spaceArtifactCreationCatalogUiRef, spaceArtifactCreationOwnersRef, setSpaceArtifactCreationUi, spaceDirectoryHistoriesRef, hostPorts, adoptSharedSpaceAccess, resolveArtifactOpeningWithActivationRef, openResolvedArtifactRef, isCurrentEffectOwner, openDocumentRef, localDataDir, writeLocalDocumentRef, recordLocalCatalogRef, loadedPluginsRef, resolvedTargetViewState, rehydratedLocalDocumentsRef, localCatalogRef, replayShellOwnedCommandRef, exampleOptionsRef, defaults, lastDispatchedExampleIdRef, dispatch, effect, baseSession, effectOrigin, effectOwner, applyHostEffects, core });
           continue;
         }
         if ("requestMediaFrames" in effect) {

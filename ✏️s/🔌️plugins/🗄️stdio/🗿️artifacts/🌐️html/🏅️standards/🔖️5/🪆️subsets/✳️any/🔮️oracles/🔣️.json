@@ -85,7 +85,8 @@
         "set-attribute",
         "set-text",
         "set-comment",
-        "set-raw-text"
+        "set-raw-text",
+        "splice-source"
       ]
     }
   ],
@@ -235,6 +236,27 @@
             "operation": "set-raw-text",
             "bridgeVersion": 1,
             "variant": "SetRawText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "html-5-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "html5lib-html-5-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "splice-source",
+          "capability": "html-5-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "splice-source",
+            "bridgeVersion": 1,
+            "variant": "SpliceSource"
           },
           "oracleRequirements": [
             {

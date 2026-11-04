@@ -84,7 +84,7 @@ pub fn document_sync_json(document: &RasterSnapshot) -> String {
 /// 🧩️ Resolves every asset handle on `document.assets` back to its real `RasterImageAsset` bytes
 /// through the working-scene cache accessor (`crate::raster_asset`, ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` — `document.assets` now stores composed
-/// `s.stdio.semio.image` CHILD handles, not embedded bytes) — the ONE call site the WASM compositor's
+/// `stdio.semio.image` CHILD handles, not embedded bytes) — the ONE call site the WASM compositor's
 /// real pixel bytes funnel through. A handle whose content is not (or no longer) cached is honestly
 /// omitted rather than serialized as an empty/garbage blob (documented staleness gap, matches every
 /// other exemplar in this ticket).

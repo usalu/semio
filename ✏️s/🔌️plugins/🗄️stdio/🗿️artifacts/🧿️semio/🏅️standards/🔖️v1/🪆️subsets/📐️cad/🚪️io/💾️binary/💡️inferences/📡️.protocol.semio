@@ -1,7 +1,7 @@
 dialect protocol
 protocol semio.cad.inference
 version 1
-schema s.stdio.semio.cad.inference
+schema stdio.semio.cad.inference
 start frame
 framing magic 0x8953f83f7d340d0b
 header fixed 32

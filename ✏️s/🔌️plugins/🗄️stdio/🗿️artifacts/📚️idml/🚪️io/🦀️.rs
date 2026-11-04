@@ -51,7 +51,12 @@ impl ArtifactPack for IdmlSnapshot {
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(native_record_spec()) }
 }
-impl protocol::os_store::serialization::ArtifactStoreSnapshot for IdmlSnapshot {}
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
+
+impl protocol::os_store::serialization::ArtifactStoreSnapshot for IdmlSnapshot {
+    fn sqlite_snapshot_codec() -> Option<protocol::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as protocol::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()) }
+}
 
 impl protocol::OpText for IdmlMutation {
     fn print_op(&self) -> String { format!("{} {}", protocol::Mutation::descriptor(self).semantic_kind, semio_framework_pack_json::to_json_string(&protocol::Mutation::payload_value(self))) }

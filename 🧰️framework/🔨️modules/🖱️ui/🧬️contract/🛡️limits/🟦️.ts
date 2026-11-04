@@ -37,3 +37,24 @@ export function numberRangeIsValid(min: number | null, max: number | null, scale
 export function numberLimitValues(limits: UiNumberLimits | null | undefined): number[] {
   return [limits?.min?.value, limits?.max?.value].filter((value): value is number => value !== undefined);
 }
+
+/** ♿️ The structural slice of a node the accessible-name law reads. */
+export type NamedControlRecord = Readonly<{ component: Readonly<{ type: string; role?: string; label?: string | null; text?: string | null }>; accessibility: Readonly<{ label?: string | null }> }>;
+
+const blank = (text: string | null | undefined): boolean => text === undefined || text === null || text.trim() === "";
+
+/** ♿️ Whether a component is an interactive control that must carry an accessible name — the twin of Rust `component_needs_accessible_name`. */
+export function componentNeedsAccessibleName(component: NamedControlRecord["component"]): boolean {
+  switch (component.type) {
+    case "input": case "select": case "slider": case "numberStepper": case "iconSelect": case "ring": return true;
+    case "toggle": return blank(component.text);
+    default: return false;
+  }
+}
+
+/** ♿️ Whether a node is an interactive control with no accessible name under `parent`: neither a non-blank own label nor the control of a labelled `Field` container — the twin of Rust `control_is_unnamed`. */
+export function controlIsUnnamed(record: NamedControlRecord, parent: NamedControlRecord | null | undefined): boolean {
+  if (!componentNeedsAccessibleName(record.component)) return false;
+  if (!blank(record.accessibility.label)) return false;
+  return !(parent !== null && parent !== undefined && parent.component.type === "container" && parent.component.role === "field" && !blank(parent.component.label));
+}

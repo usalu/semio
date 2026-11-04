@@ -63,6 +63,7 @@
       "id": "s.stdio.dwg.standard.ac1018.representation.document",
       "standard": "s.stdio.dwg.standard.ac1018",
       "representation": "document",
+      "sniff": {"window": 6, "contains": ["AC1018"]},
       "mimes": ["image/vnd.dwg"],
       "extensions": [".dwg"],
       "is_binary": true,
@@ -74,6 +75,8 @@
       "id": "s.stdio.dwg.standard.ac1024.representation.document",
       "standard": "s.stdio.dwg.standard.ac1024",
       "representation": "document",
+      "sniff": {"window": 6, "contains": ["AC1024"]},
+      "owner": true,
       "mimes": [
         "image/vnd.dwg"
       ],

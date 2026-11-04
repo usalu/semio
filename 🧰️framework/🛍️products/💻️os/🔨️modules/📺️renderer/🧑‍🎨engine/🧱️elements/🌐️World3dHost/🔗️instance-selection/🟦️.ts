@@ -715,3 +715,20 @@ export function world3dMarkerInteractionTarget(layer: World3dMarkerLayer, id: st
 }
 //#endregion 🎯️WorldInteractionDomain
 //#endregion 🔖️World3dHost
+
+/** ⌨️ Whether a key chord is the keyboard route to the suggestions menu: the context-menu key or Shift+F10. */
+export function world3dSuggestionsKeyChord(event: Readonly<{ key: string; shiftKey: boolean; ctrlKey: boolean; metaKey: boolean; altKey: boolean }>): boolean {
+  if (event.ctrlKey || event.metaKey) return false;
+  return (event.key === "ContextMenu" && !event.altKey) || (event.key === "F10" && event.shiftKey && !event.altKey);
+}
+
+/** 🗣️ Labels of the touch and keyboard routes to suggestions, authored in both languages. */
+export const WORLD3D_SUGGESTIONS_LABELS_V1 = {
+  hint: { en: "Suggestions for a marker: long-press it, or focus it and press the context menu key or Shift+F10.", de: "Vorschläge zu einer Markierung: lange drücken, oder fokussieren und die Kontextmenü-Taste oder Umschalt+F10 drücken." },
+  noTarget: { en: "No marker is focused, so there are no suggestions.", de: "Keine Markierung ist fokussiert, daher gibt es keine Vorschläge." },
+} as const;
+
+/** 🎯️ The vortex a touch or keyboard suggestions gesture applies to: the hovered or locally retained marker, or `null` when none is under focus. */
+export function world3dSuggestionsGestureTarget(hoveredVortexFullId: string | null | undefined): string | null {
+  return hoveredVortexFullId || null;
+}

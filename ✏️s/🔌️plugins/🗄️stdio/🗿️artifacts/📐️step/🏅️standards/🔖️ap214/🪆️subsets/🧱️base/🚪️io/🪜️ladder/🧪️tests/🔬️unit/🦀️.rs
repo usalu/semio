@@ -159,3 +159,49 @@ async fn product_chain_requires_all_three_types() {
     doc.instances.push(Part21Instance { id: 3, entities: vec![("PRODUCT_DEFINITION".into(), vec![])] });
     assert!(has_product_definition_chain(&doc));
 }
+
+fn json_value(source: &str) -> semio_framework_value::DslValue {
+    semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())
+}
+
+#[test]
+fn the_product_gesture_sets_one_field_or_the_whole_chain_or_removes_it() {
+    let identity = ProductIdentity { product: 827, product_name: "Document".into(), formation: 822, formation_id: "A".into(), definition: 821, definition_id: "A".into() };
+    let base = snapshot_of(Vec::new());
+    let with_chain = applied(&base, &product_identity_diff(&base, Some(&identity)));
+    let set = |path: &str, value: semio_framework_value::DslValue| product_identity_edit(&SnapshotEditEvent::SetValue { path: path.into(), value }, &with_chain);
+    let renamed = set("/product/productName", semio_framework_value::DslValue::String("Spec".into())).unwrap().expect("a product edit").expect("an identity");
+    assert_eq!((renamed.product_name.as_str(), renamed.formation_id.as_str(), renamed.product), ("Spec", "A", 827));
+    assert!(product_identity_edit(&SnapshotEditEvent::RemoveValue { path: "/product".into() }, &with_chain).unwrap().expect("a product edit").is_none());
+    assert!(product_identity_edit(&SnapshotEditEvent::RemoveValue { path: "/product/productName".into() }, &with_chain).is_err());
+    assert!(set("/entities/0", semio_framework_value::DslValue::Null).unwrap().is_none());
+    assert!(product_identity_edit(&SnapshotEditEvent::SetValue { path: "/product/productName".into(), value: semio_framework_value::DslValue::String("x".into()) }, &base).is_err());
+    let whole = product_identity_edit(&SnapshotEditEvent::SetValue { path: "/product".into(), value: json_value(r#"{"product":1,"productName":"N","formation":2,"formationId":"F","definition":3,"definitionId":"D"}"#) }, &base).unwrap().unwrap().expect("an identity");
+    assert_eq!((whole.product, whole.definition_id.as_str()), (1, "D"));
+}
+
+#[test]
+fn the_shape_representation_gesture_sets_rows_and_removes_them() {
+    let base = snapshot_of(Vec::new());
+    let set = SnapshotEditEvent::SetValue { path: "/shapeRepresentations/7".into(), value: json_value(r#"{"typeName":"SHAPE_REPRESENTATION","name":"body","items":[1,2],"context":null}"#) };
+    match shape_representation_edit(&set, &base).unwrap() {
+        Some(ShapeRepresentationEdit::Set { id, row }) => assert_eq!((id, row.name.as_str(), row.items), (7, "body", vec![1, 2])),
+        other => panic!("{other:?}"),
+    }
+    assert_eq!(shape_representation_edit(&SnapshotEditEvent::RemoveValue { path: "/shapeRepresentations/7".into() }, &base).unwrap(), Some(ShapeRepresentationEdit::Remove { id: 7 }));
+    assert!(shape_representation_edit(&SnapshotEditEvent::RemoveValue { path: "/entities/0".into() }, &base).unwrap().is_none());
+    assert!(shape_representation_edit(&SnapshotEditEvent::RemoveValue { path: "/shapeRepresentations/x".into() }, &base).is_err());
+}
+
+#[test]
+fn the_transform_gesture_restores_only_points_and_directions() {
+    let real = |values: &[f64]| StepValue::Aggregate(values.iter().map(|value| StepValue::Real(*value)).collect());
+    let entity = |id: u64, name: &str, args: Vec<StepValue>| StepEntity { id, name: name.into(), args, complex: Vec::new() };
+    let base = StepSnapshot { entities: vec![entity(1, "CARTESIAN_POINT", vec![StepValue::String(String::new()), real(&[1.0, 2.0, 3.0])]), entity(2, "LINE", vec![StepValue::String(String::new())])], ..StepSnapshot::default() };
+    let event = SnapshotEditEvent::SetValue { path: semio_s_artifact_stdio_contract::editing::TRANSFORM_PATH.into(), value: json_value(r#"{"translate":[10,0,0]}"#) };
+    let rows = transform_restore_rows(&event, &base).unwrap().expect("computed");
+    assert_eq!(rows.iter().map(|row| row.id).collect::<Vec<_>>(), vec![1]);
+    assert_eq!(rows[0].entity.as_ref().expect("an entity").args[1], real(&[11.0, 2.0, 3.0]));
+    let line_only = StepSnapshot { entities: vec![entity(2, "LINE", Vec::new())], ..StepSnapshot::default() };
+    assert!(transform_restore_rows(&event, &line_only).is_err());
+}

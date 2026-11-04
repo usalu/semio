@@ -123,6 +123,10 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
   const channelRequests = new AppChannelRequestSequence();
   let disposal: Promise<void> | null = null;
   let disposing = false;
+  const throwOnErrorFrame = (owner: string, verb: string, frames: readonly AppFrameValue[]): void => {
+    const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+    if (errorFrame) throw new Error(`program ${owner}: ${verb} failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+  };
   const requireChannel = (instanceId: number): AppChannelClient => {
     if (disposing) throw new Error("plugin-handle.closed");
     const client = channels.get(instanceId);
@@ -269,6 +273,17 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       return conflictsFrame ? decodeConflictsFromWire(conflictsFrame.Conflicts.conflicts, decodePackValue) : [];
     },
     //#endregion 🔖️Merge
+    //#region 🔖️Opening
+    openArtifact: async (instanceId, artifactRef, role, pluginIdArg, appIdArg) => {
+      throwOnErrorFrame(pluginId, "openArtifact", await requireChannel(instanceId).openArtifact(artifactRef, role, pluginIdArg, appIdArg));
+    },
+    setDefaultApp: async (instanceId, artifactKind, standard, subset, role, pluginIdArg, appIdArg) => {
+      throwOnErrorFrame(pluginId, "setDefaultApp", await requireChannel(instanceId).setDefaultApp(artifactKind, standard, subset, role, pluginIdArg, appIdArg));
+    },
+    clearDefaultApp: async (instanceId, artifactKind, standard, subset, role) => {
+      throwOnErrorFrame(pluginId, "clearDefaultApp", await requireChannel(instanceId).clearDefaultApp(artifactKind, standard, subset, role));
+    },
+    //#endregion 🔖️Opening
     readLocalInteraction: async (instanceId, signal) => {
       const pages: Uint8Array[] = [];
       let length = 0;

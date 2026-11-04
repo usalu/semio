@@ -18,12 +18,17 @@ export type ReplayRefusalReasonV1 = keyof typeof vocabulary.reasons;
 
 export type ReplayRefusalLabelV1 = { readonly en: string; readonly de: string };
 
-/** 🗣️ Notice text per reason (`🔣️.json`). `locale` picks; only an unknown locale falls back to English. */
+/** 🗣️ Renders a label table row in `locale`; the primary language subtag picks the row (`de-DE` reads `de`); a tag without a row has no default language, so every language is rendered, joined in table order. */
+export function localizedLabelTextV1(label: Readonly<Record<string, string>>, locale: string): string {
+  const primary = locale.toLowerCase().split(/[-_]/u)[0] ?? "";
+  return Object.hasOwn(label, primary) ? label[primary]! : Object.values(label).join(" | ");
+}
+
+/** 🗣️ Notice text per reason (`🔣️.json`). `locale` picks; an unknown locale renders every language. */
 export const REPLAY_REFUSAL_LABELS_V1: Readonly<Record<ReplayRefusalReasonV1, ReplayRefusalLabelV1>> = vocabulary.reasons;
 
 export function replayRefusalNoticeTextV1(reason: ReplayRefusalReasonV1, locale: string): string {
-  const label = REPLAY_REFUSAL_LABELS_V1[reason];
-  return locale === "de" ? label.de : label.en;
+  return localizedLabelTextV1(REPLAY_REFUSAL_LABELS_V1[reason], locale);
 }
 
 /** 🩺️ Fault code carried on the notice so a probe, a law and the console line all name the same

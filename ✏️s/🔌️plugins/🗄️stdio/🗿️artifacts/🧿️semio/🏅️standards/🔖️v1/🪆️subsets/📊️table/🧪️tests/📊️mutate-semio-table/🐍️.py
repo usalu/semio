@@ -1,4 +1,4 @@
-"""🐍️ Independent Python implementation of the `s.stdio.semio.table` carrier and its eight-verb
+"""🐍️ Independent Python implementation of the `stdio.semio.table` carrier and its eight-verb
 mutation vocabulary — the differential ORACLE this case is measured against.
 
 Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. `.dsl.semio`/`.pack.semio` is a semio-native carrier
@@ -58,7 +58,7 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 
 
 # region 🔖️Carrier
-ENVELOPE_ID = "s.stdio.semio.table"
+ENVELOPE_ID = "stdio.semio.table"
 DSL_PREAMBLE = "semio %s.dsl v1" % ENVELOPE_ID
 
 #: 🔤️ `cell-kind = "n" | "b" | "i" | "f" | "s" | "y"`, paired with the JSON tag each letter stands
@@ -434,7 +434,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
 
 # region 🔖️Derivation
 def derive_document_from_csv(raw: bytes) -> dict:
-    """🧫️ The real committed survey table as an `s.stdio.semio.table` document — the ONE derivation
+    """🧫️ The real committed survey table as an `stdio.semio.table` document — the ONE derivation
     that produced `shared://📊️mutate-semio-table/📝️reuse-marketplaces.dsl.semio`, kept here and re-run by
     `payload-fidelity` so the fixture can never drift from the CSV it claims to carry.
 

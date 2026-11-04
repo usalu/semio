@@ -292,6 +292,10 @@ type En1990ReliabilityAnalysisPatch {
   actionDistribution: JSON
   actionMean: Float
   actionSd: Float
+  secondActionDistribution: JSON
+  secondActionMean: Float
+  secondActionSd: Float
+  memberId: String
 }
 type En1990TestSeriesDelta {
   removed: [En1990TestSeriesRemoval!]!
@@ -325,6 +329,9 @@ type En1990TestSeriesPatch {
   variationKnown: Float
   conversionFactor: Float
   required: Float
+  pairs: String
+  theoryVariation: Float
+  theoryMean: Float
 }
 type En1990PlacementDelta {
   removed: [En1990PlacementRemoval!]!

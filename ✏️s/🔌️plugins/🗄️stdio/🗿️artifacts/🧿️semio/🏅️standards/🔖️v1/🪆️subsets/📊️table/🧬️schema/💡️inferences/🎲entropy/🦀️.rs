@@ -87,7 +87,7 @@ impl store::InferredField<SemioTableSnapshot> for ColumnEntropy {
     type Dependency = semio_framework_value::DslValue;
     type Key = String;
     type Value = SemioColumnEntropy;
-    const FIELD_ID: &'static str = "s.stdio.semio.table.inference.entropy";
+    const FIELD_ID: &'static str = "stdio.semio.table.inference.entropy";
     const SCHEMA_VERSION: u32 = 1;
 
     fn reads() -> &'static [&'static str] {

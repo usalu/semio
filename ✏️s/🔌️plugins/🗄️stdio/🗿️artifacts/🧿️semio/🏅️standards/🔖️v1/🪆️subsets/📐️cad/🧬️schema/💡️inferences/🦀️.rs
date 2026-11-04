@@ -14,7 +14,7 @@ use super::bounds::compute_semio_cad_bounds;
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.cad.inference")]
+#[artifact_schema(id = "stdio.semio.cad.inference")]
 pub struct SemioCadInference {
     #[derived]
     pub bounds: SemioCadBounds,
@@ -41,24 +41,24 @@ impl Default for SemioCadInference {
 
 impl protocol::InferenceSpec<SemioCadSnapshot> for SemioCadInference {
     fn inference_schema_id() -> &'static str {
-        "s.stdio.semio.cad.inference"
+        "stdio.semio.cad.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.semio.cad.inference.bounds", reads: &["entities", "blocks"] }]
+        &[protocol::InferenceFieldSpec { id: "stdio.semio.cad.inference.bounds", reads: &["entities", "blocks"] }]
     }
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.stdio.semio.cad.inference`'s facet leaves into the OS-wide inference catalog —
+/// 💡️ Registers `stdio.semio.cad.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `semio_cad_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_cad_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.stdio.semio.cad.inference",
+        id: "stdio.semio.cad.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

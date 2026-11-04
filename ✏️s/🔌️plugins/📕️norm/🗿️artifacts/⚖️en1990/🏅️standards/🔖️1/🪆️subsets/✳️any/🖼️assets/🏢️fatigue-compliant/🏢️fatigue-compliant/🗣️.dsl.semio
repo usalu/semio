@@ -27,7 +27,7 @@ fatigue-spectra [id:TEXT member-id:TEXT detail-category:NUM stress-range:NUM cyc
   FS-1 beam-B1 71000000 60000000 200000
   FS-2 beam-B1 71000000 30000000 1000000
 }
-reliability-analyses [id:TEXT resistance-distribution:ENUM resistance-mean:NUM resistance-sd:NUM action-distribution:ENUM action-mean:NUM action-sd:NUM] {
+reliability-analyses [id:TEXT resistance-distribution:ENUM resistance-mean:NUM resistance-sd:NUM action-distribution:ENUM action-mean:NUM action-sd:NUM member-id:TEXT] {
 }
 test-series [id:TEXT quantity:TEXT distribution:ENUM sample-size:UINT mean:NUM std-dev:NUM variation-known:NUM conversion-factor:NUM required:NUM pairs:TEXT theory-variation:NUM] {
 }

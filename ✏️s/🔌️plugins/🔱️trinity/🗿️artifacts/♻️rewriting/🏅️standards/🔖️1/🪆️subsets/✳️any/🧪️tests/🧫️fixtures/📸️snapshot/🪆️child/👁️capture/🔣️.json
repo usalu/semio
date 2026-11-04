@@ -7,7 +7,7 @@
     "standard": "v1",
     "subset": "graph"
   },
-  "ownerSchema": "s.stdio.semio.graph",
+  "ownerSchema": "stdio.semio.graph",
   "owners": [
     {
       "label": "old !@/\u0000引用😀"

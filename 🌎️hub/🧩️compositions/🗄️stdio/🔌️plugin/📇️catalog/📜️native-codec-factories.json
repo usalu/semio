@@ -356,6 +356,19 @@
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📜️artifact-definition.json"
     },
     {
+      "artifact": "wav",
+      "factory_id": "stdio.native.wav.v1",
+      "artifact_kind": "s.stdio.wav",
+      "artifact_schema": "stdio.wav",
+      "extension": "semio",
+      "pack_schema_hash": "a90ed01f33ac476750694405d62fc88c077decec3bf5a14d3fbbed2981faf97f",
+      "runtime_capability_id": "s.stdio.wav.standard.riff-pcm.codec.codec-stdio-wav-extension-semio.v1",
+      "descriptor_codec_id": "s.stdio.wav.standard.riff-pcm.codec.native-document.v1",
+      "protocol_source_sha256": "a90ed01f33ac476750694405d62fc88c077decec3bf5a14d3fbbed2981faf97f",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📜️artifact-definition.json"
+    },
+    {
       "artifact": "xlsx",
       "factory_id": "stdio.native.xlsx.v1",
       "artifact_kind": "s.stdio.xlsx",

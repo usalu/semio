@@ -63,8 +63,8 @@ fatigue-spectra [id:TEXT member-id:TEXT detail-category:NUM stress-range:NUM cyc
   FS-3 span-2 71000000 50000000 300000
   FS-4 span-2 71000000 25000000 1500000
 }
-reliability-analyses [id:TEXT resistance-distribution:ENUM resistance-mean:NUM resistance-sd:NUM action-distribution:ENUM action-mean:NUM action-sd:NUM] {
-  rel-1 normal 330000 30000 normal 150000 30000
+reliability-analyses [id:TEXT resistance-distribution:ENUM resistance-mean:NUM resistance-sd:NUM action-distribution:ENUM action-mean:NUM action-sd:NUM member-id:TEXT] {
+  rel-1 normal 330000 30000 normal 150000 30000 
 }
 test-series [id:TEXT quantity:TEXT distribution:ENUM sample-size:UINT mean:NUM std-dev:NUM variation-known:NUM conversion-factor:NUM required:NUM pairs:TEXT theory-variation:NUM] {
   tes-1 strength normal 10 40 4 0 0.9 25  0

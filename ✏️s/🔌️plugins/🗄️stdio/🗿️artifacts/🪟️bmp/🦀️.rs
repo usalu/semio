@@ -27,7 +27,7 @@ pub use semio_s_artifact_stdio_bmp_editor_2::{definition};
 
 pub use semio_s_artifact_stdio_bmp_editor_2::{formats};
 
-pub use semio_s_artifact_stdio_bmp_snapshot::{native_codecs};
+pub use semio_s_artifact_stdio_bmp_editor_2::{native_codec, native_codecs};
 
 pub use semio_s_artifact_stdio_bmp_editor_2::{contribution};
 

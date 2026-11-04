@@ -82,6 +82,69 @@ fn payload_detail_edits_publish_the_exact_requested_value() {
     }
 }
 
+
+fn paint_command(args: Vec<(&str, u64)>) -> JpgAnyEditCommand {
+    let number = |value| semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(value));
+    super::jpg_any_editor_command_from_action(paint_region::ACTION_ID, Some(&semio_framework_value::DslValue::object(args.into_iter().map(|(key, value)| (key.into(), number(value))).collect::<Vec<_>>()))).expect("typed paint-region action")
+}
+
+fn drive_paint(command: &JpgAnyEditCommand, snapshot: &crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::JpgSnapshot) -> Result<Vec<crate::standards::v_jfif_1_01::subsets::document::schema::mutations::JpgMutation>, semio_framework_plugin::Fault> {
+    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+    let config = semio_framework_plugin::NoConfig::default();
+    let history = semio_framework_plugin::HistoryView::empty();
+    let interaction = protocol::InteractionState::default();
+    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "paint-region-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "paint-region-test".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
+    let mut work = paint_region::PaintRegionWork::new();
+    assert!(work.extent(command, snapshot, &interaction, None).is_some());
+    for _ in 0..4096 {
+        let mut sequence = 0;
+        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
+        let step = work.step(&ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut cx);
+        match step {
+            Err(failure) => return Err(semio_framework_plugin::Fault::from(format!("{failure:?}"))),
+            Ok(ArtifactCommandWorkStep::Progress { preview, .. }) => assert!(std::str::from_utf8(preview).unwrap().contains("\"de\"")),
+            Ok(ArtifactCommandWorkStep::Complete(emit)) => return Ok(emit.artifact_mutations),
+            Ok(_) => panic!("unexpected paint region work step"),
+        }
+    }
+    panic!("paint region work did not complete")
+}
+
+fn raster(width: u32, height: u32) -> crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::JpgSnapshot {
+    let mut snapshot = crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::JpgSnapshot::default();
+    snapshot.image.width = width;
+    snapshot.image.height = height;
+    snapshot.image.pixels = [1u8, 2, 3, 255].repeat((width * height) as usize);
+    snapshot
+}
+
+#[test]
+fn paint_region_fills_one_rectangle_of_the_decoded_raster_and_undo_restores_it() {
+    use protocol::{ColdMutation, Mutation, MutationDiff};
+    let base = raster(4, 3);
+    let command = paint_command(vec![("x", 1), ("y", 1), ("width", 2), ("height", 1), ("red", 10), ("green", 20), ("blue", 30), ("alpha", 128)]);
+    let mutations = drive_paint(&command, &base).expect("region paint completes");
+    assert_eq!(mutations.len(), 1);
+    let edited = protocol::apply_diff_cold(mutations[0].diff(&base).diff(), &base).expect("paint applies");
+    assert_eq!(&edited.image.pixels[20..28], &[10, 20, 30, 128, 10, 20, 30, 128]);
+    assert_eq!(&edited.image.pixels[..20], &base.image.pixels[..20]);
+    assert_eq!(&edited.image.pixels[28..], &base.image.pixels[28..]);
+    let inverse = mutations[0].inverse(&base).expect("paint inverse");
+    let restored = inverse.iter().fold(edited, |current, mutation| protocol::apply_diff_cold(mutation.diff(&current).diff(), &current).expect("undo applies"));
+    assert_eq!(restored, base);
+}
+
+#[test]
+fn paint_region_refuses_an_out_of_bounds_rectangle_without_mutating() {
+    let base = raster(4, 3);
+    for (x, y, width, height) in [(3, 0, 2, 1), (0, 2, 1, 2), (4, 0, 1, 1), (u32::MAX as u64, 0, 1, 1)] {
+        let command = paint_command(vec![("x", x), ("y", y), ("width", width), ("height", height), ("red", 0), ("green", 0), ("blue", 0), ("alpha", 255)]);
+        assert!(drive_paint(&command, &base).is_err(), "{x},{y} {width}x{height}");
+    }
+}
+
 semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::jpg_any::JpgAnyEditor, || semio_framework_plugin::App { definition: crate::editor::jpg_any::create_jpg_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document");
 
 #[semio_framework_async_macros::async_test]

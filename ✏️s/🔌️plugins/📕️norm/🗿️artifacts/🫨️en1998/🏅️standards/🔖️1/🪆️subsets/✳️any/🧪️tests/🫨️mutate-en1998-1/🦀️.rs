@@ -90,6 +90,7 @@ const KINDS: &[&str] = &[
     "change-bridge-correlated-occupancy",
     "change-assessment-knowledge-level",
     "change-assessment-limit-state",
+    "change-assessment-analysis-method",
     "change-assessment-supported-building-id",
     "change-assessment-gamma-el",
     "change-tower-height-m",
@@ -838,6 +839,12 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../🧫️fixtures/🧬️mutations/✏️change-assessment-limit-state/✅apply/🔣️.mutation.json"),
             include_str!("../🧫️fixtures/🧬️mutations/✏️change-assessment-limit-state/✅apply/🔣️.after.json"),
             include_str!("../🧫️fixtures/🧬️mutations/✏️change-assessment-limit-state/✅apply/🔣️.outcome.json"),
+        ),
+        "change-assessment-analysis-method" => (
+            include_str!("../🧫️fixtures/🧬️mutations/✏️change-assessment-analysis-method/✅apply/🔣️.before.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/✏️change-assessment-analysis-method/✅apply/🔣️.mutation.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/✏️change-assessment-analysis-method/✅apply/🔣️.after.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/✏️change-assessment-analysis-method/✅apply/🔣️.outcome.json"),
         ),
         "change-assessment-supported-building-id" => (
             include_str!("../🧫️fixtures/🧬️mutations/✏️change-assessment-supported-building-id/✅apply/🔣️.before.json"),

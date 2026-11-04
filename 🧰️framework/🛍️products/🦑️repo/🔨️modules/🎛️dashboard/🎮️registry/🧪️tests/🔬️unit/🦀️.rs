@@ -321,12 +321,12 @@ fn the_check_reports_ports_that_commands_of_different_owners_claim_together_and_
 fn the_check_reports_a_playground_renderer_whose_build_target_the_graph_lacks() {
     let owner = |targets: &[&str]| ProjectFacts { name: "@semio-tech/framework-os-dev".into(), root: "dev".into(), targets: targets.iter().map(|name| TargetFacts { name: (*name).into(), continuous: Some(true), ..Default::default() }).collect(), ..Default::default() };
     let playgrounds = vec![PlaygroundFacts { variant: "p".into(), plugin: "x".into(), react: 7100, wgpu: 7101, ..Default::default() }];
-    let complete = Registry::build(Path::new("/w"), &Facts { projects: vec![owner(&["dev-p-react-dev", "dev-p-wgpu-dev", "run-p-native-dev"])], playgrounds: playgrounds.clone(), ..Default::default() });
+    let complete = Registry::build(Path::new("/w"), &Facts { projects: vec![owner(&["dev-p-react-prototype", "dev-p-wgpu-prototype", "run-p-native-prototype"])], playgrounds: playgrounds.clone(), ..Default::default() });
     assert!(complete.check().iter().all(|problem| !problem.message.en.contains("project graph does not have")));
-    let missing = Registry::build(Path::new("/w"), &Facts { projects: vec![owner(&["dev-p-react-dev"])], playgrounds: playgrounds.clone(), ..Default::default() }).check();
+    let missing = Registry::build(Path::new("/w"), &Facts { projects: vec![owner(&["dev-p-react-prototype"])], playgrounds: playgrounds.clone(), ..Default::default() }).check();
     let lacking: Vec<&str> = missing.iter().filter(|problem| problem.message.en.contains("project graph does not have")).map(|problem| problem.message.en.as_str()).collect();
     assert_eq!(lacking.len(), 2, "{lacking:?}");
-    assert!(lacking[0].contains("renderer wgpu-wasm resolves to the build target @semio-tech/framework-os-dev:dev-p-wgpu-dev") && lacking[1].contains("run-p-native-dev"));
+    assert!(lacking[0].contains("renderer wgpu-wasm resolves to the build target @semio-tech/framework-os-dev:dev-p-wgpu-prototype") && lacking[1].contains("run-p-native-prototype"));
     let nothing = Registry::build(Path::new("/w"), &Facts { playgrounds, ..Default::default() }).check();
     assert_eq!(nothing.iter().filter(|problem| problem.message.en.contains("project graph does not have")).count(), 3, "no owner project at all: every renderer is reported");
 }
@@ -360,9 +360,9 @@ fn playground_facts_of_the_catalog_become_parameters_with_their_effects() {
 fn a_playground_example_locks_the_shell_to_it_and_native_renderers_pass_it_as_an_argument() {
     let (_, registry) = fixture("example");
     let react = resolve(&registry, "playground:shell", &request(&[("example", "tower")], &[], &[]));
-    assert_eq!((env_of(&react.processes[0], "PLAYGROUND_LOCKED_EXAMPLE_ID"), react.processes[0].args.last().map(String::as_str)), (Some("tower"), Some("@semio-tech/framework-os-dev:dev-shell-react-dev")));
+    assert_eq!((env_of(&react.processes[0], "PLAYGROUND_LOCKED_EXAMPLE_ID"), react.processes[0].args.last().map(String::as_str)), (Some("tower"), Some("@semio-tech/framework-os-dev:dev-shell-react-prototype")));
     let native = resolve(&registry, "playground:shell", &request(&[("example", "tower"), ("renderer", "wgpu-native")], &[], &[]));
-    assert_eq!(native.processes[0].args, ["run", "@semio-tech/framework-os-dev:run-shell-native-dev", "--", "--example", "tower"]);
+    assert_eq!(native.processes[0].args, ["run", "@semio-tech/framework-os-dev:run-shell-native-prototype", "--", "--example", "tower"]);
     assert!(native.processes[0].ready.is_none());
 }
 

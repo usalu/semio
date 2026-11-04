@@ -63,6 +63,42 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/cobie/mutation/set-type-assignment/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "UpsertInstance"
+      ],
+      "properties": {
+        "UpsertInstance": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/mutation/upsert-instance/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveInstance"
+      ],
+      "properties": {
+        "RemoveInstance": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/mutation/remove-instance/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetHeader"
+      ],
+      "properties": {
+        "SetHeader": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/mutation/set-header/schema.json"
+        }
+      }
     }
   ]
 }

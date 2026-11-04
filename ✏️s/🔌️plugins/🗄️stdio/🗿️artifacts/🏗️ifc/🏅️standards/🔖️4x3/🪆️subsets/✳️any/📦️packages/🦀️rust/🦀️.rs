@@ -20,6 +20,8 @@ pub mod validation;
 pub mod details;
 #[path = "../../✏️editor/🦀️.rs"]
 pub mod editor;
+#[path = "../../👁️viewer/🦀️.rs"]
+pub mod viewer;
 pub use semio_s_artifact_stdio_ifc4x3_step as io;
 #[path = "../../🚪️io/🧰️facade/🦀️.rs"]
 pub mod native_exchange;

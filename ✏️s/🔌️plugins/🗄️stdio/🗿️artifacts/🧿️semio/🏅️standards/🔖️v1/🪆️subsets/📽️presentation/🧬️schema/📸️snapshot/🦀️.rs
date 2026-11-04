@@ -145,13 +145,13 @@ pub struct Slide {
 }
 //#endregion 🔖️Structure
 //#region 🔖️Ids
-pub const STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA: &str = "s.stdio.semio.presentation";
+pub const STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA: &str = "stdio.semio.presentation";
 //#endregion 🔖️Ids
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(layout = "lines")]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.presentation")]
+#[artifact_schema(id = "stdio.semio.presentation")]
 pub struct SemioPresentationSnapshot {
     #[state(artifact)]
     pub schema: String,
@@ -180,7 +180,7 @@ impl Default for SemioPresentationSnapshot {
 //#region 🔖️ReachableCodecs
 //#endregion 🔖️ReachableCodecs
 //#region 🔖️Demo
-/// 🌱 The demo `s.stdio.semio.presentation` snapshot — masters/layouts/slides all populated,
+/// 🌱 The demo `stdio.semio.presentation` snapshot — masters/layouts/slides all populated,
 /// exercising every `SlideShape` variant (incl. `Table`) and every `PlaceholderKind` variant (incl.
 /// `Other`), plus the `document::DocBlock` reuse in `TextBox.blocks`/table cell `blocks`/
 /// `Slide.notes`. Single source of truth for `📚️examples/…/🖼️assets/🗣️.dsl.semio`/

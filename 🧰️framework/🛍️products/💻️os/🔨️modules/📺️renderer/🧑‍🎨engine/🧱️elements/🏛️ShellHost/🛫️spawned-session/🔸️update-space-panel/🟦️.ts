@@ -5,7 +5,7 @@ import { renameLayoutWindowIdsV1, spawnedLayoutRenameV1 } from "../../🪟️spa
 import { type WindowLayoutNode } from "@semio-tech/ui-react";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { resolveFrameworkLayoutSeed, frameworkLayoutDeclaredInstances } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
-import { panelJsonFromState, type SpacePanelState } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import { panelJsonFromState, parsePanelState, type SpacePanelState } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { windowFaultFromError } from "../../🩺️fault/🟦️.ts";
 import { seededActiveWindowId } from "../../🎚️shell-model/🟦️.tsx";
 import { SPAWNED_FOCUS_FRAME_BUDGET, withLocalizedWindowKindLabels } from "../../🧱️built-node-stores/🟦️.ts";
@@ -13,6 +13,8 @@ import type { useDocumentServicesState } from "../🔶️document-services/🟦�
 
 /** 🔹 Builds updateSpacePanel, retireSessionInstance, sessionHumanRef of useSpawnedSession. */
 export function useUpdateSpacePanelState({ session, seededFocusedProgramKeyRef, focusedProgramKey, activeToolIdRef, writeToolRegister, focusedSpawnedId, focusedApp, sessionLayoutBeforeSpawnRef, shellLayout, activeWindowIdRef, appLabelsOverlay, uiTerminology, uiLocale, dispatch, scope, loadedPluginsRef, openDocumentSessionsRef, closeDocumentRef, documentAttachmentLanesRef, identity, sessionRef, shellSessionLaneRef, refreshUi, reportRefreshFault, establishPrimaryWithShardRetry, pluginSupervisorByIdRef, sessionHumanKey }: Pick<ReturnType<typeof useDocumentServicesState>, "session" | "seededFocusedProgramKeyRef" | "focusedProgramKey" | "activeToolIdRef" | "writeToolRegister" | "focusedSpawnedId" | "focusedApp" | "sessionLayoutBeforeSpawnRef" | "shellLayout" | "activeWindowIdRef" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "dispatch" | "scope" | "loadedPluginsRef" | "openDocumentSessionsRef" | "closeDocumentRef" | "documentAttachmentLanesRef" | "identity" | "sessionRef" | "shellSessionLaneRef" | "refreshUi" | "reportRefreshFault" | "establishPrimaryWithShardRetry" | "pluginSupervisorByIdRef" | "sessionHumanKey">) {
+  const shellLayoutRef = useRef(shellLayout);
+  shellLayoutRef.current = shellLayout;
   useEffect(() => {
     if (!session) return;
     if (seededFocusedProgramKeyRef.current === focusedProgramKey) return;
@@ -20,7 +22,7 @@ export function useUpdateSpacePanelState({ session, seededFocusedProgramKeyRef, 
     seededFocusedProgramKeyRef.current = focusedProgramKey;
     if (previous !== "" && activeToolIdRef.current) writeToolRegister(null, null);
     if (focusedSpawnedId !== null && focusedApp !== null) {
-      if (sessionLayoutBeforeSpawnRef.current === null) sessionLayoutBeforeSpawnRef.current = { layout: shellLayout ?? null, activeWindowId: activeWindowIdRef.current };
+      if (sessionLayoutBeforeSpawnRef.current === null) sessionLayoutBeforeSpawnRef.current = { layout: shellLayoutRef.current ?? null, activeWindowId: activeWindowIdRef.current };
       const seed = resolveFrameworkLayoutSeed(focusedApp.defaultLayout, withLocalizedWindowKindLabels(focusedApp.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
       const modeLayout = renameLayoutWindowIdsV1(seed.modeLayout as WindowLayoutNode & { kind: "window" | "stack" | "row" | "column" }, spawnedLayoutRenameV1(focusedSpawnedId, focusedApp.windowKinds, frameworkLayoutDeclaredInstances(focusedApp.defaultLayout, focusedApp.windowKinds))) as WindowLayoutNode;
       dispatch({ type: "SET_SHELL_LAYOUT", value: modeLayout });
@@ -38,7 +40,6 @@ export function useUpdateSpacePanelState({ session, seededFocusedProgramKeyRef, 
     const seed = resolveFrameworkLayoutSeed(session.app.defaultLayout, withLocalizedWindowKindLabels(session.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
     dispatch({ type: "SET_SHELL_LAYOUT", value: seed.modeLayout });
     dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seed.modeLayout) });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusedProgramKey, focusedSpawnedId, focusedApp, session, appLabelsOverlay, uiTerminology, uiLocale, writeToolRegister]);
 
   useEffect(() => {
@@ -67,6 +68,19 @@ export function useUpdateSpacePanelState({ session, seededFocusedProgramKeyRef, 
     });
   }, []);
 
+  /** 📌️ Rebuilds the panel from the LATEST session at commit time, so a panel change made while an async import ran is never overwritten by a render-time snapshot. */
+  const updateSpacePanelFrom = useCallback((compute: (current: SpacePanelState | null) => SpacePanelState): boolean => {
+    if (!sessionRef.current) return false;
+    dispatch({
+      type: "SET_SESSION",
+      value: (current) => {
+        if (!current) return current;
+        return { ...current, viewState: { ...current.viewState, panelJson: panelJsonFromState(compute(parsePanelState(current.viewState))) } };
+      },
+    });
+    return true;
+  }, []);
+
   /** 🪦️ The session-instance close ladder, lifted out of the shell-unmount teardown effect so an
    * in-place app switch retires its predecessor the same way unmounting does: every document session
    * still bound to that instance is closed (which retires its attachment), then the attachment lane is
@@ -81,8 +95,13 @@ export function useUpdateSpacePanelState({ session, seededFocusedProgramKeyRef, 
       if (entry.plugin !== plugin || entry.session.instanceId !== retired.instanceId) continue;
       closeDocumentRef.current(runtimeKey, entry.clientInstanceId);
     }
-    await documentAttachmentLanesRef.current.get(plugin)?.get(retired.instanceId)?.drain();
-    await plugin.destroyApp(retired.instanceId);
+    try {
+      await documentAttachmentLanesRef.current.get(plugin)?.get(retired.instanceId)?.drain();
+    } catch (drainError) {
+      console.warn(`[os-shell] attachment lane of ${retired.pluginId}#${retired.instanceId} did not drain`, drainError);
+    } finally {
+      await plugin.destroyApp(retired.instanceId);
+    }
   }, []);
 
   /** 🪪️ A change of the signed-in human is recovered by what it invalidates ({@link shellHumanChangeRecoveryV1}): a first
@@ -123,8 +142,8 @@ export function useUpdateSpacePanelState({ session, seededFocusedProgramKeyRef, 
         dispatch({ type: "SET_ERROR", value: fault.message, fault });
         return;
       }
-      await retireSessionInstance(active).catch(() => undefined);
+      await retireSessionInstance(active).catch((retireError: unknown) => console.warn(`[os-shell] superseded instance ${active.pluginId}#${active.instanceId} could not be retired`, retireError));
     });
   }, [sessionHumanKey, establishPrimaryWithShardRetry, retireSessionInstance, refreshUi, reportRefreshFault]);
-  return { retireSessionInstance, updateSpacePanel };
+  return { retireSessionInstance, updateSpacePanel, updateSpacePanelFrom };
 }

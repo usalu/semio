@@ -29,10 +29,15 @@ type En1993Diff {
   frameBars: JSON!
   placements: JSON!
   reliabilityClass: JSON
-  jointPlates: JSON
-  foundationBlocks: JSON
-  frameActions: JSON
-  frameMemberBases: JSON
+  jointPlates: JSON!
+  foundationBlocks: JSON!
+  materialDuctility: JSON!
+  formingGains: JSON!
+  bucklingLengths: JSON!
+  fatigueStresses: JSON!
+  frameActions: JSON!
+  frameMemberBases: JSON!
+  fastenedJoints: JSON!
 }
 type En1993MaterialDelta {
   removed: [En1993MaterialRemoval!]!

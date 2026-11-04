@@ -346,6 +346,7 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
       | change-bridge-correlated-occupancy | ✏️change-bridge-correlated-occupancy | ✅apply  |
       | change-assessment-knowledge-level | ✏️change-assessment-knowledge-level | ✅apply  |
       | change-assessment-limit-state | ✏️change-assessment-limit-state | ✅apply  |
+      | change-assessment-analysis-method | ✏️change-assessment-analysis-method | ✅apply  |
       | change-assessment-supported-building-id | ✏️change-assessment-supported-building-id | ✅apply  |
       | change-assessment-gamma-el | ✏️change-assessment-gamma-el | ✅apply  |
       | change-tower-height-m | ✏️change-tower-height-m | ✅apply  |
@@ -679,6 +680,7 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
       | change-bridge-correlated-occupancy | ✏️change-bridge-correlated-occupancy | ✅apply  |
       | change-assessment-knowledge-level | ✏️change-assessment-knowledge-level | ✅apply  |
       | change-assessment-limit-state | ✏️change-assessment-limit-state | ✅apply  |
+      | change-assessment-analysis-method | ✏️change-assessment-analysis-method | ✅apply  |
       | change-assessment-supported-building-id | ✏️change-assessment-supported-building-id | ✅apply  |
       | change-assessment-gamma-el | ✏️change-assessment-gamma-el | ✅apply  |
       | change-tower-height-m | ✏️change-tower-height-m | ✅apply  |

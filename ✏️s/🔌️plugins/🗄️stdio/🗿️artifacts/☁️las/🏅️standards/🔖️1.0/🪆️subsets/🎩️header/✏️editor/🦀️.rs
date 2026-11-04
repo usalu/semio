@@ -182,6 +182,22 @@ impl ArtifactEditor for LasAnyEditor {
     const DIALECT: Dialect = LAS_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = LAS_ANY_DOCUMENT_SCHEMA;
 
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.las@1.0", extension: ".las", media_type: "application/vnd.las", binary: true })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        crate::engine::encode_las(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        crate::engine::decode_las(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+    }
+
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
+    }
+
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<LasAnyEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/✏️editor/🦀️.rs",
@@ -263,6 +279,20 @@ impl editing::SnapshotEditingEditor for LasAnyEditor {
     fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
         use crate::standards::v1_0::subsets::any::schema::mutations::{insert_vlr, remove_vlr, set_bounds, set_creation_date, set_points_by_return, set_scale_and_offset, set_software_info, set_system_identifier, set_version};
         use crate::standards::v1_0::subsets::any::schema::snapshot::{LasHeader, LasVlr};
+        if let Some(transform) = editing::Transform::from_event(event) {
+            use crate::standards::v1_0::subsets::any::schema::mutations::set_point;
+            let transform = transform?;
+            if snapshot.points.is_empty() { return Err(Fault::from("the point cloud has no points to transform")); }
+            let mut leaves: Vec<LasMutation> = Vec::with_capacity(snapshot.points.len() + 1);
+            let (mut min, mut max) = ([f64::INFINITY; 3], [f64::NEG_INFINITY; 3]);
+            for (index, point) in snapshot.points.iter().enumerate() {
+                let [x, y, z] = transform.point([point.x, point.y, point.z]);
+                (0..3).for_each(|axis| { min[axis] = min[axis].min([x, y, z][axis]); max[axis] = max[axis].max([x, y, z][axis]); });
+                leaves.push(LasMutation::SetPoint(set_point::SetPoint { index, point: crate::standards::v1_0::subsets::any::schema::snapshot::LasPoint { x, y, z, ..point.clone() } }));
+            }
+            leaves.push(LasMutation::SetBounds(set_bounds::SetBounds { max: (max[0], max[1], max[2]), min: (min[0], min[1], min[2]) }));
+            return Ok(Some(leaves));
+        }
         let editing::SnapshotEditEvent::SetValue { path, .. } = event else { return Ok(None) };
         let fail = |message: String| Fault::from(message);
         let segments: Vec<&str> = path.split('/').skip(1).collect();
@@ -305,7 +335,7 @@ impl editing::SnapshotEditingEditor for LasAnyEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_las_any_editor() -> semio_framework_plugin::AppDefinition {
-    let builder = Editor::builder(LAS_ANY_DIALECT).document(["stdio", "las"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::LAS_ANY_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
+    let builder = Editor::builder(LAS_ANY_DIALECT).document(["stdio", "las"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::LAS_ANY_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Main")).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())

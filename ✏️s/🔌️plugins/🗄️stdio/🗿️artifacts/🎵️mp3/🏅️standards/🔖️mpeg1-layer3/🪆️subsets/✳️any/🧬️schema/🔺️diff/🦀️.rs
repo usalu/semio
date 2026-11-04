@@ -9,6 +9,44 @@ use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3v1Tag, I
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
+//#region 🔖️Splices
+/// ✂️ One sequential edit of the frame lane: `remove` frames from `index` replaced by `insert`. A diff applies its splices in order, each addressing the lane the previous one left behind, so coalescing two diffs is plain concatenation.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
+#[value(rename_all = "camelCase")]
+pub struct Mp3FrameSplice {
+    pub index: u64,
+    pub remove: u64,
+    #[value(default)]
+    pub insert: Vec<Mp3Frame>,
+}
+
+/// ▶️ Applies the splices in order to `frames`, refusing the first one that leaves the lane.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_frame_splices(frames: &mut Vec<Mp3Frame>, splices: &[Mp3FrameSplice]) -> Result<(), String> {
+    for splice in splices {
+        let (Ok(start), Ok(count)) = (usize::try_from(splice.index), usize::try_from(splice.remove)) else { return Err("MP3 frame splice exceeds this platform".into()) };
+        let Some(end) = start.checked_add(count).filter(|end| *end <= frames.len()) else { return Err("MP3 frame splice is outside the frame lane".into()) };
+        frames.splice(start..end, splice.insert.iter().cloned());
+    }
+    Ok(())
+}
+
+/// ↩️ The splices that undo `splices` on `frames`, last first: each puts back the frames its forward splice removed and takes out the ones it inserted.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_frame_splices(frames: &[Mp3Frame], splices: &[Mp3FrameSplice]) -> Option<Vec<Mp3FrameSplice>> {
+    let mut running = frames.to_vec();
+    let mut undo = Vec::with_capacity(splices.len());
+    for splice in splices {
+        let (Ok(start), Ok(count)) = (usize::try_from(splice.index), usize::try_from(splice.remove)) else { return None };
+        let end = start.checked_add(count).filter(|end| *end <= running.len())?;
+        undo.push(Mp3FrameSplice { index: splice.index, remove: splice.insert.len() as u64, insert: running[start..end].to_vec() });
+        running.splice(start..end, splice.insert.iter().cloned());
+    }
+    undo.reverse();
+    Some(undo)
+}
+//#endregion 🔖️Splices
+
 //#region 🔖️Diff
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
@@ -19,6 +57,9 @@ pub struct Mp3Diff {
     pub id3v2: Option<Option<Id3v2Tag>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub frames: Option<Vec<Mp3Frame>>,
+    /// ✂️ Sequential splices of the frame lane, applied after a whole-lane `frames` replacement.
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub frame_splices: Vec<Mp3FrameSplice>,
     /// 🪆️ Tri-state, same shape as `id3v2`.
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub id3v1: Option<Option<Id3v1Tag>>,
@@ -33,6 +74,9 @@ impl protocol::ColdMutationDiff<Mp3Snapshot> for Mp3Diff {
         }
         if other.frames.is_some() {
             self.frames = other.frames;
+            self.frame_splices = other.frame_splices;
+        } else {
+            self.frame_splices.extend(other.frame_splices);
         }
         if other.id3v1.is_some() {
             self.id3v1 = other.id3v1;
@@ -50,6 +94,7 @@ impl protocol::ColdMutationDiff<Mp3Snapshot> for Mp3Diff {
         if let Some(v) = &self.frames {
             next.frames = v.clone();
         }
+        apply_frame_splices(&mut next.frames, &self.frame_splices).map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-splice", message).at(["frames"]))?;
         if let Some(v) = &self.id3v1 {
             next.id3v1 = v.clone();
         }
@@ -60,13 +105,15 @@ impl protocol::ColdMutationDiff<Mp3Snapshot> for Mp3Diff {
 
 impl DiffAlgebra<Mp3Snapshot> for Mp3Diff {
     fn is_empty(&self) -> bool {
-        self.id3v2.is_none() && self.frames.is_none() && self.id3v1.is_none()
+        self.id3v2.is_none() && self.frames.is_none() && self.frame_splices.is_empty() && self.id3v1.is_none()
     }
 }
 
 impl protocol::ColdDiffAlgebra<Mp3Snapshot> for Mp3Diff {
     fn inverse(&self, base: &Mp3Snapshot) -> Self {
-        Mp3Diff { id3v2: self.id3v2.as_ref().map(|_| base.id3v2.clone()), frames: self.frames.as_ref().map(|_| base.frames.clone()), id3v1: self.id3v1.as_ref().map(|_| base.id3v1.clone()) }
+        let spliced = self.frames.is_none().then(|| inverse_frame_splices(&base.frames, &self.frame_splices)).flatten();
+        let restore_lane = self.frames.is_some() || (!self.frame_splices.is_empty() && spliced.is_none());
+        Mp3Diff { id3v2: self.id3v2.as_ref().map(|_| base.id3v2.clone()), frames: restore_lane.then(|| base.frames.clone()), frame_splices: spliced.unwrap_or_default(), id3v1: self.id3v1.as_ref().map(|_| base.id3v1.clone()) }
     }
 }
 
@@ -79,6 +126,11 @@ pub fn diff_set_id3v2(id3v2: Option<Id3v2Tag>) -> Mp3Diff {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_frames(frames: Vec<Mp3Frame>) -> Mp3Diff {
     Mp3Diff { frames: Some(frames), ..Default::default() }
+}
+/// 🧩 Builds a patch-frames diff: one splice of the frame lane.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_patch_frames(index: u64, remove: u64, insert: Vec<Mp3Frame>) -> Mp3Diff {
+    Mp3Diff { frame_splices: vec![Mp3FrameSplice { index, remove, insert }], ..Default::default() }
 }
 /// 🧩 Builds a set-id3v1 diff (`None` clears the tag).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -143,7 +195,7 @@ pub fn diff_set_id3v1(id3v1: Option<Id3v1Tag>) -> Mp3Diff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<Mp3Diff> {
-    vec![Mp3Diff::default(), diff_set_id3v2(None), diff_set_id3v1(None), diff_set_frames(vec![])]
+    vec![Mp3Diff::default(), diff_set_id3v2(None), diff_set_id3v1(None), diff_set_frames(vec![]), diff_patch_frames(0, 0, vec![]), diff_patch_frames(2, 1, vec![Mp3Frame { header: Mp3FrameHeader { mpeg_version_id: 3, layer: 1, protection_bit: true, bitrate_index: 9, sample_rate_index: 0, padding: false, private_bit: false, channel_mode: 3, mode_extension: 0, copyright: false, original: true, emphasis: 0 }, payload: vec![1, 2, 3] }])]
 }
 
 #[cfg(test)]

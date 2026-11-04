@@ -2,7 +2,7 @@
   "mutation": "addLayerAsset",
   "assetId": "cover-art",
   "asset": {
-    "schema": "s.stdio.semio.image",
+    "schema": "stdio.semio.image",
     "width": 1,
     "height": 1,
     "colorspace": "rgba",

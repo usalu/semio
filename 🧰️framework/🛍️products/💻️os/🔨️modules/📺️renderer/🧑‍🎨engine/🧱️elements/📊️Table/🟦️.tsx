@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { restoreFocusAfterCommitV1 } from "../🎯️focus-return/🟦️.ts";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "../⚛️react-port/🟦️.ts";
 import { Button, ContextMenuController, Icon, Input, Table, Textarea, uiDataLabel, useLabel, useShellScopeOptional, type ContextMenuItem, type IconName, type TableColumn } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type ComponentSceneHostProps } from "@semio-tech/framework";
@@ -135,7 +136,7 @@ export function TableEditableTextCell({ cell, id, columnLabel, onAction }: { rea
       onKeyDown={(event) => {
         event.stopPropagation();
         if (event.key === "Escape") { event.preventDefault(); cancel(); return; }
-        if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); commit(); }
+        if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); commit(); restoreFocusAfterCommitV1(document, id); }
       }}
     />
   );

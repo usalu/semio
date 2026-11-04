@@ -4,13 +4,19 @@
 //#region 🔖️Leaves
 #[path = "🎼️set-frames/🦀️.rs"]
 pub mod set_frames;
+#[path = "🩹️patch-frames/🦀️.rs"]
+pub mod patch_frames;
+#[path = "🗑️remove-id3-frame/🦀️.rs"]
+pub mod remove_id3_frame;
+#[path = "🏷️set-id3-frame/🦀️.rs"]
+pub mod set_id3_frame;
 #[path = "🔖️set-id3v1/🦀️.rs"]
 pub mod set_id3v1;
 #[path = "🏷️set-id3v2/🦀️.rs"]
 pub mod set_id3v2;
 //#endregion 🔖️Leaves
 
-use crate::standards::mpeg1_layer3::subsets::any::schema::diff::{diff_set_frames, diff_set_id3v1, diff_set_id3v2, Mp3Diff};
+use crate::standards::mpeg1_layer3::subsets::any::schema::diff::{diff_patch_frames, diff_set_frames, diff_set_id3v1, diff_set_id3v2, Mp3Diff};
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3Snapshot};
 use protocol::Mutation;
 
@@ -29,6 +35,12 @@ pub enum Mp3Mutation {
     SetFrames(set_frames::SetFrames),
     /// 🏷️ Sets (`Some`) or clears (`None`) the ID3v1 trailer wholesale.
     SetId3v1(set_id3v1::SetId3v1),
+    /// 🩹️ Splices the MPEG frame lane at frame boundaries.
+    PatchFrames(patch_frames::PatchFrames),
+    /// 🏷️ Replaces or appends one ID3v2 frame by id.
+    SetId3Frame(set_id3_frame::SetId3Frame),
+    /// 🗑️ Removes one ID3v2 frame by id.
+    RemoveId3Frame(remove_id3_frame::RemoveId3Frame),
 }
 
 
@@ -48,13 +60,16 @@ impl Mp3Mutation {
             Mp3Mutation::SetId3v2(_) => "set-id3v2",
             Mp3Mutation::SetFrames(_) => "set-frames",
             Mp3Mutation::SetId3v1(_) => "set-id3v1",
+            Mp3Mutation::PatchFrames(_) => "patch-frames",
+            Mp3Mutation::SetId3Frame(_) => "set-id3-frame",
+            Mp3Mutation::RemoveId3Frame(_) => "remove-id3-frame",
         }
     }
 }
 
 /// 🏷️ Every declared kind, kebab-case, in the enum's own declaration order — mirrors the catalog's
 /// `mutationCatalogs[].kinds` exactly.
-pub const KINDS: &[&str] = &["set-id3v2", "set-frames", "set-id3v1"];
+pub const KINDS: &[&str] = &["set-id3v2", "set-frames", "set-id3v1", "patch-frames", "set-id3-frame", "remove-id3-frame"];
 //#endregion 🔖️Kinds
 
 //#region OpCodecs

@@ -409,8 +409,9 @@ pub fn canonicalize_format_descriptor(mut row: FormatDescriptor) -> Result<Forma
     if row.extensions.iter().any(String::is_empty) || row.extensions.is_empty() {
         return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "at least one non-empty extension claim is required".to_string() });
     }
-    row.extensions.sort();
-    if row.extensions.windows(2).any(|claims| claims[0] == claims[1]) {
+    let mut distinct = row.extensions.clone();
+    distinct.sort();
+    if distinct.windows(2).any(|claims| claims[0] == claims[1]) {
         return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "extension claims must be distinct".to_string() });
     }
     for mime in &mut row.mimes {

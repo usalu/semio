@@ -89,6 +89,7 @@ export type RendererBindings = RuntimeAssetBindings & {
    * first frame's appearance, tour-seen and dock-skeleton reads synchronous — and the shell writes back
    * through the host-io door. */
   semioWgpuSetHostStorage?: (snapshotJson: string) => void;
+  semioWgpuDispatchMediaAction?: (actionJson: string) => void;
   /** 🩺️ Arms the renderer's own per-frame `[TRACE]` dumps — `semio_framework_trace::set_runtime_diagnostics`,
    * the wasm door of the `SEMIO_RUNTIME_DIAGNOSTICS` switch a native process reads from its environment
    * and React reads from `localStorage`. */

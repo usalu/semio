@@ -547,3 +547,41 @@ fn logical_diff_does_not_require_native_comment_encoding(){
     assert_eq!(reference,fixture["after"]);assert_eq!(actual,reference);
     assert_eq!(crate::standards::v2_0::subsets::base::io::encode_zip(&after).is_ok(),fixture["nativeEncode"].as_bool().unwrap());
 }
+
+#[test]
+fn unsafe_member_paths_are_refused_on_decode_and_encode_and_agree_with_the_independent_reader() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🛡️unsafe-names/🔣️.json")).expect("neutral unsafe-name fixture");
+    for case in fixture["names"].as_array().expect("names") {
+        let name = case["name"].as_str().expect("name");
+        let safe = case["safe"].as_bool().expect("safe");
+        assert_eq!(check_entry_name(name).is_ok(), safe, "{name:?}");
+        let snapshot = ZipSnapshot { entries: vec![ZipEntry { name: name.into(), data: b"x".to_vec(), ..Default::default() }], ..Default::default() };
+        assert_eq!(encode_zip(&snapshot).is_ok(), safe, "encode {name:?}");
+        let raw = build_raw_zip(vec![RawZipEntry { name: name.as_bytes().to_vec(), data: b"x".to_vec(), method: 0, flags: 0x0800, extra: Vec::new(), comment: Vec::new(), use_descriptor: false, force_zip64_sentinel: false }], b"");
+        match decode_zip(&raw) {
+            Ok(decoded) => assert!(safe && decoded.entries[0].name == name, "decode {name:?}"),
+            Err(error) => assert!(!safe && matches!(error, ZipError::UnsafeEntryName { .. }), "decode {name:?}: {error:?}"),
+        }
+        if safe && !name.ends_with('/') {
+            let mut oracle = zip::ZipArchive::new(std::io::Cursor::new(&raw)).expect("independent ZIP reader");
+            assert!(oracle.by_index(0).expect("independent member").enclosed_name().is_some(), "independent reader accepts {name:?}");
+        }
+    }
+}
+
+#[test]
+fn corrupt_archives_are_refused_without_panicking() {
+    let snapshot = ZipSnapshot { entries: vec![ZipEntry { name: "a.txt".into(), data: b"alpha alpha alpha".to_vec(), ..Default::default() }], ..Default::default() };
+    let good = encode_zip(&snapshot).expect("encode");
+    assert!(decode_zip(&good).is_ok());
+    for cut in [0, 1, 4, good.len() / 2, good.len() - 1] {
+        assert!(decode_zip(&good[..cut]).is_err(), "truncated at {cut}");
+    }
+    let mut tail = good.clone();
+    let eocd = tail.len() - 22;
+    tail[eocd] ^= 0xFF;
+    assert!(decode_zip(&tail).is_err());
+    let mut body = good.clone();
+    body[good.len() / 3] ^= 0xFF;
+    assert!(decode_zip(&body).is_err() || decode_zip(&body).map(|decoded| decoded != snapshot).unwrap_or(false));
+}

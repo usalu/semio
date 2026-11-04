@@ -18,7 +18,9 @@
       },
       "style": {},
       "activity": "idle",
-      "accessibility": {}
+      "accessibility": {
+        "label": "Orb phase"
+      }
     }
   ],
   "layoutEpoch": 0

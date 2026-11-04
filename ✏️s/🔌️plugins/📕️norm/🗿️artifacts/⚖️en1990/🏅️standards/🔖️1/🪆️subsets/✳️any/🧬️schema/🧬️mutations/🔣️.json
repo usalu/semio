@@ -397,6 +397,9 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-traffic-group-variable-id/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-reliability-member-id/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/insert-traffic-group/schema.json"
     },
     {

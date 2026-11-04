@@ -24,7 +24,7 @@ Feature: Apply every typed animate PRESENTATION mutation to the real committed f
   📄️ The base document is real and committed. `asset://🎬️demo/🗣️.dsl.semio` is
   parsed by production's own `parse_dsl`, and the figure SOURCE every scenario starts from is whatever
   that artifact decodes to — never a literal in this case. What the committed artifact cannot supply is
-  tiles: `PresentationSnapshot` keeps its `(source, tiles)` in a composed `s.stdio.semio.presentation` CHILD
+  tiles: `PresentationSnapshot` keeps its `(source, tiles)` in a composed `stdio.semio.presentation` CHILD
   and the `.presentation` DSL persists the child HANDLE, not the child, so a case that only parsed the file
   would find an empty tile list and six of the nine kinds would address nothing. The three tiles are
   therefore committed once in `shared://🧭️mutate-presentation-1/🔣️.json`, derived from this vocabulary's OWN committed

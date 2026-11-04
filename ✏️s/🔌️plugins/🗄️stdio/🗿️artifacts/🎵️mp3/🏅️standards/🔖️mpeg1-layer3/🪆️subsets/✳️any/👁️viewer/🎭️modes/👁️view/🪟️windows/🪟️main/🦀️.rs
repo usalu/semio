@@ -36,6 +36,7 @@ pub fn render(snapshot: &Mp3Snapshot, locale: Locale, resource: Option<MediaReso
         capability: if ready { MediaCapabilityStatus::Ready } else { MediaCapabilityStatus::Unsupported },
         capability_reason: (!ready).then(|| reason.into()),
         host_content_height: 88.0,
+        trim: None,
     })
 }
 

@@ -74,6 +74,20 @@ impl ArtifactEditor for Ifc4x3AnyEditor {
     const DIALECT: Dialect = IFC4X3_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = IFC4X3_DOCUMENT_SCHEMA;
 
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.ifc@4x3", extension: ".ifc", media_type: "application/x-ifc", binary: false })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        crate::io::write_ifc4x3_step(snapshot).map(String::into_bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        let refuse = |detail: String| semio_framework_plugin::MediaError::Payload("artifact:native".into(), detail);
+        let text = std::str::from_utf8(bytes).map_err(|error| refuse(format!("ifc4x3: not valid utf-8: {error}")))?;
+        crate::io::parse_ifc4x3_step(text).map_err(|error| refuse(error.to_string()))
+    }
+
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
         let mut proofs = editing::snapshot_edit_bounded_first_step_proofs::<Self>("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/✏️editor/🦀️.rs", IFC4X3_CONTROLLER, IFC4X3_DOCUMENT_SCHEMA);
         proofs.push(template_factory::proof());

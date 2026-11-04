@@ -115,6 +115,21 @@ pub struct En1993Snapshot {
     #[dsl(table)]
     #[state(artifact)]
     pub frame_member_bases: Vec<FrameMemberBasis>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub fatigue_stresses: Vec<FatigueStress>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub buckling_lengths: Vec<BucklingLength>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub forming_gains: Vec<FormingGain>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub material_ductility: Vec<MaterialDuctility>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub fastened_joints: Vec<FastenedJoint>,
 }
 
 impl En1993Snapshot {
@@ -1533,6 +1548,12 @@ pub struct SteelJoint {
     /// 🔩 Yield strength f_y,wb of the beam web of an end plate joint for the beam web in tension (EN 1993-1-8 6.2.6.8); 0 = not given, the component is then not assessed and no value is assumed.
     #[dsl(unit = "Pa")]
     pub beam_web_fy: f64,
+    /// 🔥 Design force on the fillet weld group of the joint along the weld axis F_w,par,Ed, the source of tau_par in the directional method of EN 1993-1-8 4.5.3.2 (throat stress = force / (a l_w)); 0 = not given, the force then does not enter the weld check and no value is assumed.
+    #[dsl(unit = "N")]
+    pub weld_force_longitudinal: f64,
+    /// 🔥 Design force on the fillet weld group of the joint perpendicular to the weld axis along a leg F_w,perp,Ed, the source of sigma_perp and tau_perp in the directional method of EN 1993-1-8 4.5.3.2 (throat stress = force / (a l_w)); 0 = not given, the force then does not enter the weld check and no value is assumed.
+    #[dsl(unit = "N")]
+    pub weld_force_transverse: f64,
 }
 
 /// ♻ Fatigue assessment method.
@@ -1558,6 +1579,8 @@ pub struct FatigueDetail {
     #[dsl(table)]
     pub spectrum: Vec<FatigueBand>,
     pub stress_history: String,
+    /// 🔄 Consequence class of a fatigue failure for the partial factor γ_Mf of EN 1993-1-9 Table 3.1: with the assessment method (damage tolerant or safe life) it selects one of the four registry rows ndp.en1993.1-9.gamma-mf.<method>.<consequence>.
+    pub consequence: FatigueConsequence,
 }
 
 /// ⏱️ Standard fire resistance class of a member (EN 1993-1-2 4.2.5): R30, R60, R90 or R120.
@@ -1707,6 +1730,12 @@ pub struct PlatedPanel {
     pub stiffener_flange_thickness: f64,
     pub lateral_pressure: f64,
     pub lateral_pressure_coefficient: f64,
+    /// 🏷 Steel grade of the plate for the brittle fracture check of EN 1993-1-10 2.1 (Table 2.1 column, e.g. S355); empty = not given, the plate is then not assessed and no grade is assumed.
+    pub steel_grade: String,
+    /// 🏷 Sub-grade of the plate (JR, J0, J2, K2, ...) for Table 2.1 of EN 1993-1-10; empty = not given.
+    pub steel_subgrade: String,
+    /// 🌡 Reference temperature T_Ed of the plate in °C for EN 1993-1-10 2.1 (minimum member temperature with the shifts already applied); used with the plate grade, the stress level is taken as the highest transcribed column 0.75 f_y(t).
+    pub design_temperature: f64,
 }
 
 /// 🏭 Fabrication tolerance class of a silo shell.
@@ -1821,6 +1850,8 @@ pub struct BridgeFatigue {
     pub surfacing_thickness: f64,
     pub wheel_load: f64,
     pub wheel_patch: f64,
+    /// 🌉 Consequence class of a fatigue failure of the bridge detail for the partial factor γ_Mf of EN 1993-1-9 Table 3.1: with the assessment method it selects one of the four registry rows ndp.en1993.1-9.gamma-mf.<method>.<consequence>.
+    pub consequence: FatigueConsequence,
 }
 
 /// 🗼 Lattice member kind of a tower leg.
@@ -2674,6 +2705,8 @@ pub struct JointPlate {
     pub weld_throat: f64,
     pub weld_fu: f64,
     pub weld_beta_w: f64,
+    /// 🔩 Distribution of the load over the bolt group of the plate (EN 1993-1-8 3.12): Elastic is the vector method with the polar moment of the bolts, InstantaneousCentre is the plastic method with the load-deformation law of the bolts about the instantaneous centre of rotation.
+    pub group_method: BoltGroupMethod,
 }
 
 /// 🧱 Concrete block, grout layer and anchor bolts under a base plate joint: block size and strength, grout thickness and strength, anchors in tension.
@@ -2734,6 +2767,9 @@ pub struct FormingGain {
     pub gross_area: f64,
     /// 🔢 Number of 90 degree bends with an inner radius r <= 5 t (bends of other angles count proportionally).
     pub bends: u32,
+    /// 🥫 Yield strength the design uses for the member: the basic f_yb, or an enhanced value that must not exceed the average yield strength f_ya of the cold forming (EN 1993-1-3 3.2.2); 0 = the basic yield strength of the member is used.
+    #[dsl(unit = "Pa")]
+    pub used_yield: f64,
 }
 
 /// 🪜 🪜 Buckling length of a column in a frame from the end restraint of the adjacent members (EN 1993-1-1 6.3.1.3 with the nomogram of the effective length factor): sway or non-sway mode, the stiffness sums of columns and beams at both ends, and the member whose buckling length it checks.

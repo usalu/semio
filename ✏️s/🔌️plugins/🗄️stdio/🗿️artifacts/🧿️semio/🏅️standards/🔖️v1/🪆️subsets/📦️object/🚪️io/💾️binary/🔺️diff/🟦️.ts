@@ -1,4 +1,4 @@
-/** 💾️ Binary-facet grammar mirror (descriptive) for s.stdio.semio.object.diff's pack encoding. */
+/** 💾️ Binary-facet grammar mirror (descriptive) for stdio.semio.object.diff's pack encoding. */
 export interface SemioObjectDiffFrame { format: number; presence: number; payload: string; }
 
 //#region 🚪️Parsers

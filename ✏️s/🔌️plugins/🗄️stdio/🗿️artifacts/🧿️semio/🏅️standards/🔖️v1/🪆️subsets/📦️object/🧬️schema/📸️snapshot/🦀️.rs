@@ -29,7 +29,7 @@ pub const STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA: &str = "stdio.semio.object";
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(layout = "lines")]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[artifact_schema(id = "s.stdio.semio.object")]
+#[artifact_schema(id = "stdio.semio.object")]
 pub struct SemioObjectSnapshot {
     #[state(artifact)]
     pub schema: String,

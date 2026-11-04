@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `s.stdio.semio.presentation.inference`. */
+/** 💾️ Binary representation for `stdio.semio.presentation.inference`. */
 export type SemioPresentationInferenceBinary = Uint8Array;

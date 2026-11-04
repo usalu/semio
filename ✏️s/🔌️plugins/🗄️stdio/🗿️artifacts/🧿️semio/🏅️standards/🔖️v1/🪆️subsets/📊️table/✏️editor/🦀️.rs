@@ -45,7 +45,7 @@ use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Dialect
 pub const SEMIO_TABLE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("table") };
-pub const SEMIO_TABLE_DOCUMENT_SCHEMA: &str = "s.stdio.semio.table";
+pub const SEMIO_TABLE_DOCUMENT_SCHEMA: &str = "stdio.semio.table";
 //#endregion 🔖️Dialect
 
 //#region 🔖️Command
@@ -155,6 +155,8 @@ impl ArtifactOwnedToolJobFactory for SemioTableEditorExampleFactory {
     type Owner = EditorApp<SemioTableEditor>;
     const TOOL_IDS: &'static [&'static str] = SEMIO_TABLE_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_TABLE_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_semio_base::semio_natural_file!(SemioTableSnapshot, "stdio.semio.table");
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_TABLE_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 #[path = "🧭️edit-rules/🦀️.rs"]
@@ -188,7 +190,7 @@ impl ArtifactEditor for SemioTableEditor {
         owner: EditorApp<SemioTableEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/✏️editor/🦀️.rs",
         controller: "s.stdio.semio@v1/table#editor",
-        artifact_schema: "s.stdio.semio.table",
+        artifact_schema: "stdio.semio.table",
         factory: "SemioTableEditorExampleFactory",
         factory_type: SemioTableEditorExampleFactory,
         contract: ToolExecutionContract::bounded_first_step(SEMIO_TABLE_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500),

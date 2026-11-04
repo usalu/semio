@@ -1,5 +1,6 @@
 module Semio_mp3_mutations;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=19;
+# A binary mutation op: format octet, variant tag (LEB128 varint, tags in 📡️.protocol.semio), then the variant's wire value.
+public type Op = unit {
+    format: uint8;
+    rest: bytes &eod;
 };

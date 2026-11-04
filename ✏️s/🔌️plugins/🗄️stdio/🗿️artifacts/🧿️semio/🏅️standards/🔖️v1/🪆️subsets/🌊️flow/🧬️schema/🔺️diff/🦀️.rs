@@ -73,7 +73,7 @@ pub struct FlowEdgeDiff {
 /// 🔺️ Diff for `s.stdio.semio.flow`.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.flow.diff")]
+#[artifact_schema(id = "stdio.semio.flow.diff")]
 pub struct SemioFlowDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]

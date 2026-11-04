@@ -117,7 +117,7 @@ pub fn semio_mesh_to_las_bytes(semio: &SemioMeshSnapshot) -> Result<Vec<u8>, Str
 }
 
 /// 🖼️ Exports whichever raster/texture asset is available (DSM, else ortho, else DTM, else the mesh's
-/// baked texture) — `scene.assets` holds composed `s.stdio.semio.image` child handles, so this reads
+/// baked texture) — `scene.assets` holds composed `stdio.semio.image` child handles, so this reads
 /// the real bytes back through `remodeling_asset` (working-scene cache).
 pub fn remodeling_png_asset(scene: &RemodelingSnapshot) -> Result<ImageAsset, String> {
     let asset_id = scene

@@ -958,23 +958,23 @@ pub struct En1993Diff {
     #[state(artifact)]
     pub reliability_class: Option<semio_s_plugin_norm_compliance::ReliabilityClass>,
     #[state(artifact)]
-    pub joint_plates: Option<En1993JointPlateDelta>,
+    pub joint_plates: En1993JointPlateDelta,
     #[state(artifact)]
-    pub foundation_blocks: Option<En1993FoundationBlockDelta>,
+    pub foundation_blocks: En1993FoundationBlockDelta,
     #[state(artifact)]
-    pub material_ductility: Option<En1993MaterialDuctilityDelta>,
+    pub material_ductility: En1993MaterialDuctilityDelta,
     #[state(artifact)]
-    pub forming_gains: Option<En1993FormingGainDelta>,
+    pub forming_gains: En1993FormingGainDelta,
     #[state(artifact)]
-    pub buckling_lengths: Option<En1993BucklingLengthDelta>,
+    pub buckling_lengths: En1993BucklingLengthDelta,
     #[state(artifact)]
-    pub fatigue_stresses: Option<En1993FatigueStressDelta>,
+    pub fatigue_stresses: En1993FatigueStressDelta,
     #[state(artifact)]
-    pub frame_actions: Option<En1993FrameActionDelta>,
+    pub frame_actions: En1993FrameActionDelta,
     #[state(artifact)]
-    pub frame_member_bases: Option<En1993FrameMemberBasisDelta>,
+    pub frame_member_bases: En1993FrameMemberBasisDelta,
     #[state(artifact)]
-    pub fastened_joints: Option<En1993FastenedJointDelta>,
+    pub fastened_joints: En1993FastenedJointDelta,
 }
 //#endregion 🔖️Diff
 

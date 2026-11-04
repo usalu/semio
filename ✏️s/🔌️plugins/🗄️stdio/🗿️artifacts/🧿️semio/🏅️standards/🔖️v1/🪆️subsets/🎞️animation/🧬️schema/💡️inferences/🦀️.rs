@@ -14,7 +14,7 @@ use super::duration::compute_semio_animation_duration;
 /// `💡️inferences/` (currently: `duration`, backed by the `⏱️duration/` slug dir).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.animation.inference")]
+#[artifact_schema(id = "stdio.semio.animation.inference")]
 pub struct SemioAnimationInference {
     #[derived]
     pub duration: SemioAnimationDuration,
@@ -41,25 +41,25 @@ impl Default for SemioAnimationInference {
 
 impl protocol::InferenceSpec<SemioAnimationSnapshot> for SemioAnimationInference {
     fn inference_schema_id() -> &'static str {
-        "s.stdio.semio.animation.inference"
+        "stdio.semio.animation.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.semio.animation.inference.duration", reads: &["timelines"] }]
+        &[protocol::InferenceFieldSpec { id: "stdio.semio.animation.inference.duration", reads: &["timelines"] }]
     }
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.stdio.semio.animation.inference`'s facet leaves into the OS-wide inference
+/// 💡️ Registers `stdio.semio.animation.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `semio_animation_artifact_schema_descriptor`'s
 /// registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_animation_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.stdio.semio.animation.inference",
+        id: "stdio.semio.animation.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

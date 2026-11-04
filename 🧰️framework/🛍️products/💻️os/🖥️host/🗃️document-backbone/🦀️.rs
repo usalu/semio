@@ -8,7 +8,7 @@ use crate::host::OsBackbonePorts;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::space;
 #[cfg(not(target_arch = "wasm32"))]
-use crate::store_sync::{FolderEventLogStorage, FolderTextStorage};
+use crate::store_sync::FolderEventLogStorage;
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::Arc;
 use store::os_store::backbone::MemoryBackbonePort;
@@ -21,13 +21,10 @@ use vcs::VcsError;
 const SPACE_FOLDER_DOCUMENT_ID: &str = "studio";
 
 enum SpacePortKind {
-    /// 🗃️ A single document's pack blob addressed by an arbitrary `file://` path —
-    /// `<folder>/<document_id>.<extension>.pack` (authoritative) + `.ops` + a DSL mirror, via
-    /// `FolderTextStorage::write_pack`/`read_pack` and the typed `store::os_store::text_format::parse_document_pack`/
-    /// `print_document_pack::<OsSnapshot, OsMutation>` (this crate is fully typed, no
-    /// `store::os_store::serialization::ArtifactCodec` indirection needed).
+    /// 🗃️ One document stored as exactly the chosen `file://` path: the whole backbone payload (name, pack and spr) in one blob,
+    /// replaced atomically through a sibling temporary file, never as `<stem>.<ext>.*.semio` companions.
     #[cfg(not(target_arch = "wasm32"))]
-    File { uri: String, storage: FolderTextStorage, document_id: String, extension: String },
+    File { uri: String, path: std::path::PathBuf },
     #[cfg(not(target_arch = "wasm32"))]
     Folder(String, FolderEventLogStorage),
 }
@@ -41,14 +38,7 @@ impl SpaceBackbonePort {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn file(file_path: &str) -> Result<Self, VcsError> {
         let uri = format!("file://{file_path}");
-        let path = std::path::Path::new(file_path);
-        let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("txt").to_string();
-        let document_id = path.file_stem().and_then(|stem| stem.to_str()).unwrap_or("document").to_string();
-        let folder = path.parent().map_or_else(|| std::path::PathBuf::from("."), std::path::Path::to_path_buf);
-        Ok(Self {
-            kind: Some(SpacePortKind::File { uri, storage: crate::registry::resolve_kernel_future(FolderTextStorage::new(folder)), document_id, extension }),
-            memory: crate::registry::resolve_kernel_future(MemoryBackbonePort::new()),
-        })
+        Ok(Self { kind: Some(SpacePortKind::File { uri, path: std::path::PathBuf::from(file_path) }), memory: crate::registry::resolve_kernel_future(MemoryBackbonePort::new()) })
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -65,30 +55,15 @@ impl SpaceBackbonePort {
 /// `OsBackbonePort` implementor carries: a `name` byte blob wrapping a nested `pack`+`spr` pair
 /// (`store::os_store::serialization::encode_document_pack_bytes`, twice). The file/folder storage backends below have no
 /// slot for `name` (they only ever persisted `pack`+`spr`, or before this crate's pack/dsl rollout
-/// bare JSON) — that half of the payload is dropped on write and reconstituted empty on read,
-/// same loss the previous JSON-through-`OsEnvelope` bridge already had (`OsEnvelope` itself has no
-/// `name` field), not a regression.
+/// bare JSON) — that half of the payload is dropped on write and reconstituted empty on read. A file space keeps the
+/// whole payload, name included, in the chosen file itself.
 impl OsBackbonePort for SpaceBackbonePort {
     fn read(&self, uri: &str) -> Result<Vec<u8>, VcsError> {
         if let Some(kind) = &self.kind {
             match kind {
                 #[cfg(not(target_arch = "wasm32"))]
-                SpacePortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
-                    let (pack, spr) = if let Some(pack_files) = crate::registry::resolve_kernel_future(storage.read_pack(document_id, extension))? {
-                        (pack_files.pack, pack_files.spr)
-                    } else {
-                        match crate::registry::resolve_kernel_future(storage.read(document_id, extension))? {
-                            Some(text_files) => {
-                                let snapshot = <space::SpaceSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text_files.dsl).map_err(|error| VcsError::Deserialize(error.message))?;
-                                let document: crate::host::OsSpaceDocument = crate::host::create_backbone_document(space::S_SPACE_SCHEMA, document_id, "", snapshot);
-                                let pack_files = crate::host::export_backbone_pack(&document)?;
-                                (pack_files.pack, pack_files.spr)
-                            }
-                            None => return Err(VcsError::Backbone(format!("missing backbone file {uri}"))),
-                        }
-                    };
-                    let inner = crate::registry::resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(&pack, &spr));
-                    return Ok(crate::registry::resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(&[], &inner)));
+                SpacePortKind::File { uri: file_uri, path } if uri == file_uri => {
+                    return std::fs::read(path).map_err(|error| if error.kind() == std::io::ErrorKind::NotFound { VcsError::Backbone(format!("missing backbone file {uri}")) } else { VcsError::Backbone(format!("backbone file {uri}: {error}")) });
                 }
                 #[cfg(not(target_arch = "wasm32"))]
                 SpacePortKind::Folder(folder_uri, storage) if uri == folder_uri => {
@@ -106,12 +81,18 @@ impl OsBackbonePort for SpaceBackbonePort {
         if let Some(kind) = &self.kind {
             match kind {
                 #[cfg(not(target_arch = "wasm32"))]
-                SpacePortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
-                    let (pack, spr) = decode_os_space_pack_payload(payload)?;
-                    let parsed: store::os_store::text_format::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = crate::registry::resolve_kernel_future(store::os_store::text_format::parse_document_pack(&pack, &spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-                    let dsl_mirror = pack::snapshot::ArtifactDsl::print_dsl(&parsed.into_snapshot());
-                    let pack_files = store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() };
-                    return crate::registry::resolve_kernel_future(storage.write_pack(document_id, extension, &pack_files, &dsl_mirror));
+                SpacePortKind::File { uri: file_uri, path } if uri == file_uri => {
+                    if payload.is_empty() {
+                        return Err(VcsError::Backbone(format!("backbone file {uri} is never emptied")));
+                    }
+                    decode_os_space_pack_payload(payload)?;
+                    let directory = path.parent().filter(|parent| !parent.as_os_str().is_empty()).unwrap_or_else(|| std::path::Path::new("."));
+                    let temporary = directory.join(format!(".{}.{}.tmp", path.file_name().and_then(|name| name.to_str()).unwrap_or("document"), std::process::id()));
+                    let written = std::fs::write(&temporary, payload).and_then(|()| std::fs::rename(&temporary, path));
+                    if written.is_err() {
+                        let _ = std::fs::remove_file(&temporary);
+                    }
+                    return written.map_err(|error| VcsError::Backbone(format!("backbone file {uri}: {error}")));
                 }
                 #[cfg(not(target_arch = "wasm32"))]
                 SpacePortKind::Folder(folder_uri, storage) if uri == folder_uri => {
@@ -155,11 +136,11 @@ impl SpaceBackbonePort {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn open_folder_space_backbone(folder_path: &str) -> Result<Arc<OsBackbonePorts>, VcsError> {
-    Ok(Arc::new(OsBackbonePorts::Space(SpaceBackbonePort::folder(folder_path)?)))
+    Ok(Arc::new(OsBackbonePorts::space(SpaceBackbonePort::folder(folder_path)?)))
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn open_file_space_backbone(file_path: &str) -> Result<Arc<OsBackbonePorts>, VcsError> {
-    Ok(Arc::new(OsBackbonePorts::Space(SpaceBackbonePort::file(file_path)?)))
+    Ok(Arc::new(OsBackbonePorts::space(SpaceBackbonePort::file(file_path)?)))
 }
 // #endregion backbone

@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/mutation/remove-id3-frame/schema.json",
+  "title": "RemoveId3Frame",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeId3Frame"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z0-9]{4}$",
+      "x-semio-ui": {
+        "label": {
+          "en": "Frame id",
+          "de": "Frame-ID"
+        },
+        "description": {
+          "en": "Four-character ID3v2 frame id; the first frame carrying it is removed.",
+          "de": "Vierstellige ID3v2-Frame-ID; der erste Frame mit dieser ID wird entfernt."
+        }
+      }
+    }
+  }
+}

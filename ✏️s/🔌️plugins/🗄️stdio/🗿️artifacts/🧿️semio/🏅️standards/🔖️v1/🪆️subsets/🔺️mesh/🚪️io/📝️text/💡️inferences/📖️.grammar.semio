@@ -4,6 +4,6 @@ extension semio.mesh.inference
 start document
 
 document = header body
-header = "schema" SP "s.stdio.semio.mesh.inference" NL
+header = "schema" SP "stdio.semio.mesh.inference" NL
 body = payload NL?
 payload = OCTET+

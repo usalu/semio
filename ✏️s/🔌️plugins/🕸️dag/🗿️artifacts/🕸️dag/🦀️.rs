@@ -1,7 +1,7 @@
 //! 🔀️ DAG artifact — the document entity this plugin's app edits.
 //!
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`reasoning/dag→C:graph`): the old inline
-//! `nodes`/`edges` fields are replaced by a composed `s.stdio.semio.graph` CHILD slot
+//! `nodes`/`edges` fields are replaced by a composed `stdio.semio.graph` CHILD slot
 //! (`🔖️ContentBridge` below) — this plugin no longer defines its own persisted node/edge model, it
 //! composes stdio's neutral `graph` subset instead. The rich live editing types
 //! (`semio_framework_os_infinite_directed_presentation::DagNodeSpec`/`DagNodeKind`/`DagHostSnapshotEdge`) still flow

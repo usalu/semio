@@ -4,6 +4,8 @@
  */
 
 // #region 🔌️Adapters
+import { deriveSavedStateV1, saveFailureTextV1 } from "../💾️saved-state/🟦️.ts";
+import { localizedLabelTextV1 } from "../../🏛️ShellHost/📣️replay-refusal/🟦️.ts";
 import {
   type ActionDefinition,
   type AppDefinition,
@@ -142,7 +144,9 @@ export type DocumentTransferNoticeV1 =
   | "imported"
   | "load-cancelled"
   | "load-failed"
-  | "folder-detached";
+  | "folder-detached"
+  | "transfer-busy"
+  | "open-cancelled";
 
 /** 🗣️ Notice text per outcome, authored beside the code like `📣️replay-refusal`; `{file}` is the file name. */
 export const DOCUMENT_TRANSFER_NOTICE_LABELS_V1: Readonly<Record<DocumentTransferNoticeV1, { readonly en: string; readonly de: string }>> = {
@@ -159,11 +163,20 @@ export const DOCUMENT_TRANSFER_NOTICE_LABELS_V1: Readonly<Record<DocumentTransfe
   imported: { en: "Opened “{file}” as a new document.", de: "„{file}“ als neues Dokument geöffnet." },
   "load-cancelled": { en: "Loading “{file}” was cancelled; the previous document is unchanged.", de: "Laden von „{file}“ abgebrochen; das bisherige Dokument ist unverändert." },
   "load-failed": { en: "“{file}” could not be loaded; the previous document is unchanged.", de: "„{file}“ konnte nicht geladen werden; das bisherige Dokument ist unverändert." },
+  "open-cancelled": { en: "Opening “{file}” was cancelled; nothing was opened.", de: "Das Öffnen von „{file}“ wurde abgebrochen; es wurde nichts geöffnet." },
+  "transfer-busy": { en: "Another file is still being opened — wait for it or cancel it in Tasks.", de: "Eine andere Datei wird noch geöffnet — bitte warten oder in den Aufgaben abbrechen." },
   "folder-detached": {
     en: "The folder was detached because its document was not loaded; nothing is saved to it. Reconnect the folder to load its document.",
     de: "Der Ordner wurde getrennt, weil sein Dokument nicht geladen wurde; es wird nichts darin gespeichert. Verbinde den Ordner erneut, um sein Dokument zu laden.",
   },
 };
+
+/** 🚦️ Claims the single document-transfer slot; `false` when one is already in flight (the claim is released by the caller's `finally`). */
+export function beginDocumentTransferV1(flight: { current: boolean }): boolean {
+  if (flight.current) return false;
+  flight.current = true;
+  return true;
+}
 
 /** ⏹️ Whether a whole-document load ended by a cancel: the caller's `signal`, or the guest's own (a person's Cancel in the
  * history body), which the stepped archive load reports as an `AbortError`. */
@@ -171,10 +184,10 @@ export function documentLoadCancelledV1(error: unknown, signal?: AbortSignal): b
   return signal?.aborted === true || (error instanceof DOMException && error.name === "AbortError");
 }
 
-/** 🗣️ The localized notice for one outcome; only an unknown locale falls back to English. */
+/** 🗣️ The localized notice for one outcome; an unknown locale renders every language. */
 export function documentTransferNoticeTextV1(notice: DocumentTransferNoticeV1, file: string, locale: string): string {
   const label = DOCUMENT_TRANSFER_NOTICE_LABELS_V1[notice];
-  return (locale === "de" ? label.de : label.en).replace("{file}", file);
+  return localizedLabelTextV1(label, locale).replaceAll("{file}", file);
 }
 
 /** 🩺️ The notice's code, shared by the notice, the console line and every probe. */
@@ -390,17 +403,20 @@ export function canCheckIn(role: AppRole | undefined): boolean {
  * non-live remote takes priority over a pending-mutation count (the user needs to know the
  * connection itself is degraded before anything about local pending edits); `null` (no status event
  * observed yet, e.g. before the document's first `open`) reads as `remote: "detached"`. */
-export type SyncPillState = { readonly kind: "persisted" } | { readonly kind: "pending"; readonly count: number } | { readonly kind: "remote"; readonly remote: "connected" | "connecting" | "backoff" | "detached" };
+export type SyncPillState = { readonly kind: "persisted" } | { readonly kind: "unsaved"; readonly failure: Readonly<{ code: string }> | null } | { readonly kind: "pending"; readonly count: number } | { readonly kind: "remote"; readonly remote: "connected" | "connecting" | "backoff" | "detached" };
 
 export function computeSyncPillState(status: ArtifactSyncStatus | null): SyncPillState {
+  const saved = deriveSavedStateV1(status);
+  if (saved.kind === "unsaved" && saved.failure !== null) return { kind: "unsaved", failure: saved.failure };
   if (!status || status.remote.kind !== "live") {
     return { kind: "remote", remote: !status ? "detached" : status.remote.kind === "live" ? "connected" : status.remote.kind };
   }
   if (status.pendingMutations > 0) return { kind: "pending", count: status.pendingMutations };
-  return { kind: "persisted" };
+  return saved.kind === "saved" ? { kind: "persisted" } : { kind: "unsaved", failure: null };
 }
 
 const SYNC_STATUS_PERSISTED_LABEL: FrozenLabel = { en: "Persisted", de: "Gespeichert" };
+const SYNC_STATUS_UNSAVED_LABEL: FrozenLabel = { en: "Unsaved", de: "Nicht gespeichert" };
 const SYNC_STATUS_PENDING_LABEL: FrozenLabel = { en: "Pending", de: "Ausstehend" };
 const SYNC_STATUS_REMOTE_LABEL: FrozenLabel = { en: "Remote", de: "Remote" };
 const SYNC_STATUS_REMOTE_STATE_LABEL: Readonly<Record<"connected" | "connecting" | "backoff" | "detached", FrozenLabel>> = {
@@ -415,6 +431,7 @@ const SYNC_STATUS_REMOTE_STATE_LABEL: Readonly<Record<"connected" | "connecting"
  * read back off the rendered string in either locale, not just English. */
 export function syncPillText(state: SyncPillState, locale: string): string {
   if (state.kind === "persisted") return frozenLabelText(SYNC_STATUS_PERSISTED_LABEL, locale);
+  if (state.kind === "unsaved") return state.failure === null ? frozenLabelText(SYNC_STATUS_UNSAVED_LABEL, locale) : `${frozenLabelText(SYNC_STATUS_UNSAVED_LABEL, locale)}: ${saveFailureTextV1(state.failure, locale)}`;
   if (state.kind === "pending") return `${frozenLabelText(SYNC_STATUS_PENDING_LABEL, locale)} (${state.count})`;
   return `${frozenLabelText(SYNC_STATUS_REMOTE_LABEL, locale)}: ${frozenLabelText(SYNC_STATUS_REMOTE_STATE_LABEL[state.remote], locale)}`;
 }

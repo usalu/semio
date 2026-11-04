@@ -3,6 +3,7 @@
  * @see ../../🐚️Shell/🟦️.tsx
  * @see ../../🪪️WasmSessionLoader/🟦️.tsx
  */
+import type { PickedFileFormatCatalogPortV1 } from "../📂️picked-file-opening/🟦️.ts";
 import type { UiPreferenceVocabularyV1 } from "../../🎚️UiPreferences/🟦️.ts";
 import type { WasmBindingsV1 } from "../../🪪️WasmSessionLoader/🟦️.tsx";
 import type { HubPluginSourceNoticeV1, HubPluginSourceV1 } from "@semio-tech/framework/plugin-module/hub-source/port";
@@ -32,6 +33,7 @@ export type ShellHostPortsV1 = Readonly<{
   catalogAdmission?: CatalogAdmissionPortV1;
   pluginDistribution?: PluginDistributionPortV1;
   documentAccess?: DocumentAccessPortV1;
+  formatCatalog?: PickedFileFormatCatalogPortV1;
   preferenceVocabulary?: UiPreferenceVocabularyV1;
   wasmBindings?: WasmBindingsV1;
 }>;

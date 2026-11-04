@@ -49,7 +49,8 @@
           "diagonalReinforcementRatio": null,
           "shearCrackingBeforeYield": null,
           "shearForceDemandN": 1.5,
-          "intermediateSteelAreaM2": null
+          "intermediateSteelAreaM2": null,
+          "analysisMethod": null
         }
       }
     ]

@@ -17,6 +17,7 @@ message HtmlMutation {
     SetText set_text = 8;
     SetComment set_comment = 9;
     SetRawText set_raw_text = 10;
+    SpliceSource splice_source = 11;
   }
 }
 
@@ -70,4 +71,14 @@ message SetComment {
 message SetRawText {
   NodePath path = 1;
   string text = 2;
+}
+
+message SourceSplice {
+  uint32 offset = 1;
+  uint32 delete = 2;
+  string insert = 3;
+}
+
+message SpliceSource {
+  repeated SourceSplice splices = 1;
 }

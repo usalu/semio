@@ -163,3 +163,31 @@ async fn every_leaf_satisfies_the_inverse_sum_law() {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     }
 }
+
+#[test]
+fn renaming_an_element_composes_the_gated_remove_and_insert_and_refuses_an_excluded_name() {
+    use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+    let base = document();
+    let rename = |name: &str| SnapshotEditEvent::SetValue { path: "/doc/root/children/1/children/0/name".into(), value: semio_framework_value::DslValue::String(name.into()) };
+    let rows = edit_rules::special(&rename("circle"), &base).expect("a rename resolves").expect("the tree edit handles it");
+    let [SvgBasicMutation::RemoveElement(_), SvgBasicMutation::InsertBasicElement(insert)] = rows.as_slice() else { panic!("a rename is a gated remove and insert: {rows:?}") };
+    assert!(matches!(&insert.node, SvgNode::Element { name, .. } if name == "circle"));
+    let mut state = base.clone();
+    for row in &rows {
+        apply_svg_basic_mutation(&mut state, row);
+    }
+    let SvgNode::Element { name, .. } = node_at(&state.doc, &[1, 0]).unwrap() else { panic!("an element") };
+    assert_eq!(name, "circle");
+}
+
+#[test]
+fn a_typed_transform_value_raises_the_typed_set_transform_kind() {
+    use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+    let base = document();
+    let event = SnapshotEditEvent::InsertValue {
+        path: "/doc/root/children/1/attrs/-".into(),
+        value: semio_framework_value::ToValue::to_value(&SvgAttr { name: "transform".into(), value: SvgAttributeValue::Transform(vec![TransformOp::Translate { x: 3.0, y: Some(4.0) }]) }),
+    };
+    let rows = edit_rules::special(&event, &base).expect("a transform edit resolves").expect("the tree edit handles it");
+    assert!(matches!(rows.as_slice(), [SvgBasicMutation::SetTransform(_)]), "{rows:?}");
+}

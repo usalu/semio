@@ -1,21 +1,11 @@
-//! 🧊 Step CC5 viewer — the Main window: a read-only world-3d mesh scene built with the shared
-//! `MeshWindowKit` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.6), from the
-//! artifact-level `StepSnapshot` — this file imports nothing from the sibling editor module
-//! (a substring check on that module path is what `policyViewerPurityBreaches` forbids). One
-//! placeholder-box instance per entry of the snapshot's largest top-level collection stands in for
-//! real per-kind geometry — deliberately generic across all subsets this kit serves (see the
-//! packet's own report for the tradeoff).
+//! 🧊 STEP window — the document's own cartesian points on the shared `MeshWindowKit`; it never mutates (edits arrive through the Details pane and the transform gesture) and the viewer variant imports nothing from the sibling editor module (`policyViewerPurityBreaches`).
 
 use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::{BuiltNode, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
 pub const BODY_KEY: &str = MeshWindowKit::KIND_ID;
-const STEP_CC5_VIEW_FALLBACK_MESH_KIND: &str = "box";
-const STEP_CC5_VIEW_DEFAULT_CAMERA_POSITION: [f64; 3] = [8.0, -8.0, 6.0];
-const STEP_CC5_VIEW_DEFAULT_CAMERA_TARGET: [f64; 3] = [0.0, 0.0, 0.0];
-const STEP_CC5_VIEW_DEFAULT_CAMERA_FOV: f64 = 45.0;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -27,46 +17,10 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure, kind-agnostic content signal: the length of the snapshot's largest top-level JSON
-/// array field, clamped to a small display range — real (not fabricated), deliberately generic so
-/// this same shape replicates uniformly across every subset this window kit serves without coupling
-/// to field names a live peer ticket may still be refactoring.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entity_count(document: &StepSnapshot) -> usize {
-    semio_framework_value::ToValue::to_value(document).as_object().map_or(0, |object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).clamp(1, 6)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn world_instances_json(document: &StepSnapshot) -> String {
-    let count = entity_count(document);
-    let instances: Vec<semio_framework_pack_json::Value> = (0..count)
-        .map(|index| {
-            semio_framework_pack_json::json!({
-                "id": format!("step_cc5-{index}"),
-                "meshId": STEP_CC5_VIEW_FALLBACK_MESH_KIND,
-                "position": [index as f64 * 2.0, 0.0, 0.0],
-                "rotation": [0.0, 0.0, 0.0, 1.0],
-                "scale": [1.0, 1.0, 1.0],
-                "label": format!("Step CC5 {index}"),
-                "smoothShading": false,
-            })
-        })
-        .collect();
-    semio_framework_pack_json::to_string(&semio_framework_pack_json::array(instances))
-}
-
-/// 👁️ Pure `StepSnapshot -> BuiltNode` read: default camera (a viewer has no persisted
-/// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
+/// 🧊️ The document's own `CARTESIAN_POINT` entities as point markers on the shared mesh scene, framed on their bounds, never a placeholder.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &StepSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let meshes_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::array([semio_framework_pack_json::json!({ "id": STEP_CC5_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(STEP_CC5_VIEW_FALLBACK_MESH_KIND) })]));
-    let view = MeshView {
-        camera_json: world3d_camera_json(STEP_CC5_VIEW_DEFAULT_CAMERA_POSITION, STEP_CC5_VIEW_DEFAULT_CAMERA_TARGET, STEP_CC5_VIEW_DEFAULT_CAMERA_FOV),
-        meshes_json,
-        instances_json: world_instances_json(document),
-        selection_json: world3d_selection_json("rectangle", &[], None),
-    };
-    MeshWindowKit::render(&view)
+    semio_s_artifact_stdio_contract::mesh_scene("STEP", &[], &[], &document.scene_points())
 }
 //#endregion 🔖️Render
 

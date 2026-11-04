@@ -23,7 +23,7 @@
 //   bun 📜️script.ts generate [--out <dir>] [--only <fixture-id>]
 //   bun 📜️script.ts manifests                      # emit the testEvidence block for 🔮️oracles
 //
-// @see ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/⚙️generator/📜️script.ts
+// @see ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts
 //      — the sibling this generator's shape, CLI and manifest format are mirrored from
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/
 

@@ -19,6 +19,8 @@ pub mod remove_assessment;
 pub mod change_assessment_knowledge_level;
 #[path = "../✏️change-assessment-limit-state/🦀️.rs"]
 pub mod change_assessment_limit_state;
+#[path = "../✏️change-assessment-analysis-method/🦀️.rs"]
+pub mod change_assessment_analysis_method;
 #[path = "../✏️change-assessment-supported-building-id/🦀️.rs"]
 pub mod change_assessment_supported_building_id;
 #[path = "../✏️change-assessment-gamma-el/🦀️.rs"]

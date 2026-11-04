@@ -93,7 +93,7 @@ impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
     type Dependency = semio_framework_value::DslValue;
     type Key = String;
     type Value = SemioGraphNodeConnectivity;
-    const FIELD_ID: &'static str = "s.stdio.semio.graph.inference.connectivity";
+    const FIELD_ID: &'static str = "stdio.semio.graph.inference.connectivity";
     const SCHEMA_VERSION: u32 = 1;
 
     fn reads() -> &'static [&'static str] {

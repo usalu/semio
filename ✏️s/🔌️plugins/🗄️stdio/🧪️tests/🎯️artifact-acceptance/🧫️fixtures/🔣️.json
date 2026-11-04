@@ -1,0 +1,858 @@
+{
+ "schema": "semio.stdio.artifact-acceptance/v1",
+ "nonArtifacts": [
+  "📇️inventory",
+  "🔣️.json"
+ ],
+ "artifacts": [
+  {
+   "batch": "A",
+   "artifact": "html",
+   "directory": "🌐️html",
+   "kind": "s.stdio.html",
+   "plugin": "stdio",
+   "extension": ".html",
+   "oracle": "html",
+   "surface": "shipped",
+   "edit": {
+    "mode": "verb",
+    "verb": "textEdit",
+    "args": {
+     "text": "<p>Matrix</p>"
+    }
+   },
+   "export": {
+    "format": "html"
+   },
+   "invalid": {
+    "bytes": "ffc328",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "A",
+   "artifact": "json",
+   "directory": "🧾️json",
+   "kind": "s.stdio.json",
+   "plugin": "stdio",
+   "extension": ".json",
+   "oracle": "json",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "verb": "set-node",
+    "control": "[data-ui-node-key=\"edit\"][aria-label^=\"name:\"]",
+    "value": "\"Matrix\""
+   },
+   "export": {
+    "format": "json"
+   },
+   "invalid": {
+    "bytes": "7b",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "A",
+   "artifact": "md",
+   "directory": "📝️md",
+   "kind": "s.stdio.md",
+   "plugin": "stdio",
+   "extension": ".md",
+   "oracle": "text",
+   "surface": "shipped",
+   "edit": {
+    "mode": "verb",
+    "verb": "textEdit",
+    "args": {
+     "text": "# Matrix"
+    }
+   },
+   "export": {
+    "format": "text"
+   },
+   "invalid": {
+    "bytes": "ffc328",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "A",
+   "artifact": "txt",
+   "directory": "🔤️txt",
+   "kind": "s.stdio.txt",
+   "plugin": "stdio",
+   "extension": ".txt",
+   "oracle": "text",
+   "surface": "shipped",
+   "edit": {
+    "mode": "verb",
+    "verb": "textEdit",
+    "args": {
+     "text": "Matrix text"
+    }
+   },
+   "export": {
+    "format": "text"
+   },
+   "invalid": {
+    "bytes": "ffc328",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "A",
+   "artifact": "xml",
+   "directory": "📰️xml",
+   "kind": "s.stdio.xml",
+   "plugin": "stdio",
+   "extension": ".xml",
+   "oracle": "xml",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "verb": "set-node",
+    "control": "[data-ui-node-key=\"edit\"][aria-label^=\"text:\"]",
+    "value": "Matrix"
+   },
+   "export": {
+    "format": "xml"
+   },
+   "invalid": {
+    "bytes": "3c",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "B",
+   "artifact": "csv",
+   "directory": "📊️csv",
+   "kind": "s.stdio.csv",
+   "plugin": "stdio",
+   "extension": ".csv",
+   "oracle": "csv",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "verb": "set-cell",
+    "control": "[id$=\"/row-0/cell-0\"]",
+    "value": "Matrix Cell"
+   },
+   "export": {
+    "format": "csv"
+   },
+   "invalid": {
+    "bytes": "ffc328",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "B",
+   "artifact": "docx",
+   "directory": "📜️docx",
+   "kind": "s.stdio.docx",
+   "plugin": "stdio-office",
+   "extension": ".docx",
+   "oracle": "ooxml",
+   "surface": "shipped",
+   "edit": {
+    "mode": "scan"
+   },
+   "export": {
+    "format": "ooxml"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "B",
+   "artifact": "idml",
+   "directory": "📚️idml",
+   "kind": "s.stdio.idml",
+   "plugin": null,
+   "extension": ".idml",
+   "oracle": "zip",
+   "surface": "missing",
+   "edit": {
+    "mode": "none"
+   },
+   "export": {
+    "format": "zip"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "B",
+   "artifact": "pptx",
+   "directory": "📽️pptx",
+   "kind": "s.stdio.pptx",
+   "plugin": "stdio-office",
+   "extension": ".pptx",
+   "oracle": "ooxml",
+   "surface": "shipped",
+   "edit": {
+    "mode": "scan"
+   },
+   "export": {
+    "format": "ooxml"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "B",
+   "artifact": "tsv",
+   "directory": "📑️tsv",
+   "kind": "s.stdio.tsv",
+   "plugin": "stdio",
+   "extension": ".tsv",
+   "oracle": "tsv",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "verb": "set-cell",
+    "control": "[id$=\"/row-0/cell-0\"]",
+    "value": "Matrix Cell"
+   },
+   "export": {
+    "format": "tsv"
+   },
+   "invalid": {
+    "bytes": "ffc328",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "B",
+   "artifact": "xlsx",
+   "directory": "📕️xlsx",
+   "kind": "s.stdio.xlsx",
+   "plugin": "stdio-office",
+   "extension": ".xlsx",
+   "oracle": "ooxml",
+   "surface": "shipped",
+   "edit": {
+    "mode": "scan"
+   },
+   "export": {
+    "format": "ooxml"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "C",
+   "artifact": "bmp",
+   "directory": "🪟️bmp",
+   "kind": "s.stdio.bmp",
+   "plugin": "stdio-image",
+   "extension": ".bmp",
+   "oracle": "bmp",
+   "surface": "shipped",
+   "edit": {
+    "mode": "scan"
+   },
+   "export": {
+    "format": "bmp"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "C",
+   "artifact": "gif",
+   "directory": "🎞️gif",
+   "kind": "s.stdio.gif",
+   "plugin": "stdio-image",
+   "extension": ".gif",
+   "oracle": "gif",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "/frames/0/delay",
+    "value": "10"
+   },
+   "export": {
+    "format": "gif"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "C",
+   "artifact": "jpg",
+   "directory": "📸️jpg",
+   "kind": "s.stdio.jpg",
+   "plugin": "stdio-image",
+   "extension": ".jpg",
+   "oracle": "jpeg",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "density",
+    "value": "72"
+   },
+   "export": {
+    "format": "jpeg"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "C",
+   "artifact": "png",
+   "directory": "📷️png",
+   "kind": "s.stdio.png",
+   "plugin": "stdio-image",
+   "extension": ".png",
+   "oracle": "png",
+   "surface": "shipped",
+   "edit": {
+    "mode": "scan"
+   },
+   "export": {
+    "format": "png"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "C",
+   "artifact": "tiff",
+   "directory": "🖼️tiff",
+   "kind": "s.stdio.tiff",
+   "plugin": "stdio-image",
+   "extension": ".tiff",
+   "oracle": "tiff",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "/ifds/0/entries/0/values",
+    "value": "1"
+   },
+   "export": {
+    "format": "tiff"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "D",
+   "artifact": "dwg",
+   "directory": "🖊️dwg",
+   "kind": "s.stdio.dwg",
+   "plugin": "stdio-cad",
+   "extension": ".dwg",
+   "oracle": "dwg",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "title",
+    "value": "Matrix"
+   },
+   "export": {
+    "format": "dwg"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "D",
+   "artifact": "dxf",
+   "directory": "🖋️dxf",
+   "kind": "s.stdio.dxf",
+   "plugin": "stdio-cad",
+   "extension": ".dxf",
+   "oracle": "dxf",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "/tables/layers/0",
+    "value": "Matrix"
+   },
+   "export": {
+    "format": "dxf"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "D",
+   "artifact": "pdf",
+   "directory": "📖️pdf",
+   "kind": "s.stdio.pdf",
+   "plugin": "stdio-pdf",
+   "extension": ".pdf",
+   "oracle": "pdf",
+   "surface": "shipped",
+   "edit": {
+    "mode": "scan"
+   },
+   "export": {
+    "format": "pdf"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "D",
+   "artifact": "svg",
+   "directory": "🎨️svg",
+   "kind": "s.stdio.svg",
+   "plugin": "stdio-image",
+   "extension": ".svg",
+   "oracle": "svg",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "/doc/root/children/0/attrs/0/value",
+    "value": "Matrix"
+   },
+   "export": {
+    "format": "svg"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "E",
+   "artifact": "gltf",
+   "directory": "🧊️gltf",
+   "kind": "s.stdio.gltf",
+   "plugin": "stdio-mesh",
+   "extension": ".gltf",
+   "oracle": "gltf",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "/nodes/0/translation",
+    "value": "[0,0,0]"
+   },
+   "export": {
+    "format": "gltf"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "E",
+   "artifact": "las",
+   "directory": "☁️las",
+   "kind": "s.stdio.las",
+   "plugin": "stdio-mesh",
+   "extension": ".las",
+   "oracle": "las",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "/points/0",
+    "value": "1"
+   },
+   "export": {
+    "format": "las"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "E",
+   "artifact": "obj",
+   "directory": "🗽️obj",
+   "kind": "s.stdio.obj",
+   "plugin": "stdio-mesh",
+   "extension": ".obj",
+   "oracle": "obj",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "/vertices/0",
+    "value": "0 0 0"
+   },
+   "export": {
+    "format": "obj"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "E",
+   "artifact": "ply",
+   "directory": "🧱️ply",
+   "kind": "s.stdio.ply",
+   "plugin": "stdio-mesh",
+   "extension": ".ply",
+   "oracle": "ply",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "comment",
+    "value": "Matrix"
+   },
+   "export": {
+    "format": "ply"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "E",
+   "artifact": "step",
+   "directory": "📐️step",
+   "kind": "s.stdio.step",
+   "plugin": "stdio-cad",
+   "extension": ".step",
+   "oracle": "step",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "/entities/0/name",
+    "value": "Matrix"
+   },
+   "export": {
+    "format": "step"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "E",
+   "artifact": "stl",
+   "directory": "🔺️stl",
+   "kind": "s.stdio.stl",
+   "plugin": "stdio-mesh",
+   "extension": ".stl",
+   "oracle": "stl",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "/solid/triangles/0/vertices/0",
+    "value": "0 0 0"
+   },
+   "export": {
+    "format": "stl"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "F",
+   "artifact": "bcf",
+   "directory": "💬️bcf",
+   "kind": "s.stdio.bcf",
+   "plugin": "stdio-bim",
+   "extension": ".bcf",
+   "oracle": "bcf",
+   "surface": "shipped",
+   "edit": {
+    "mode": "scan"
+   },
+   "export": {
+    "format": "bcf"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "F",
+   "artifact": "epw",
+   "directory": "🌦️epw",
+   "kind": "s.stdio.epw",
+   "plugin": "stdio-binary",
+   "extension": ".epw",
+   "oracle": "epw",
+   "surface": "shipped",
+   "edit": {
+    "mode": "scan"
+   },
+   "export": {
+    "format": "epw"
+   },
+   "invalid": {
+    "bytes": "ffc328",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "F",
+   "artifact": "idf",
+   "directory": "⚡️idf",
+   "kind": "s.stdio.idf",
+   "plugin": "energy",
+   "extension": ".idf",
+   "oracle": "text",
+   "surface": "shipped",
+   "edit": {
+    "mode": "scan"
+   },
+   "export": {
+    "format": "text"
+   },
+   "invalid": {
+    "bytes": "ffc328",
+    "expect": "refusal-notice"
+   },
+   "ownerApp": "s.energy.model@1/*#editor"
+  },
+  {
+   "batch": "F",
+   "artifact": "ifc",
+   "directory": "🏗️ifc",
+   "kind": "s.stdio.ifc",
+   "plugin": "stdio-bim",
+   "extension": ".ifc",
+   "oracle": "ifc",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "name",
+    "value": "Matrix"
+   },
+   "export": {
+    "format": "ifc"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "G",
+   "artifact": "avi",
+   "directory": "📼️avi",
+   "kind": "s.stdio.avi",
+   "plugin": "stdio-media",
+   "extension": ".avi",
+   "oracle": "avi",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "keyframe",
+    "value": "false"
+   },
+   "export": {
+    "format": "avi"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "G",
+   "artifact": "mp3",
+   "directory": "🎵️mp3",
+   "kind": "s.stdio.mp3",
+   "plugin": "stdio-media",
+   "extension": ".mp3",
+   "oracle": "mp3",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "/id3v2",
+    "value": "TIT2=Matrix"
+   },
+   "export": {
+    "format": "mp3"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "G",
+   "artifact": "mp4",
+   "directory": "🎥️mp4",
+   "kind": "s.stdio.mp4",
+   "plugin": "stdio-media",
+   "extension": ".mp4",
+   "oracle": "mp4",
+   "surface": "shipped",
+   "edit": {
+    "mode": "rendered",
+    "path": "details",
+    "verb": "setSnapshotValue",
+    "field": "/tracks/0/samples/0/sync",
+    "value": "false"
+   },
+   "export": {
+    "format": "mp4"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "G",
+   "artifact": "wav",
+   "directory": "🔊️wav",
+   "kind": "s.stdio.wav",
+   "plugin": "stdio-media",
+   "extension": ".wav",
+   "oracle": "wav",
+   "surface": "shipped",
+   "edit": {
+    "mode": "scan"
+   },
+   "export": {
+    "format": "wav"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "H",
+   "artifact": "binary",
+   "directory": "💾️binary",
+   "kind": "s.stdio.binary",
+   "plugin": "stdio-binary",
+   "extension": ".bin",
+   "oracle": "binary",
+   "surface": "shipped",
+   "edit": {
+    "mode": "scan"
+   },
+   "export": {
+    "format": "binary"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "H",
+   "artifact": "deflate",
+   "directory": "🗜️deflate",
+   "kind": "s.stdio.deflate",
+   "plugin": "stdio-binary",
+   "extension": ".zz",
+   "oracle": "zlib",
+   "surface": "shipped",
+   "edit": {
+    "mode": "scan"
+   },
+   "export": {
+    "format": "zlib"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "H",
+   "artifact": "semio",
+   "directory": "🧿️semio",
+   "kind": "s.stdio.semio",
+   "plugin": "stdio-semio",
+   "extension": ".semio",
+   "oracle": "semio",
+   "surface": "shipped",
+   "edit": {
+    "mode": "scan"
+   },
+   "export": {
+    "format": "semio"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  },
+  {
+   "batch": "H",
+   "artifact": "zip",
+   "directory": "🎒️zip",
+   "kind": "s.stdio.zip",
+   "plugin": "stdio-binary",
+   "extension": ".zip",
+   "oracle": "zip",
+   "surface": "shipped",
+   "edit": {
+    "mode": "scan"
+   },
+   "export": {
+    "format": "zip"
+   },
+   "invalid": {
+    "bytes": "deadbeef",
+    "expect": "refusal-notice"
+   }
+  }
+ ]
+}

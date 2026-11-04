@@ -211,6 +211,60 @@ macro_rules! semio_member_owner {
 }
 
 
+static NATURAL_MOUNTS: std::sync::Mutex<std::collections::BTreeMap<&'static str, Result<(), String>>> = std::sync::Mutex::new(std::collections::BTreeMap::new());
+
+/// 🧭️ Mounts one subset's pack envelope on the natural-file dispatcher exactly once and remembers why a refusal happened; mounting again returns the first outcome.
+pub fn mount_natural_pack(schema: &'static str, envelope_id: &str, format: ::semio_framework_os_kernel::os_store::semio_format::SemioHandler) -> Result<(), String> {
+    let mut mounts = NATURAL_MOUNTS.lock().map_err(|_| "the semio natural-file mount table is unavailable".to_string())?;
+    if let Some(outcome) = mounts.get(schema) {
+        return outcome.clone();
+    }
+    let outcome = ::semio_framework_os_kernel::os_store::semio_format::SemioEnvelope::from_envelope_id(envelope_id, ::semio_framework_os_kernel::os_store::semio_format::Component::Pack, 1).and_then(|envelope| ::semio_framework_os_kernel::os_store::semio_format::register_format(envelope, format)).map_err(|error| error.to_string());
+    mounts.insert(schema, outcome.clone());
+    outcome
+}
+
+/// 🚧️ The refusal a natural-file call reports when its subset is not mounted: the mount's own reason when registration was refused, otherwise that the subset editor was never mounted (English and German).
+pub fn natural_mount_refusal(schema: &'static str) -> Option<semio_framework_plugin::MediaError> {
+    let outcome = NATURAL_MOUNTS.lock().ok().and_then(|mounts| mounts.get(schema).cloned());
+    let (english, german) = match outcome {
+        Some(Ok(())) => return None,
+        Some(Err(reason)) => (format!("subset {schema} could not be mounted: {reason}"), format!("Teilmenge {schema} konnte nicht eingebunden werden: {reason}")),
+        None => (format!("subset editor {schema} is not mounted"), format!("Teilmengen-Editor {schema} ist nicht eingebunden")),
+    };
+    Some(semio_framework_plugin::MediaError::Payload("artifact:native".into(), format!("[semio.natural-file.unmounted] {english} / {german}")))
+}
+
+/// 📄️ The `.semio` natural-file codec of one subset: Open and Save route through the semio dispatcher. The editor mounts its pack envelope once, when its codec is first read; the codec is always declared, and a refused or missing mount is reported by every encode and decode with its real reason.
+#[macro_export]
+macro_rules! semio_natural_file {
+    ($snapshot:ty, $schema:literal) => {
+        fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+            static FORMAT: ::semio_framework_os_kernel::os_store::semio_format::SemioFormat = ::semio_framework_os_kernel::os_store::semio_format::SemioFormat {
+                token: concat!($schema, "#natural-pack-v1"),
+                verify: |bytes| <$snapshot as ::pack::snapshot::ArtifactPack>::decode_pack(bytes).map(|_| ()).map_err(|error| error.to_string()),
+            };
+            let _ = $crate::mount_natural_pack($schema, <$snapshot as ::pack::snapshot::ArtifactDsl>::envelope_id(), &FORMAT);
+            Some(semio_framework_plugin::NaturalFileCodec { format_kind: concat!($schema, "@v1"), extension: ".semio", media_type: "application/vnd.semio", binary: true })
+        }
+
+        fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+            if let Some(refusal) = $crate::natural_mount_refusal($schema) {
+                return Err(refusal);
+            }
+            <$snapshot as ::pack::snapshot::ArtifactPack>::encode_pack_with(snapshot, &::semio_framework_os_kernel::os_store::PackEncodeOptions::default()).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+        }
+
+        fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+            if let Some(refusal) = $crate::natural_mount_refusal($schema) {
+                return Err(refusal);
+            }
+            ::semio_framework_os_kernel::os_store::semio_format::dispatch(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
+            <$snapshot as ::pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+        }
+    };
+}
+
 /// 🔗️ One direction of one subset's conversions: `declare` adds the composer rows that write a semio dialect to an
 /// artifact declaration, `register` publishes all of the direction's rows into the process-wide io registry.
 #[derive(Clone, Copy)]

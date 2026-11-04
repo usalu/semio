@@ -170,7 +170,7 @@ pub const STDIO_SEMIODRAWING_DOCUMENT_SCHEMA: &str = "stdio.semio.drawing";
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(layout = "lines")]
 #[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_snapshot")]
-#[artifact_schema(id = "s.stdio.semio.drawing")]
+#[artifact_schema(id = "stdio.semio.drawing")]
 pub struct SemioDrawingSnapshot {
     #[state(artifact)]
     pub schema: String,

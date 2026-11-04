@@ -134,6 +134,7 @@ export function testWindowScope(): void {
   for (const row of fixture.unownedHint) {
     assert.equal(keybindingUnownedTextV1(row.locale, row.chord, row.label), row.text, `${row.locale}: hint`);
   }
+  assert.equal(keybindingUnownedTextV1("fr", "⌘G", "Add"), `⌘G · Add — ${KEYBINDING_UNOWNED_LABEL.en} | ${KEYBINDING_UNOWNED_LABEL.de}`, "an unknown locale joins every language");
   assert.notEqual(KEYBINDING_UNOWNED_LABEL.en, KEYBINDING_UNOWNED_LABEL.de, "🇩🇪️ the two languages are authored, not copied");
   assert.equal(fixture.unownedHint.filter((row) => row.locale === "de").length, 1, "🇩🇪️ German is pinned by its own row");
 

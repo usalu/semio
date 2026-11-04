@@ -1,5 +1,4 @@
-//! 🚧 scaffolded by W1b — binary representation marker for `stdio.mp3.diff`. Full field-layout
-//! parse/print lands in W2/W3.
+//! 🧬️ The `stdio.mp3.diff` binary diff: the text diff line verbatim as UTF-8 (`📡️.protocol.semio`).
 pub const BINARY_MAGIC: &str = "stdio.mp3.diff";
 
 #[allow(unused_imports)]

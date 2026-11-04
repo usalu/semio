@@ -101,7 +101,7 @@ pub fn document_mass_properties(body: &Body, tol: f64) -> BrepMassProperties {
 /// have an honest home here).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.brep.inference")]
+#[artifact_schema(id = "stdio.semio.brep.inference")]
 pub struct SemioBrepInference {
     #[derived]
     pub validation_report: Vec<BrepValidationDiagnostic>,
@@ -127,23 +127,23 @@ impl protocol::Inference<SemioBrepSnapshot> for SemioBrepInference {
 
 impl protocol::InferenceSpec<SemioBrepSnapshot> for SemioBrepInference {
     fn inference_schema_id() -> &'static str {
-        "s.stdio.semio.brep.inference"
+        "stdio.semio.brep.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
-            protocol::InferenceFieldSpec { id: "s.stdio.semio.brep.inference.validationReport", reads: &["vertices", "edges", "loops", "faces", "shells", "solids"] },
-            protocol::InferenceFieldSpec { id: "s.stdio.semio.brep.inference.tessellation", reads: &["vertices", "edges", "loops", "faces", "shells", "solids", "coedges", "nextLabel"] },
-            protocol::InferenceFieldSpec { id: "s.stdio.semio.brep.inference.massProperties", reads: &["vertices", "edges", "loops", "faces", "shells", "solids", "coedges", "nextLabel"] },
+            protocol::InferenceFieldSpec { id: "stdio.semio.brep.inference.validationReport", reads: &["vertices", "edges", "loops", "faces", "shells", "solids"] },
+            protocol::InferenceFieldSpec { id: "stdio.semio.brep.inference.tessellation", reads: &["vertices", "edges", "loops", "faces", "shells", "solids", "coedges", "nextLabel"] },
+            protocol::InferenceFieldSpec { id: "stdio.semio.brep.inference.massProperties", reads: &["vertices", "edges", "loops", "faces", "shells", "solids", "coedges", "nextLabel"] },
         ]
     }
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.stdio.semio.brep.inference`'s facet leaves into the OS-wide inference catalog.
+/// 💡️ Registers `stdio.semio.brep.inference`'s facet leaves into the OS-wide inference catalog.
 /// The `register_artifact_inferences()` call site itself lives in the SHARED
 /// `🏅️standards/🔖️v1/⚙️engine/🦀️.rs` (aggregates all 14 `s.stdio.semio.*` subsets'
 /// `register()` calls) — out of this ticket's `🧊️brep/`-only edit scope, same boundary
@@ -152,7 +152,7 @@ impl protocol::InferenceSpec<SemioBrepSnapshot> for SemioBrepInference {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_brep_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.stdio.semio.brep.inference",
+        id: "stdio.semio.brep.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

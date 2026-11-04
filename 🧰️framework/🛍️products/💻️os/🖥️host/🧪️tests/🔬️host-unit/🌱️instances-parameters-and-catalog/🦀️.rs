@@ -27,7 +27,7 @@
 
     #[test]
     fn creates_and_lists_space_catalog_entries() {
-        let port = Arc::new(OsBackbonePorts::Store(store::os_store::backbone::BackbonePorts::Memory(resolve_kernel_future(MemoryBackbonePort::new()))));
+        let port = Arc::new(OsBackbonePorts::store(store::os_store::backbone::BackbonePorts::Memory(resolve_kernel_future(MemoryBackbonePort::new()))));
         let owner = space::SpaceUser { id: "user-1".into(), name: "Ada".into(), avatar: None, role: space::SpaceRole::Author };
         let entry = create_os_space("Catalog Space", space::SpaceKind::Studio, space::SpaceVisibility::Private, owner, &port).expect("create");
         assert_eq!(entry.collection_count, 1, "create_os_space must seed exactly one default collection");
@@ -37,6 +37,73 @@
         assert!(listed.iter().any(|row| row.id == entry.id));
         delete_os_space(&entry.id, &port).expect("delete");
         assert!(!list_os_space_catalog_entries(&port).expect("list").iter().any(|row| row.id == entry.id));
+    }
+
+    #[test]
+    fn space_pack_export_keeps_the_document_name_and_import_never_overwrites() {
+        let fresh = || Arc::new(OsBackbonePorts::store(store::os_store::backbone::BackbonePorts::Memory(resolve_kernel_future(MemoryBackbonePort::new()))));
+        let port = fresh();
+        let owner = space::SpaceUser { id: "user-1".into(), name: "Ada".into(), avatar: None, role: space::SpaceRole::Author };
+        let entry = create_os_space("Grundriss: EG/OG?", space::SpaceKind::Studio, space::SpaceVisibility::Private, owner, &port).expect("create");
+        let document = load_os_space_document(&entry.id, &port).expect("load");
+        let export = export_os_space_pack(&document).expect("pack export");
+        assert_eq!(export.name, document.name);
+        assert_eq!(export.file_stem(&entry.id), "Grundriss_ EG_OG_");
+        let unnamed = BackboneExport { name: String::new(), files: () };
+        assert_eq!(unnamed.file_stem("space-1"), "space-1");
+        assert!(import_os_space_from_pack(&export.files.pack, &export.files.spr, &port).is_err(), "an existing id is never overwritten");
+        let other = fresh();
+        let admitted = import_os_space_from_pack(&export.files.pack, &export.files.spr, &other).expect("first import into an empty catalog");
+        assert_eq!(admitted.id, entry.id);
+        assert!(import_os_space_from_pack(&export.files.pack, &export.files.spr, &other).is_err(), "the second import of the same id is refused");
+    }
+
+    #[test]
+    fn file_space_port_persists_exactly_the_chosen_file_with_no_companions() {
+        let directory = std::env::temp_dir().join(format!("semio-file-space-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).expect("scratch directory");
+        let file = directory.join("studio.space");
+        let ports = open_file_space_backbone(file.to_str().expect("utf-8 scratch path")).expect("file space port");
+        let source = Arc::new(OsBackbonePorts::store(store::os_store::backbone::BackbonePorts::Memory(resolve_kernel_future(MemoryBackbonePort::new()))));
+        let owner = space::SpaceUser { id: "user-1".into(), name: "Ada".into(), avatar: None, role: space::SpaceRole::Author };
+        let entry = create_os_space("Studio", space::SpaceKind::Studio, space::SpaceVisibility::Private, owner, &source).expect("create");
+        let document = load_os_space_document(&entry.id, &source).expect("load");
+        let payload = encode_backbone_payload(&document).expect("payload");
+        let uri = format!("file://{}", file.display());
+        assert!(ports.read(&uri).is_err(), "a file that does not exist yet is missing, not empty");
+        ports.write(&uri, &payload).expect("write");
+        assert_eq!(std::fs::read(&file).expect("the chosen file itself"), payload);
+        assert_eq!(ports.read(&uri).expect("read back"), payload);
+        assert!(ports.write(&uri, &[]).is_err(), "a file space is never emptied");
+        let names: Vec<_> = std::fs::read_dir(&directory).expect("list").map(|entry| entry.expect("entry").file_name().to_string_lossy().into_owned()).collect();
+        assert_eq!(names, vec!["studio.space".to_string()], "no companion or temporary files remain");
+        std::fs::remove_dir_all(&directory).ok();
+    }
+
+    #[test]
+    fn saved_at_stamps_sort_as_instants_and_never_as_text() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🕰️saved-at-stamps/🔣️.json")).unwrap();
+        for row in fixture["accepted"].as_array().unwrap() {
+            let expected: i128 = row["nanoseconds"].as_str().unwrap().parse().unwrap();
+            assert_eq!(saved_at_nanoseconds(row["stamp"].as_str().unwrap()).unwrap(), expected, "{row}");
+        }
+        for stamp in fixture["refused"].as_array().unwrap() {
+            assert!(saved_at_nanoseconds(stamp.as_str().unwrap()).is_err(), "{stamp}");
+        }
+        assert!(saved_at_nanoseconds("2026-11-04T06:41:07.5Z").unwrap() < saved_at_nanoseconds("2026-11-04T06:41:07Z").unwrap() + 1_000_000_000);
+    }
+
+    #[test]
+    fn catalog_state_does_not_outlive_its_port() {
+        let owner = || space::SpaceUser { id: "user-1".into(), name: "Ada".into(), avatar: None, role: space::SpaceRole::Author };
+        let first = Arc::new(OsBackbonePorts::store(store::os_store::backbone::BackbonePorts::Memory(resolve_kernel_future(MemoryBackbonePort::new()))));
+        let entry = create_os_space("First", space::SpaceKind::Studio, space::SpaceVisibility::Private, owner(), &first).expect("create");
+        assert!(list_os_space_catalog_entries(&first).unwrap().iter().any(|row| row.id == entry.id));
+        drop(first);
+        for _ in 0..64 {
+            let next = Arc::new(OsBackbonePorts::store(store::os_store::backbone::BackbonePorts::Memory(resolve_kernel_future(MemoryBackbonePort::new()))));
+            assert!(list_os_space_catalog_entries(&next).unwrap().is_empty(), "a reused allocation never inherits another port's spaces");
+        }
     }
 
     #[test]

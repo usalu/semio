@@ -5,7 +5,7 @@
 //! `🔺️diff/🚫️.absent` and an `➡️after` byte-identical to `⬅️before`.
 //!
 //! ⚠️ Why every presentation case pins a GUARD branch: `PresentationSnapshot` keeps its `(source, tiles)` in
-//! the composed `s.stdio.semio.presentation` CHILD (`🔖️WorkingScene`), so a committed snapshot
+//! the composed `stdio.semio.presentation` CHILD (`🔖️WorkingScene`), so a committed snapshot
 //! carries a handle, never a deck — and every content-changing diff routes through
 //! `PresentationDiff::apply`, which derives the handle from the resulting `(source, tiles)`.
 //! Hand-authoring such an `➡️after` would mean forging a value from `std`'s deliberately

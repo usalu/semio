@@ -1,14 +1,17 @@
-# Direct identities: replace-image, paint-indexed-region, paint-direct-region, replace-samples
+# Direct identities: replace-image, paint-indexed-region, paint-direct-region, replace-samples, set-palette-entry, insert-palette-entry, remove-palette-entry
 dialect grammar
 grammar stdio.bmp.mutations
 start op
 
 comment none
 
-op = replace-image | paint-indexed-region | paint-direct-region | replace-samples
+op = replace-image | paint-indexed-region | paint-direct-region | replace-samples | set-palette-entry | insert-palette-entry | remove-palette-entry
 
 paint-indexed-region = "paint-indexed-region" "payload" "=" hex
 paint-direct-region = "paint-direct-region" "payload" "=" hex
 
 replace-image = "replace-image" "payload" "=" hex
 replace-samples = "replace-samples" "payload" "=" hex
+set-palette-entry = "set-palette-entry" "payload" "=" hex
+insert-palette-entry = "insert-palette-entry" "payload" "=" hex
+remove-palette-entry = "remove-palette-entry" "payload" "=" hex

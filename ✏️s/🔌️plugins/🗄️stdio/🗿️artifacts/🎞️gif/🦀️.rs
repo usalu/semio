@@ -30,7 +30,7 @@ pub use semio_s_artifact_stdio_gif_editor::{definition};
 
 pub use semio_s_artifact_stdio_gif_editor::{formats};
 
-pub use semio_s_artifact_stdio_gif_inferences::{native_codecs};
+pub use semio_s_artifact_stdio_gif_editor::{native_codec_87a, native_codec_89a, native_codecs};
 
 pub use semio_s_artifact_stdio_gif_editor::{contribution};
 

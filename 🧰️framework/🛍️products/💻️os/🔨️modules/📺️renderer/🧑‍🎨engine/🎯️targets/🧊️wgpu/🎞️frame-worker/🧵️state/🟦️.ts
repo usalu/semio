@@ -127,7 +127,14 @@ export let interactiveJobs: InteractiveWorkerScheduler | undefined;
 
 export const typedMediaPlugins = new Map<string, Awaited<ReturnType<typeof loadPluginModule>>>();
 
-export const mediaRegistry = new BrowserMediaRegistry((pluginId) => typedMediaPlugins.get(pluginId));
+export const mediaRegistry = new BrowserMediaRegistry(
+  (pluginId) => typedMediaPlugins.get(pluginId),
+  (slot, action, args) => {
+    const dispatch = bindings?.semioWgpuDispatchMediaAction;
+    if (!dispatch) throw new Error("browser-media.apply-unavailable");
+    dispatch(JSON.stringify({ windowId: slot.windowId, controllerId: slot.controllerId, action, args }));
+  },
+);
 
 export let mediaRetirement: Promise<void> | undefined;
 

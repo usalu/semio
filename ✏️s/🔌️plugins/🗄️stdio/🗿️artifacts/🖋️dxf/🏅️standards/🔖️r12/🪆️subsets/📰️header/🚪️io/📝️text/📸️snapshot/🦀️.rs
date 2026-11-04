@@ -71,6 +71,8 @@ pub(crate) fn from_record_controlled(record:&semio_framework_dsl_record::RecordV
 #[allow(unused_imports)]
 #[path="🏷️entity-codec/🦀️.rs"]
 pub mod entity_codec;
+#[path="🖼️preview/🦀️.rs"]
+pub mod preview;
 
 mod snapshot_codec {
 use super::*;

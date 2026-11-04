@@ -169,6 +169,10 @@ export interface En1990ReliabilityAnalysis {
   actionDistribution: En1990DistributionKind;
   actionMean: number;
   actionSd: number;
+  secondActionDistribution: En1990DistributionKind;
+  secondActionMean: number;
+  secondActionSd: number;
+  memberId: string;
 }
 
 export type En1990TestDistribution = "normal" | "lognormal";
@@ -183,6 +187,9 @@ export interface En1990TestSeries {
   variationKnown: number;
   conversionFactor: number;
   required: number;
+  pairs: string;
+  theoryVariation: number;
+  theoryMean: number;
 }
 
 export interface En1990Placement {
@@ -244,9 +251,9 @@ export const parseEn1990MemberEffect: NormWireReader<En1990MemberEffect> = normW
 export const parseEn1990BridgeSls: NormWireReader<En1990BridgeSls> = normWireObject<En1990BridgeSls>({ id: normWireRequired(normWireString), memberId: normWireRequired(normWireString), deckAcceleration: normWireRequired(normWireNumber), deckAccelerationLimit: normWireRequired(normWireNumber), deckTwist: normWireRequired(normWireNumber), deckTwistLimit: normWireRequired(normWireNumber), bridgeDeflection: normWireRequired(normWireNumber), bridgeDeflectionLimit: normWireRequired(normWireNumber), trackGauge: normWireRequired(normWireNumber), lineSpeed: normWireRequired(normWireNumber), ballastDepth: normWireRequired(normWireNumber), deckMass: normWireRequired(normWireNumber), naturalFrequency: normWireRequired(normWireNumber), endRotation: normWireRequired(normWireNumber), basicWindSpeed: normWireRequired(normWireNumber), dampingRatio: normWireRequired(normWireNumber) });
 export const parseEn1990FatigueSpectrum: NormWireReader<En1990FatigueSpectrum> = normWireObject<En1990FatigueSpectrum>({ id: normWireRequired(normWireString), memberId: normWireRequired(normWireString), detailCategory: normWireRequired(normWireNumber), stressRange: normWireRequired(normWireNumber), cycles: normWireRequired(normWireNumber) });
 export const parseEn1990DistributionKind: NormWireReader<En1990DistributionKind> = normWireLiteral("normal", "lognormal", "gumbel", "weibull");
-export const parseEn1990ReliabilityAnalysis: NormWireReader<En1990ReliabilityAnalysis> = normWireObject<En1990ReliabilityAnalysis>({ id: normWireRequired(normWireString), resistanceDistribution: normWireRequired(normWireRef(() => parseEn1990DistributionKind)), resistanceMean: normWireRequired(normWireNumber), resistanceSd: normWireRequired(normWireNumber), actionDistribution: normWireRequired(normWireRef(() => parseEn1990DistributionKind)), actionMean: normWireRequired(normWireNumber), actionSd: normWireRequired(normWireNumber) });
+export const parseEn1990ReliabilityAnalysis: NormWireReader<En1990ReliabilityAnalysis> = normWireObject<En1990ReliabilityAnalysis>({ id: normWireRequired(normWireString), resistanceDistribution: normWireRequired(normWireRef(() => parseEn1990DistributionKind)), resistanceMean: normWireRequired(normWireNumber), resistanceSd: normWireRequired(normWireNumber), actionDistribution: normWireRequired(normWireRef(() => parseEn1990DistributionKind)), actionMean: normWireRequired(normWireNumber), actionSd: normWireRequired(normWireNumber), secondActionDistribution: normWireRequired(normWireRef(() => parseEn1990DistributionKind)), secondActionMean: normWireRequired(normWireNumber), secondActionSd: normWireRequired(normWireNumber), memberId: normWireRequired(normWireString) });
 export const parseEn1990TestDistribution: NormWireReader<En1990TestDistribution> = normWireLiteral("normal", "lognormal");
-export const parseEn1990TestSeries: NormWireReader<En1990TestSeries> = normWireObject<En1990TestSeries>({ id: normWireRequired(normWireString), quantity: normWireRequired(normWireString), distribution: normWireRequired(normWireRef(() => parseEn1990TestDistribution)), sampleSize: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), mean: normWireRequired(normWireNumber), stdDev: normWireRequired(normWireNumber), variationKnown: normWireRequired(normWireNumber), conversionFactor: normWireRequired(normWireNumber), required: normWireRequired(normWireNumber) });
+export const parseEn1990TestSeries: NormWireReader<En1990TestSeries> = normWireObject<En1990TestSeries>({ id: normWireRequired(normWireString), quantity: normWireRequired(normWireString), distribution: normWireRequired(normWireRef(() => parseEn1990TestDistribution)), sampleSize: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), mean: normWireRequired(normWireNumber), stdDev: normWireRequired(normWireNumber), variationKnown: normWireRequired(normWireNumber), conversionFactor: normWireRequired(normWireNumber), required: normWireRequired(normWireNumber), pairs: normWireRequired(normWireString), theoryVariation: normWireRequired(normWireNumber), theoryMean: normWireRequired(normWireNumber) });
 export const parseEn1990Placement: NormWireReader<En1990Placement> = normWireObject<En1990Placement>({ id: normWireRequired(normWireString), x: normWireRequired(normWireNumber), y: normWireRequired(normWireNumber), z: normWireRequired(normWireNumber), yaw: normWireRequired(normWireNumber) });
 export const parseEn1990FactorOverride: NormWireReader<En1990FactorOverride> = normWireObject<En1990FactorOverride>({ id: normWireRequired(normWireString), factor: normWireRequired(normWireString), target: normWireRequired(normWireString), value: normWireRequired(normWireNumber), justification: normWireRequired(normWireString) });
 export const parseEn1990TrafficGroup: NormWireReader<En1990TrafficGroup> = normWireObject<En1990TrafficGroup>({ id: normWireRequired(normWireString), group: normWireRequired(normWireLiteral("GR1A", "GR1B", "GR2", "GR3", "GR4", "GR5", "GR6")), variableId: normWireRequired(normWireString) });

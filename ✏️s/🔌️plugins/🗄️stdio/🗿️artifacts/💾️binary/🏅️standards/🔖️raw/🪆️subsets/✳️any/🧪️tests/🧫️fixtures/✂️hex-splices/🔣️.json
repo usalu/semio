@@ -6,7 +6,8 @@
       "id": "unchanged",
       "before": "deadbeef",
       "splices": [],
-      "leaves": []
+      "leaves": [],
+      "after": "deadbeef"
     },
     {
       "id": "changes-a-byte",
@@ -24,7 +25,8 @@
           "removeLen": 1,
           "insert": "00"
         }
-      ]
+      ],
+      "after": "de00beef"
     },
     {
       "id": "a-nibble-edit-rewrites-its-byte",
@@ -42,7 +44,8 @@
           "removeLen": 1,
           "insert": "a0"
         }
-      ]
+      ],
+      "after": "dea0beef"
     },
     {
       "id": "inserts-a-byte-between-bytes",
@@ -60,7 +63,8 @@
           "removeLen": 0,
           "insert": "01"
         }
-      ]
+      ],
+      "after": "deadbe01ef"
     },
     {
       "id": "appends-bytes-at-the-end-of-the-digits",
@@ -78,7 +82,8 @@
           "removeLen": 0,
           "insert": "cafe"
         }
-      ]
+      ],
+      "after": "deadbeefcafe"
     },
     {
       "id": "deletes-two-bytes",
@@ -96,7 +101,8 @@
           "removeLen": 2,
           "insert": ""
         }
-      ]
+      ],
+      "after": "deef"
     },
     {
       "id": "digits-typed-inside-a-byte-rewrite-that-byte",
@@ -114,7 +120,8 @@
           "removeLen": 1,
           "insert": "affd"
         }
-      ]
+      ],
+      "after": "deaffdbeef"
     },
     {
       "id": "two-ranges-in-two-bytes-emit-last-first",
@@ -142,7 +149,8 @@
           "removeLen": 1,
           "insert": "ff"
         }
-      ]
+      ],
+      "after": "ffadbe00"
     },
     {
       "id": "two-ranges-in-one-byte-are-one-run",
@@ -165,7 +173,8 @@
           "removeLen": 1,
           "insert": "ff"
         }
-      ]
+      ],
+      "after": "ffadbeef"
     },
     {
       "id": "whitespace-in-edited-digits-is-ignored",
@@ -183,7 +192,8 @@
           "removeLen": 0,
           "insert": "0102"
         }
-      ]
+      ],
+      "after": "deadbeef0102"
     },
     {
       "id": "a-range-in-the-comment-moves-nothing",
@@ -195,7 +205,8 @@
           "insert": "9"
         }
       ],
-      "leaves": []
+      "leaves": [],
+      "after": "deadbeef"
     },
     {
       "id": "an-odd-digit-is-refused",
@@ -207,7 +218,8 @@
           "insert": "f"
         }
       ],
-      "leaves": null
+      "leaves": null,
+      "after": null
     },
     {
       "id": "a-non-hex-digit-is-refused",
@@ -219,7 +231,8 @@
           "insert": "zz"
         }
       ],
-      "leaves": null
+      "leaves": null,
+      "after": null
     },
     {
       "id": "a-range-crossing-into-the-comment-is-refused",
@@ -231,7 +244,8 @@
           "insert": ""
         }
       ],
-      "leaves": null
+      "leaves": null,
+      "after": null
     },
     {
       "id": "a-range-beyond-the-window-is-refused",
@@ -243,7 +257,8 @@
           "insert": "00"
         }
       ],
-      "leaves": null
+      "leaves": null,
+      "after": null
     }
   ]
 }

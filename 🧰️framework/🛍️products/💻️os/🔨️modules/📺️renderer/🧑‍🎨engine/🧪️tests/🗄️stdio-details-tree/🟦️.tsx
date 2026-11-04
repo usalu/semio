@@ -87,3 +87,54 @@ it("mounts native collection rows as expandable tree descendants with editable e
   expect(collection.getAttribute("aria-expanded")).toBe("true");
   expect(editorWithValue(hierarchy.entries[1]!.value.input.value)?.disabled).toBe(false);
 });
+
+function mountDetails() {
+  const hierarchy = fixture.rendererHierarchy;
+  const store = new UiDocumentStore("stdio-details-tree");
+  store.loadSnapshot(documentFromNativeHierarchy(hierarchy) as any);
+  const intents: any[] = [];
+  const view = render(createElement(UiNodeView, { store, id: 1, context: { store, onAction: () => {}, onIntent: (intent: unknown) => { intents.push(intent); } } }));
+  return { hierarchy, intents, view };
+}
+
+it("exposes one roving tab stop in the real Details render path and moves it with the WAI-ARIA tree keys", async () => {
+  const { view } = mountDetails();
+  const root = view.container.querySelector('[role="tree"]') as HTMLElement;
+  const rows = () => Array.from(root.querySelectorAll<HTMLElement>('[role="treeitem"]'));
+  await new Promise((resolveFrame) => setTimeout(resolveFrame, 20));
+  expect(rows().filter((row) => row.getAttribute("tabindex") === "0")).toHaveLength(1);
+  const first = rows()[0]!;
+  first.focus();
+  fireEvent.keyDown(first, { key: "End" });
+  expect(document.activeElement).toBe(rows().at(-1));
+  fireEvent.keyDown(document.activeElement!, { key: "Home" });
+  expect(document.activeElement).toBe(rows()[0]);
+  fireEvent.keyDown(rows()[0]!, { key: "ArrowDown" });
+  expect(document.activeElement).toBe(rows()[1]);
+  expect(rows().filter((row) => row.getAttribute("tabindex") === "0")).toEqual([rows()[1]]);
+});
+
+it("folds and unfolds the focused Details row with ArrowLeft and ArrowRight", () => {
+  const { hierarchy, view } = mountDetails();
+  const root = view.container.querySelector('[role="tree"]') as HTMLElement;
+  const collection = screen.getByRole("treeitem", { name: hierarchy.label });
+  collection.focus();
+  fireEvent.keyDown(collection, { key: "ArrowLeft" });
+  expect(collection.getAttribute("aria-expanded")).toBe("false");
+  fireEvent.keyDown(collection, { key: "ArrowRight" });
+  expect(collection.getAttribute("aria-expanded")).toBe("true");
+  expect(root.contains(collection)).toBe(true);
+});
+
+it("keeps focus in a Details field after Enter commits its draft", async () => {
+  const { hierarchy, intents } = mountDetails();
+  const editor = screen.getAllByRole("textbox", { name: hierarchy.entries[0]!.value.input.label })[0] as HTMLInputElement;
+  editor.focus();
+  fireEvent.change(editor, { target: { value: "Delta" } });
+  fireEvent.keyDown(editor, { key: "Enter" });
+  await new Promise((resolveFrame) => setTimeout(resolveFrame, 40));
+  expect(intents.map((intent) => intent.input)).toEqual(["Delta"]);
+  expect(document.activeElement).toBe(editor);
+  fireEvent.blur(editor);
+  expect(intents).toHaveLength(1);
+});

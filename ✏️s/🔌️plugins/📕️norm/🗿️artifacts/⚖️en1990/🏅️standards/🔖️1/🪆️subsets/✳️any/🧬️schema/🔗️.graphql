@@ -119,6 +119,10 @@ type ReliabilityAnalysis {
   actionDistribution: String!
   actionMean: Float!
   actionSd: Float!
+  secondActionDistribution: String!
+  secondActionMean: Float!
+  secondActionSd: Float!
+  memberId: String!
 }
 type TestSeries {
   id: String!
@@ -130,6 +134,9 @@ type TestSeries {
   variationKnown: Float!
   conversionFactor: Float!
   required: Float!
+  pairs: String!
+  theoryVariation: Float!
+  theoryMean: Float!
 }
 type Placement {
   id: String!

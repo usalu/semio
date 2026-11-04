@@ -16,7 +16,7 @@
     {
       "id": "full",
       "sourceSnapshot": {
-        "schema": "s.stdio.semio.graph",
+        "schema": "stdio.semio.graph",
         "nodes": [
           {
             "id": {
@@ -172,7 +172,7 @@
     {
       "id": "metadataRetainingEmpty",
       "sourceSnapshot": {
-        "schema": "s.stdio.semio.graph",
+        "schema": "stdio.semio.graph",
         "nodes": [],
         "edges": []
       },

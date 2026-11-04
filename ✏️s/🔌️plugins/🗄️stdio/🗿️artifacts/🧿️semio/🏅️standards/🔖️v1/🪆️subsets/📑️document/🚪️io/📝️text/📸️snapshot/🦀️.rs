@@ -1,4 +1,4 @@
-//! 📝️ Text representation codec surface for `s.stdio.semio.document` (snapshot) — grammar include.
+//! 📝️ Text representation codec surface for `stdio.semio.document` (snapshot) — grammar include.
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
@@ -112,7 +112,7 @@ pub fn print_semio_document_dsl(snapshot: &SemioDocumentSnapshot) -> String {
 }
 
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
-/// `s.stdio.semio.document` — the shape the `📃️mutate-semio-document` case compares under `ordered-json-v1`. A thin
+/// `stdio.semio.document` — the shape the `📃️mutate-semio-document` case compares under `ordered-json-v1`. A thin
 /// `serde_json` wrapper (already a direct dependency of this crate, used behind this interface per
 /// CLAUDE.md's "external libraries behind an interface" rule, never a new one), so a projection is
 /// derived from the snapshot type itself rather than hand-written a second time in the adapter,

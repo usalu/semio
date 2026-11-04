@@ -1,4 +1,4 @@
-"""🐍️ Independent Python implementation of the `s.stdio.semio.document` carriers and their
+"""🐍️ Independent Python implementation of the `stdio.semio.document` carriers and their
 eighteen-verb mutation vocabulary — the differential ORACLE this case is measured against.
 
 Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. `.dsl.semio`/`.pack.semio` is a semio-native carrier
@@ -86,7 +86,7 @@ BLOCK_KINDS = ("paragraph", "heading", "list", "table", "code", "quote", "image"
 KIND_OF_BLOCK_TAG = dict(zip(BLOCK_TAGS, BLOCK_KINDS))
 TAG_OF_BLOCK_KIND = dict(zip(BLOCK_KINDS, BLOCK_TAGS))
 
-DOCUMENT_SCHEMA = "s.stdio.semio.document"
+DOCUMENT_SCHEMA = "stdio.semio.document"
 DSL_PREAMBLE = "semio s.stdio.semio.document.dsl v1"
 
 MEMO_DSL = "asset://🗒️memo/🗣️.dsl.semio"

@@ -484,6 +484,14 @@ pub struct ReliabilityAnalysis {
     pub action_distribution: DistributionKind,
     pub action_mean: f64,
     pub action_sd: f64,
+    /// 📐 Distribution of the second action in g = R − (E₁ + E₂). An empty analysis uses normal.
+    pub second_action_distribution: DistributionKind,
+    /// ➕ Mean μ_E2 of the second action, in newtons.
+    pub second_action_mean: f64,
+    /// 📏 Standard deviation σ_E2 of the second action, in newtons.
+    pub second_action_sd: f64,
+    /// 🏗️ Id of the member whose reliability this analysis represents: the member shows a 3D reliability badge with the FORM index; empty = the analysis belongs to the project.
+    pub member_id: String,
 }
 
 /// 🧪 Distribution assumed for the design value derived from tests (EN 1990 D.7.2).
@@ -513,6 +521,12 @@ pub struct TestSeries {
     pub variation_known: f64,
     pub conversion_factor: f64,
     pub required: f64,
+    /// 🧪 Experimental and theoretical resistance of the same specimen as r_e:r_t pairs separated by semicolons for the standard evaluation of Annex D.7.2; empty = not given, the summary statistics are used.
+    pub pairs: String,
+    /// 📉 Coefficient of variation V_rt of the basic variables of the resistance function for the standard evaluation of Annex D.7.2; used only with test pairs.
+    pub theory_variation: f64,
+    /// 🧮 Mean value of the resistance model used with the test pairs of Annex D.7.2; 0 selects the summary statistics.
+    pub theory_mean: f64,
 }
 
 /// 📍️ Persisted pose of one scene entity (`id` is the entity id; SI: m, rad). Entities without a placement follow the documented default layout.

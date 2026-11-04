@@ -26,7 +26,7 @@ Feature: Export every typed architect program mutation through ZIP and decode it
   📌️ 260 of the 266 committed vectors move the document. The six that do not are
   `delete-register-row`/`rename-register-row`/`replace-register-row` over `knowledgeRecord` and `benchmarkRecord`, and the reason is
   structural rather than an authoring gap: those two registers alone are composed
-  `s.stdio.semio.table` CHILD handles whose rows live in a working-scene cache a fresh process has
+  `stdio.semio.table` CHILD handles whose rows live in a working-scene cache a fresh process has
   never populated, so the only branch reachable from a committed snapshot is the
   `mutation.target-missing` rejection — which is exactly what those six vectors pin. They are named
   in the subject adapter's `GUARD_VECTORS` list and exempted from the observability law on that basis; the

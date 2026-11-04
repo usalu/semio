@@ -11,6 +11,7 @@ import { retainTreeFocus } from "./🎯️focus/🟦️.ts";
 /** 📏️ Re-exported from the UI contract because this element's whole window API is stated in it — a consumer of `TreeDataWindow`/`TreeWindowContainerMeasure` must be able to name the token without reaching past this module. */
 export type { TreeWindowRowExtent };
 import * as React from "react";
+import { applyRovingTabindexV1, handleTreeKeyDownV1 } from "./⌨️roving/🟦️.ts";
 import { STYLING_DOM, uiSpacingLen } from "@semio-tech/ui-styling";
 export { uiSpacingLen };
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
@@ -488,6 +489,15 @@ export const Tree = (({
 
   const { treeRootRef, handleTreePointerOver, handleTreePointerLeave, refreshTreeHoverPath } = useTreeHoverPathRootHandlers();
   useTreeSelectionPathSync(treeRootRef, resolvedSelectedIds);
+  React.useEffect(() => {
+    const root = treeRootRef.current;
+    if (root === null) return undefined;
+    const sync = (): void => applyRovingTabindexV1(root, root.contains(document.activeElement) && document.activeElement instanceof HTMLElement ? document.activeElement.closest<HTMLElement>('[role="treeitem"]') : null);
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ["aria-selected", "aria-expanded", "hidden"] });
+    return () => observer.disconnect();
+  }, [treeRootRef]);
   reactHostPort.useLayoutEffect(() => {
     const root = treeRootRef.current;
     return root ? retainTreeFocus(root) : undefined;
@@ -522,6 +532,7 @@ export const Tree = (({
             } as React.CSSProperties}
             onPointerOver={handleTreePointerOver}
             onPointerLeave={handleTreePointerLeave}
+            onKeyDown={(event) => { if (treeRootRef.current !== null) handleTreeKeyDownV1(treeRootRef.current, event.nativeEvent); }}
           >
             <TreeHoverPathRefreshContext.Provider value={refreshTreeHoverPath}>
               <TreeSelectionContext.Provider value={selectionStore}>

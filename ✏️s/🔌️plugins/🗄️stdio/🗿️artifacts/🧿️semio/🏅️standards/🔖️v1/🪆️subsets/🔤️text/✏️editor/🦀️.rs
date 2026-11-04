@@ -45,7 +45,7 @@ use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Dialect
 pub const SEMIO_TEXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("text") };
-pub const SEMIO_TEXT_DOCUMENT_SCHEMA: &str = "s.stdio.semio.text";
+pub const SEMIO_TEXT_DOCUMENT_SCHEMA: &str = "stdio.semio.text";
 //#endregion 🔖️Dialect
 
 //#region 🔖️Command
@@ -155,6 +155,8 @@ impl ArtifactOwnedToolJobFactory for SemioTextEditorExampleFactory {
     type Owner = EditorApp<SemioTextEditor>;
     const TOOL_IDS: &'static [&'static str] = SEMIO_TEXT_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_TEXT_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_semio_base::semio_natural_file!(SemioTextSnapshot, "stdio.semio.text");
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_TEXT_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 #[path = "🧭️edit-rules/🦀️.rs"]
@@ -188,7 +190,7 @@ impl ArtifactEditor for SemioTextEditor {
         owner: EditorApp<SemioTextEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/✏️editor/🦀️.rs",
         controller: "s.stdio.semio@v1/text#editor",
-        artifact_schema: "s.stdio.semio.text",
+        artifact_schema: "stdio.semio.text",
         factory: "SemioTextEditorExampleFactory",
         factory_type: SemioTextEditorExampleFactory,
         contract: ToolExecutionContract::bounded_first_step(SEMIO_TEXT_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500),

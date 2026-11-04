@@ -1,7 +1,7 @@
 {
   "schema": "stdio.semio",
   "subset": {
-    "schema": "s.stdio.semio.text",
+    "schema": "stdio.semio.text",
     "runs": [
       {
         "language": "de",

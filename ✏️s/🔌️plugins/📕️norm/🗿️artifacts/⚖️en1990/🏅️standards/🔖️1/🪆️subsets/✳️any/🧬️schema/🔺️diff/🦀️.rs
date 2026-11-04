@@ -249,7 +249,7 @@ protocol::row_patch! {
     #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `ReliabilityAnalysis`.
-    pub En1990ReliabilityAnalysisPatch of semio_s_artifact_norm_en1990_model::ReliabilityAnalysis { set { resistance_distribution: semio_s_artifact_norm_en1990_model::DistributionKind, resistance_mean: f64, resistance_sd: f64, action_distribution: semio_s_artifact_norm_en1990_model::DistributionKind, action_mean: f64, action_sd: f64 } }
+    pub En1990ReliabilityAnalysisPatch of semio_s_artifact_norm_en1990_model::ReliabilityAnalysis { set { resistance_distribution: semio_s_artifact_norm_en1990_model::DistributionKind, resistance_mean: f64, resistance_sd: f64, action_distribution: semio_s_artifact_norm_en1990_model::DistributionKind, action_mean: f64, action_sd: f64, second_action_distribution: semio_s_artifact_norm_en1990_model::DistributionKind, second_action_mean: f64, second_action_sd: f64, member_id: String} }
 }
 
 protocol::list_delta! {
@@ -263,7 +263,7 @@ protocol::row_patch! {
     #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `TestSeries`.
-    pub En1990TestSeriesPatch of semio_s_artifact_norm_en1990_model::TestSeries { set { quantity: String, distribution: semio_s_artifact_norm_en1990_model::TestDistribution, sample_size: u32, mean: f64, std_dev: f64, variation_known: f64, conversion_factor: f64, required: f64 , pairs: String, theory_variation: f64} }
+    pub En1990TestSeriesPatch of semio_s_artifact_norm_en1990_model::TestSeries { set { quantity: String, distribution: semio_s_artifact_norm_en1990_model::TestDistribution, sample_size: u32, mean: f64, std_dev: f64, variation_known: f64, conversion_factor: f64, required: f64, pairs: String, theory_variation: f64, theory_mean: f64} }
 }
 
 protocol::row_patch! {

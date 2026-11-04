@@ -277,3 +277,5 @@ record change-test-pairs tag=138
 field payload bytes
 record change-test-theory-variation tag=139
 field payload bytes
+record change-reliability-member-id tag=140
+field payload bytes

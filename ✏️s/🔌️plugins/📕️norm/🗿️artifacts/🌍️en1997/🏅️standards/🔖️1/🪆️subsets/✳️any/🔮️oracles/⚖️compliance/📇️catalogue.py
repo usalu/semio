@@ -87,6 +87,8 @@ def pf_01(c):
 def rw_01(c):
     gamma, h, phi = c.get("gamma"), c.get("h"), c.get("phi_deg")
     delta, alpha, beta, q = c.get("delta_deg", 0.0), c.get("alpha_deg", 0.0), c.get("beta_deg", 0.0), c.get("q", 0.0)
+    f = c.factors()
+    phi = math.degrees(math.atan(math.tan(R(phi)) / f["gamma_phi"]))
     ka = G.ka_coulomb(phi, delta, alpha, beta)
     ea = 0.5 * gamma * h * h * ka + ka * q * h
     return dict(ka=ka, e_top=ka * q, e_bot=ka * (gamma * h + q), e_a=ea, e_ah=ea * math.cos(R(alpha + delta)), e_av=ea * math.sin(R(alpha + delta)))
@@ -94,8 +96,10 @@ def rw_01(c):
 
 def rw_02(c):
     gamma, h, phi = c.get("gamma"), c.get("h"), c.get("phi_deg")
+    f = c.factors()
+    phi = math.degrees(math.atan(math.tan(R(phi)) / f["gamma_phi"]))
     ka = G.ka_rankine(phi, c.get("beta_deg", 0.0))
-    coh = c.get("c", 0.0)
+    coh = c.get("c", 0.0) / f["gamma_c"]
     z = c.get("z", h)
     z0 = 2 * coh / (gamma * math.sqrt(ka)) if coh > 0 else 0.0
     thrust = 0.5 * (ka * gamma * h - 2 * coh * math.sqrt(ka)) * (h - z0) if h > z0 else 0.0

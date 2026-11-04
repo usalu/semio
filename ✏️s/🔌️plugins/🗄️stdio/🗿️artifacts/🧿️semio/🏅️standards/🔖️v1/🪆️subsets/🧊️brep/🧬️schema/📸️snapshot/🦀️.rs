@@ -276,7 +276,7 @@ pub struct BrepSolid {
 #[dsl(layout = "lines")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.brep")]
+#[artifact_schema(id = "stdio.semio.brep")]
 pub struct SemioBrepSnapshot {
     #[state(artifact)]
     pub schema: String,

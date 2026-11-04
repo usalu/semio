@@ -1,19 +1,11 @@
-//! 🧊 PLY editor — the Main window: the SAME world-3d mesh scene shape as the sibling
-//! viewer window, built with the shared `MeshWindowKit`'s EDITABLE variant (contract §2.6, action id
-//! `set-vertex`). Render is identical to the viewer's read: both surfaces are pure reads of the same
-//! artifact-level `PlySnapshot` — this window itself never mutates; mutation is the surface
-//! root's `handle()` responsibility.
+//! 🧊 PLY editor — the Main window: the document's own geometry on the shared `MeshWindowKit` (the same scene as the sibling viewer window). The window itself never mutates; edits arrive through the details pane and the transform gesture handled by the surface root.
 
 use crate::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::{BuiltNode, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
 pub const BODY_KEY: &str = MeshWindowKit::KIND_ID;
-const PLY_ANY_EDIT_FALLBACK_MESH_KIND: &str = "box";
-const PLY_ANY_EDIT_DEFAULT_CAMERA_POSITION: [f64; 3] = [8.0, -8.0, 6.0];
-const PLY_ANY_EDIT_DEFAULT_CAMERA_TARGET: [f64; 3] = [0.0, 0.0, 0.0];
-const PLY_ANY_EDIT_DEFAULT_CAMERA_FOV: f64 = 45.0;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -26,43 +18,11 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// ✏️ Same kind-agnostic content signal as the sibling viewer window (duplicated, not imported —
-/// `policyViewerPurityBreaches` is one-directional but the two surfaces still never reference each
-/// other by design).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entity_count(document: &PlySnapshot) -> usize {
-    semio_framework_value::ToValue::to_value(document).as_object().map_or(0, |object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).clamp(1, 6)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn world_instances_json(document: &PlySnapshot) -> String {
-    let count = entity_count(document);
-    let instances: Vec<semio_framework_pack_json::Value> = (0..count)
-        .map(|index| {
-            semio_framework_pack_json::json!({
-                "id": format!("ply_any-{index}"),
-                "meshId": PLY_ANY_EDIT_FALLBACK_MESH_KIND,
-                "position": [index as f64 * 2.0, 0.0, 0.0],
-                "rotation": [0.0, 0.0, 0.0, 1.0],
-                "scale": [1.0, 1.0, 1.0],
-                "label": format!("PLY {index}"),
-                "smoothShading": false,
-            })
-        })
-        .collect();
-    semio_framework_pack_json::to_string(&semio_framework_pack_json::array(instances))
-}
-
+/// 🧊️ The document's own geometry on the shared mesh scene: real triangles or points, framed on their bounds, never a placeholder.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &PlySnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let meshes_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::array([semio_framework_pack_json::json!({ "id": PLY_ANY_EDIT_FALLBACK_MESH_KIND, "data": mesh_from_kind(PLY_ANY_EDIT_FALLBACK_MESH_KIND) })]));
-    let view = MeshView {
-        camera_json: world3d_camera_json(PLY_ANY_EDIT_DEFAULT_CAMERA_POSITION, PLY_ANY_EDIT_DEFAULT_CAMERA_TARGET, PLY_ANY_EDIT_DEFAULT_CAMERA_FOV),
-        meshes_json,
-        instances_json: world_instances_json(document),
-        selection_json: world3d_selection_json("rectangle", &[], None),
-    };
-    MeshWindowKit::render(&view)
+    let (positions, triangles, markers) = crate::engine::scene_geometry(document);
+    semio_s_artifact_stdio_contract::mesh_scene("PLY", &positions, &triangles, &markers)
 }
 //#endregion 🔖️Render
 

@@ -103,15 +103,13 @@ fn validate(command: PaintRegionCommand, snapshot: &crate::TiffSnapshot, ifd_ind
 
 pub struct PaintRegionWork {
     revision: Option<String>,
-    cursor: usize,
-    rows: usize,
     complete: bool,
     closing: bool,
 }
 
 impl PaintRegionWork {
     pub fn new() -> Self {
-        Self { revision: None, cursor: 0, rows: 0, complete: false, closing: false }
+        Self { revision: None, complete: false, closing: false }
     }
 }
 
@@ -133,16 +131,7 @@ impl ArtifactCommandWork<EditorApp<TiffAnyEditor>> for PaintRegionWork {
         if self.closing || self.complete { return Err(fault("stdio.tiff.paint-region.work-closed", "Paint region work is already closed")); }
         let TiffAnyEditCommand::PaintRegion(command) = input.command else { return Err(fault("stdio.tiff.paint-region.route-mismatch", "Paint work received another command")); };
         let ifd_index = selected_ifd(input.config, input.snapshot).ok_or_else(|| fault("stdio.tiff.paint-region.no-page", "TIFF document has no selectable image page"))?;
-        if self.revision.is_none() {
-            self.revision = Some(validate(*command, input.snapshot, ifd_index)?);
-            self.rows = command.height as usize;
-            return Ok(ArtifactCommandWorkStep::Progress { stage: "tiff-paint-region-prepare", preview: br#"{"en":"Preparing tiled paint","de":"Kachelmalvorgang wird vorbereitet"}"# });
-        }
-        if self.cursor < self.rows {
-            self.cursor += 1;
-            return Ok(ArtifactCommandWorkStep::Progress { stage: "tiff-paint-region-row", preview: br#"{"en":"Painting tile rows","de":"Kachelzeilen werden gemalt"}"# });
-        }
-        let revision = self.revision.take().expect("paint revision was prepared");
+        let revision = validate(*command, input.snapshot, ifd_index)?;
         let mutation = TiffMutation::PaintRegion(PaintRegionMutation {
             revision,
             ifd_index,
@@ -167,8 +156,6 @@ impl ArtifactCommandWork<EditorApp<TiffAnyEditor>> for PaintRegionWork {
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         semio_framework_job::close_original_granted_step(cx,|grant|{
             if !self.closing { return semio_framework_value::RetainedWorkOutcome { result: Ok(InteractiveJobCloseStep::Blocked), work: 0 }; }
-            self.rows = 0;
-            self.cursor = 0;
             semio_framework_value::RetainedWorkOutcome { result: Ok(semio_s_artifact_stdio_contract::editing::close_revision_turn(&mut self.revision, grant)), work: 1 }
         })
     }
@@ -179,6 +166,6 @@ impl ArtifactCommandWork<EditorApp<TiffAnyEditor>> for PaintRegionWork {
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(semio_s_artifact_stdio_contract::editing::revision_close_demand(&self.revision).depth) }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.revision.is_none() && self.rows == 0 && self.cursor == 0
+        self.closing && self.revision.is_none()
     }
 }

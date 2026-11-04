@@ -2,7 +2,7 @@
 //! (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET). `DeflateSnapshot` is a typed RFC1950
 //! zlib container: CMF/FLG header fields plus an opaque decompressed `payload`. One window,
 //! `🪟️main` (`TextWindowKit`), renders the header fields as an editable `key=value` summary; its
-//! `replace-text` action funnels through the one typed command this surface declares,
+//! `textEdit` action funnels through the one typed command this surface declares,
 //! `DeflateEditorCommand::ReplaceText`, which parses the summary back into the header leaves it changed — `SetCompressionParams`
 //! and/or `SetPresetDictionary`, nothing when the Apply changed neither (see the window's own doc comment for why `payload`
 //! itself is never shown or parsed here — a compressed byte stream has no honest text form).
@@ -58,7 +58,7 @@ pub const DEFLATE_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.de
 
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — exactly the one edit the `🪟️main` window's
-/// `editable_window_kind()` action (`replace-text`, contract §2.6) can trigger.
+/// `editable_window_kind()` action (`textEdit`, contract §2.6) can trigger.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum DeflateEditorCommand {
     #[dsl(key = "replace-deflate-text")]
@@ -280,6 +280,19 @@ impl ArtifactEditor for DeflateEditor {
 
     const DIALECT: Dialect = DEFLATE_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_DEFLATE_DOCUMENT_SCHEMA;
+
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.deflate@rfc1950", extension: ".zz", media_type: "application/zlib", binary: true })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        Ok(semio_s_artifact_stdio_deflate_snapshot::standards::v_rfc1950::subsets::any::io::binary::snapshot::encode_deflate_snapshot(snapshot))
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_deflate_snapshot::standards::v_rfc1950::subsets::any::io::binary::snapshot::decode_deflate_snapshot(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error))
+    }
+
 
     semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🦀️.rs",

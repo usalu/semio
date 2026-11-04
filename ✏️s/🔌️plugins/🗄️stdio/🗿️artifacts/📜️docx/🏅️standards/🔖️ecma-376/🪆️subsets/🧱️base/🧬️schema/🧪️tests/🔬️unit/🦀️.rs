@@ -113,6 +113,36 @@ async fn unmodeled_parts_survive_decode_encode_verbatim() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn custom_xml_with_comments_and_instructions_and_part_order_survive_round_trip() {
+    const MAIN_DOCUMENT_PART: &str = "word/document.xml";
+    const MAIN_DOCUMENT_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
+    const REL_TYPE_OFFICE_DOCUMENT: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument";
+    const CUSTOM: &str = "customXml/item1.xml";
+    const SOURCE: &str = "<root xmlns:x=\"urn:x\"><!--keep me--><?custom-pi data=\"1\"?><x:a><![CDATA[a<b]]></x:a></root>";
+    let mut opc = OpcPackage::empty();
+    opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
+    opc.content_types.set_default("xml", "application/xml");
+    opc.set_part("word/media/first.bin", "application/octet-stream", vec![1, 2, 3]);
+    opc.set_part(MAIN_DOCUMENT_PART, MAIN_DOCUMENT_CONTENT_TYPE, xml_document_to_text(&document_to_xml(&sample_document().await)).into_bytes());
+    opc.set_part(CUSTOM, "application/xml", SOURCE.as_bytes().to_vec());
+    opc.set_part("word/media/last.bin", "application/octet-stream", vec![9, 8, 7]);
+    opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, MAIN_DOCUMENT_PART);
+    let once = decode_docx(&semio_s_artifact_stdio_zip::opc::encode_opc(&opc).expect("encode")).expect("decode");
+    let twice = decode_docx(&encode_docx(&once).expect("re-encode")).expect("re-decode");
+    let custom_text = |snapshot: &semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot| xml_document_to_text(&snapshot.xml_part(CUSTOM).expect("custom part survives").document.materialize_exact().unwrap());
+    let text = custom_text(&twice);
+    assert!(text.contains("<!--keep me-->") && text.contains("<?custom-pi data=\"1\"?>") && (text.contains("a<b") || text.contains("a&lt;b")), "{text}");
+    assert_eq!(text, custom_text(&once), "custom XML text is stable across saves");
+    assert_eq!(twice.opc.part_bytes("word/media/first.bin"), Some([1u8, 2, 3].as_slice()));
+    assert_eq!(twice.opc.part_bytes("word/media/last.bin"), Some([9u8, 8, 7].as_slice()));
+    let order = |bytes: &[u8]| semio_s_artifact_stdio_zip::opc::decode_opc(bytes).expect("package").parts.iter().map(|part| part.path.clone()).collect::<Vec<_>>();
+    let first_order = order(&encode_docx(&once).expect("encode once"));
+    assert_eq!(first_order, order(&encode_docx(&twice).expect("encode twice")), "part order is stable across saves");
+    let position = |name: &str| first_order.iter().position(|path| path == name).unwrap_or_else(|| panic!("{name} missing from {first_order:?}"));
+    assert!(position("word/media/first.bin") < position("word/media/last.bin"));
+}
+
+#[semio_framework_async_macros::async_test]
 async fn unmodeled_run_properties_survive_round_trip() {
     let mut run = DocxRun { text: "colored".into(), ..Default::default() };
     run.extra_run_properties.push(XmlNode::Element { name: "w:color".into(), attrs: vec![XmlAttr { name: "w:val".into(), value: "FF0000".into() }], children: vec![] });

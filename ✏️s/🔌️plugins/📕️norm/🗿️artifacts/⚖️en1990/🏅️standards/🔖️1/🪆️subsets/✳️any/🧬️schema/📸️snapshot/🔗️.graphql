@@ -146,6 +146,10 @@ type ReliabilityAnalysis {
   actionDistribution: DistributionKind!
   actionMean: Float!
   actionSd: Float!
+  secondActionDistribution: DistributionKind!
+  secondActionMean: Float!
+  secondActionSd: Float!
+  memberId: String!
 }
 enum TestDistribution {
   normal
@@ -161,6 +165,9 @@ type TestSeries {
   variationKnown: Float!
   conversionFactor: Float!
   required: Float!
+  pairs: String!
+  theoryVariation: Float!
+  theoryMean: Float!
 }
 type Placement {
   id: String!

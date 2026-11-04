@@ -2,7 +2,7 @@
   "assets": {
     "entries": {
       "mask-paint-a95bed9ba57cbe52": {
-        "schema": "s.stdio.semio.image",
+        "schema": "stdio.semio.image",
         "width": 6,
         "height": 4,
         "colorspace": "rgba",

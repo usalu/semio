@@ -18,7 +18,7 @@ use super::topology::compute_semio_flow_topology;
 /// comment), so the derived struct-level `Default` (all-default fields) matches `infer` honestly.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.flow.inference")]
+#[artifact_schema(id = "stdio.semio.flow.inference")]
 pub struct SemioFlowInference {
     #[derived]
     pub topology: SemioFlowTopology,
@@ -35,24 +35,24 @@ impl protocol::Inference<SemioFlowSnapshot> for SemioFlowInference {
 
 impl protocol::InferenceSpec<SemioFlowSnapshot> for SemioFlowInference {
     fn inference_schema_id() -> &'static str {
-        "s.stdio.semio.flow.inference"
+        "stdio.semio.flow.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.semio.flow.inference.topology", reads: &["nodes", "edges"] }]
+        &[protocol::InferenceFieldSpec { id: "stdio.semio.flow.inference.topology", reads: &["nodes", "edges"] }]
     }
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.stdio.semio.flow.inference`'s facet leaves into the OS-wide inference catalog
+/// 💡️ Registers `stdio.semio.flow.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_flow_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_flow_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.stdio.semio.flow.inference",
+        id: "stdio.semio.flow.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

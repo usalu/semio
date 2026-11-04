@@ -1,4 +1,4 @@
-// ANTLR4 mirror (descriptive, not test-parsed) for s.stdio.semio.object.diff's DSL text form.
+// ANTLR4 mirror (descriptive, not test-parsed) for stdio.semio.object.diff's DSL text form.
 grammar StdioSemioObjectDiff;
 diff       : fieldList? ;
 fieldList  : field (';' field)* ;

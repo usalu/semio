@@ -91,6 +91,7 @@
       "id": "s.stdio.ifc.standard.2x3.representation.document",
       "standard": "s.stdio.ifc.standard.2x3",
       "representation": "document",
+      "sniff": {"window": 4096, "contains": ["'IFC2X3'"]},
       "mimes": [
         "application/x-ifc"
       ],
@@ -106,6 +107,8 @@
       "id": "s.stdio.ifc.standard.4.representation.document",
       "standard": "s.stdio.ifc.standard.4",
       "representation": "document",
+      "sniff": {"window": 4096, "contains": ["'IFC4'"]},
+      "owner": true,
       "mimes": [
         "application/x-ifc"
       ],
@@ -121,6 +124,7 @@
       "id": "s.stdio.ifc.standard.4x3.representation.document",
       "standard": "s.stdio.ifc.standard.4x3",
       "representation": "document",
+      "sniff": {"window": 4096, "contains": ["'IFC4X3"]},
       "mimes": [
         "application/x-ifc"
       ],

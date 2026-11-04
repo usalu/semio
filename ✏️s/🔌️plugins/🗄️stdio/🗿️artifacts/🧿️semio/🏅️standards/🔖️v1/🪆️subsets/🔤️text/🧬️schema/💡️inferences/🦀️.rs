@@ -16,7 +16,7 @@ use super::profile::compute_semio_text_profile;
 /// `💡️inferences/` (currently: `profile`, backed by the `📊profile/` slug dir).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.text.inference")]
+#[artifact_schema(id = "stdio.semio.text.inference")]
 pub struct SemioTextInference {
     #[derived]
     pub profile: SemioTextProfile,
@@ -45,24 +45,24 @@ impl Default for SemioTextInference {
 
 impl protocol::InferenceSpec<SemioTextSnapshot> for SemioTextInference {
     fn inference_schema_id() -> &'static str {
-        "s.stdio.semio.text.inference"
+        "stdio.semio.text.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.semio.text.inference.profile", reads: &["runs"] }]
+        &[protocol::InferenceFieldSpec { id: "stdio.semio.text.inference.profile", reads: &["runs"] }]
     }
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.stdio.semio.text.inference`'s facet leaves into the OS-wide inference catalog
+/// 💡️ Registers `stdio.semio.text.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `semio_text_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_text_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.stdio.semio.text.inference",
+        id: "stdio.semio.text.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

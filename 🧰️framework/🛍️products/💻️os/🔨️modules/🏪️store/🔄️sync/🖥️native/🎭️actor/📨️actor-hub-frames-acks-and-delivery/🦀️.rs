@@ -291,7 +291,18 @@ impl ArtifactActor {
     pub fn status(&self) -> ArtifactSyncStatus {
         let pending_mutations = self.pending_batches.values().map(Vec::len).sum();
         let acknowledged_head = if pending_mutations == 0 && self.outbox.is_empty() { self.server_frontier.as_ref().and_then(acknowledged_edited_head) } else { None };
-        ArtifactSyncStatus { persisted: self.last_written_hash.is_some() || self.server_frontier.is_some(), pending_mutations, remote: self.remote_state.clone(), acknowledged_head }
+        let folder_acknowledged = self.folder.is_some() && self.folder_write_failures == 0 && self.unsaved.is_none() && self.last_written_hash.is_some();
+        let hub_acknowledged = self.server_frontier.is_some() && pending_mutations == 0 && self.outbox.is_empty() && self.folder_write_failures == 0 && self.unsaved.is_none();
+        let write_failure = if self.folder_unread {
+            Some(SyncWriteFailure::new("folder-unreadable"))
+        } else if self.folder_diverged {
+            Some(SyncWriteFailure::new("external-divergence"))
+        } else if self.folder_write_failures > 0 {
+            Some(SyncWriteFailure::new("folder-write-failed"))
+        } else {
+            None
+        };
+        ArtifactSyncStatus { persisted: folder_acknowledged || hub_acknowledged, pending_mutations, remote: self.remote_state.clone(), acknowledged_head, write_failure }
     }
 
     pub async fn set_remote_state(&mut self, state: RemoteState) {

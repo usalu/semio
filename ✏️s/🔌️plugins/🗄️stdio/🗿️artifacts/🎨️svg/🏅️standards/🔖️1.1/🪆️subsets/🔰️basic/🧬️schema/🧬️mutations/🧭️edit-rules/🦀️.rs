@@ -5,7 +5,7 @@
 
 use super::*;
 use crate::schema::mutation_support::{region_edit, tree_edit, TreeEditKit};
-use crate::schema::snapshot::{NodePath, SvgAttributeValue, SvgNode};
+use crate::schema::snapshot::{node_at, NodePath, SvgAttributeValue, SvgNode, TransformOp, ViewBox};
 use semio_s_artifact_stdio_contract::editing::{EditRules, SnapshotEditError, SnapshotEditEvent};
 
 /// 📚 The subset declares no pointer outside the element tree.
@@ -27,6 +27,18 @@ impl TreeEditKit for Kit {
     }
     fn set_text(path: NodePath, text: String) -> SvgBasicMutation {
         SvgBasicMutation::SetText(set_text::SetText { path, text })
+    }
+    fn set_transform(path: NodePath, transform: Option<Vec<TransformOp>>, index: Option<usize>) -> Option<SvgBasicMutation> {
+        Some(SvgBasicMutation::SetTransform(set_transform::SetTransform { path, transform, index }))
+    }
+    fn set_view_box(path: NodePath, view_box: Option<ViewBox>, index: Option<usize>) -> Option<SvgBasicMutation> {
+        Some(SvgBasicMutation::SetViewBox(set_view_box::SetViewBox { path, view_box, index }))
+    }
+    fn rename_element(base: &SvgSnapshot, path: NodePath, name: String) -> Option<Vec<SvgBasicMutation>> {
+        let (index, parent) = path.split_last().map(|(index, parent)| (*index, parent.to_vec()))?;
+        let SvgNode::Element { attrs, children, .. } = node_at(&base.doc, &path).ok()? else { return None };
+        let renamed = SvgNode::Element { name, attrs: attrs.clone(), children: children.clone() };
+        Some(vec![Self::remove_element(parent.clone(), index), Self::insert_element(parent, index, renamed)])
     }
 }
 

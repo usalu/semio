@@ -155,6 +155,8 @@ impl ArtifactOwnedToolJobFactory for SemioModelEditorExampleFactory {
     type Owner = EditorApp<SemioModelEditor>;
     const TOOL_IDS: &'static [&'static str] = SEMIO_MODEL_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_MODEL_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_semio_base::semio_natural_file!(SemioModelSnapshot, "stdio.semio.model");
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_MODEL_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 pub use semio_s_artifact_stdio_semio_model_examples::editor::edit_rules;

@@ -57,6 +57,7 @@ describe("hex-window splices (ajv + two independent decodings)", () => {
       const base = bytes(row.before);
       if (row.leaves.length === 0 && decoded === "ignored") return;
       const viaLeaves = applyLeaves(base, row.leaves);
+      expect(viaLeaves.map((byte) => byte.toString(16).padStart(2, "0")).join("")).toBe(row.after);
       if (decoded !== "ignored" && decoded !== null) {
         const text = Array.from(row.before);
         const parts: string[] = [];

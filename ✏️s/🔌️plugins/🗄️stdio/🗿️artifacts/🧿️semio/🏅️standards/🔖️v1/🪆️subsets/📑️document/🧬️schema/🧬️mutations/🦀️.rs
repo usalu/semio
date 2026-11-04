@@ -118,7 +118,7 @@ pub enum SemioDocumentMutation {
     SetImageBytes(set_image_bytes::SetImageBytes),
 }
 
-/// 🏷️ The declared mutation vocabulary of `s.stdio.semio.document`, in `SemioDocumentMutation`'s own
+/// 🏷️ The declared mutation vocabulary of `stdio.semio.document`, in `SemioDocumentMutation`'s own
 /// declaration order and kebab-case spelling — the single source of truth for the binary op frame's
 /// `tag` ordinal (see [`wire_tag`]), for `parse_document_mutation`'s keyword match, and for
 /// the `semio-v1-document` catalog in `../../🔣️oracle.json`. The framework never parses

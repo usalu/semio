@@ -1,5 +1,5 @@
 dialect protocol
-protocol s.stdio.semio.graph.diff
+protocol stdio.semio.graph.diff
 version 1
 schema s.stdio.semio.graph
 start body

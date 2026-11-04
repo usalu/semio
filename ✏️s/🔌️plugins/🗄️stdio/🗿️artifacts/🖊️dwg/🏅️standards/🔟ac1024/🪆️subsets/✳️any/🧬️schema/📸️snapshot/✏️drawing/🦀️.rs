@@ -69,6 +69,9 @@ use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::a
 #[path = "🧮️geometry/🦀️.rs"]
 pub mod geometry;
 
+#[path = "🖼️preview/🦀️.rs"]
+pub mod preview;
+
 //#region 🔖️DrawingModel
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -537,6 +540,114 @@ impl DwgLogicalDrawing {
     }
 
     /// 🔢️ The next handle a new object of this drawing would take (the header's `HANDSEED`).
+    /// 🧭 The layer table records are the layer authority of the written file; the `layers` list is an editable view of them.
+    /// Pairs each listed layer with its record (by name first, then in order among the unmatched) and writes edited names and
+    /// colors into those records. A listed layer without a record gets a new record at the next free handle, listed in the layer
+    /// control; a record without a listed layer is deleted with its control entry. Layer `0` and a layer still referenced by an
+    /// object are never deleted. `handle_floor` is the header's handle seed, so a handle freed by a deletion is never reused. Returns `None` when the list already agrees with the records.
+    pub fn layers_applied(&self, handle_floor: u64) -> Result<Option<Self>, String> {
+        let is_layer = |object: &DwgLogicalObject| matches!(object.body.as_ref(), Some(DwgLogicalObjectBody::TableRecord(DwgTableRecordBody::Layer(_))));
+        let records: Vec<usize> = self.objects.iter().enumerate().filter(|(_, object)| is_layer(object)).map(|(index, _)| index).collect();
+        let record_of = |index: usize| match self.objects[index].body.as_ref() {
+            Some(DwgLogicalObjectBody::TableRecord(DwgTableRecordBody::Layer(record))) => Some(record),
+            _ => None,
+        };
+        let mut taken = vec![false; records.len()];
+        let mut pairing: Vec<Option<usize>> = vec![None; self.layers.len()];
+        for (slot, layer) in self.layers.iter().enumerate() {
+            if let Some(position) = records.iter().enumerate().position(|(candidate, index)| !taken[candidate] && record_of(*index).is_some_and(|record| record.common.name == layer.name)) {
+                taken[position] = true;
+                pairing[slot] = Some(position);
+            }
+        }
+        for slot in 0..self.layers.len() {
+            if pairing[slot].is_none() && slot < records.len() && !taken[slot] {
+                taken[slot] = true;
+                pairing[slot] = Some(slot);
+            }
+        }
+        let removed: Vec<usize> = (0..records.len()).filter(|position| !taken[*position]).map(|position| records[position]).collect();
+        let mut applied: Option<Self> = None;
+        for (slot, layer) in self.layers.iter().enumerate() {
+            let Some(position) = pairing[slot] else { continue };
+            let index = records[position];
+            let Some(record) = record_of(index) else { continue };
+            let current_color = match record.color.value {
+                DwgComplexColorValue::ByAci { index } => u8::try_from(index).unwrap_or(u8::MAX),
+                _ => layer.color,
+            };
+            if record.common.name == layer.name && current_color == layer.color {
+                continue;
+            }
+            if record.common.name == "0" && layer.name != "0" {
+                return Err("layer 0 cannot be renamed".into());
+            }
+            let draft = applied.get_or_insert_with(|| self.clone());
+            if let Some(DwgLogicalObjectBody::TableRecord(DwgTableRecordBody::Layer(target))) = draft.objects[index].body.as_mut() {
+                target.common.name = layer.name.clone();
+                if current_color != layer.color {
+                    target.color = DwgComplexColor { index: 0, value: DwgComplexColorValue::ByAci { index: u16::from(layer.color) }, ..Default::default() };
+                }
+            }
+        }
+        let added: Vec<&DwgLogicalLayer> = self.layers.iter().enumerate().filter(|(slot, _)| pairing[*slot].is_none()).map(|(_, layer)| layer).collect();
+        if added.is_empty() && removed.is_empty() {
+            return Ok(applied);
+        }
+        let control_index = self.objects.iter().position(|object| matches!(object.body.as_ref(), Some(DwgLogicalObjectBody::TableControl(DwgTableControlBody::Layer(_))))).ok_or("the drawing has no layer table control to list a layer in")?;
+        let control_handle = self.objects[control_index].handle;
+        let template = records.first().and_then(|index| record_of(*index)).cloned().ok_or("the drawing has no layer table record to model a new layer on")?;
+        let mut draft = applied.unwrap_or_else(|| self.clone());
+        for index in &removed {
+            let record = &self.objects[*index];
+            let record_name = record_of(*index).map(|record| record.common.name.clone()).unwrap_or_default();
+            if record_name == "0" {
+                return Err("layer 0 cannot be removed".into());
+            }
+            let used = self.objects.iter().any(|object| {
+                object.handle != record.handle
+                    && (object.owner_handle == Some(record.handle)
+                        || object.referenced_handles.contains(&record.handle)
+                        || match object.body.as_ref() {
+                            Some(DwgLogicalObjectBody::Entity(body)) => body.clone().common_mut().layer_handle == record.handle,
+                            _ => false,
+                        })
+            });
+            if used {
+                return Err(format!("layer {record_name:?} is still used by an object and cannot be removed"));
+            }
+        }
+        let removed_handles: Vec<u64> = removed.iter().map(|index| self.objects[*index].handle).collect();
+        draft.objects.retain(|object| !removed_handles.contains(&object.handle));
+        let mut next = self.handle_seed().max(handle_floor);
+        let mut new_handles = Vec::new();
+        for layer in added {
+            let mut body = template.clone();
+            body.common = DwgTableRecordCommon { name: layer.name.clone(), ..Default::default() };
+            body.frozen = false;
+            body.off = false;
+            body.locked = false;
+            body.color = DwgComplexColor { index: 0, value: DwgComplexColorValue::ByAci { index: u16::from(layer.color) }, ..Default::default() };
+            draft.objects.push(DwgLogicalObject {
+                handle: next,
+                type_code: 51,
+                class_name: "LAYER".into(),
+                category: DwgObjectCategory::TableRecord,
+                owner_handle: Some(control_handle),
+                body: Some(DwgLogicalObjectBody::TableRecord(DwgTableRecordBody::Layer(body))),
+                ..Default::default()
+            });
+            new_handles.push(next);
+            next += 1;
+        }
+        draft.objects.sort_by_key(|object| object.handle);
+        if let Some(DwgLogicalObjectBody::TableControl(DwgTableControlBody::Layer(entries))) = draft.objects.iter_mut().find(|object| object.handle == control_handle).and_then(|object| object.body.as_mut()) {
+            entries.entry_handles.retain(|entry| entry.handle.is_none_or(|handle| !removed_handles.contains(&handle)));
+            entries.entry_handles.extend(new_handles.iter().map(|handle| DwgTableControlEntry { handle: Some(*handle) }));
+        }
+        Ok(Some(draft))
+    }
+
     pub fn handle_seed(&self) -> u64 {
         self.objects.iter().map(|object| object.handle).max().unwrap_or_default() + 1
     }

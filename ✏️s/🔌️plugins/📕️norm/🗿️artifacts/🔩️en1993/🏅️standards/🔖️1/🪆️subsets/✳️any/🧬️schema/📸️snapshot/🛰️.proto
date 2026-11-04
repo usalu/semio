@@ -65,6 +65,16 @@ message En1993Snapshot {
   repeated FrameAction frame_actions = 31;
   // @state artifact
   repeated FrameMemberBasis frame_member_bases = 32;
+  // @state artifact
+  repeated FatigueStress fatigue_stresses = 33;
+  // @state artifact
+  repeated BucklingLength buckling_lengths = 34;
+  // @state artifact
+  repeated FormingGain forming_gains = 35;
+  // @state artifact
+  repeated MaterialDuctility material_ductility = 36;
+  // @state artifact
+  repeated FastenedJoint fastened_joints = 37;
 }
 enum MaterialKind {
   MATERIAL_KIND_CARBON = 0;
@@ -286,6 +296,8 @@ message SteelJoint {
   double base_lever_right = 62;
   double beam_web_thickness = 63;
   double beam_web_fy = 64;
+  double weld_force_longitudinal = 65;
+  double weld_force_transverse = 66;
 }
 enum FatigueMethod {
   FATIGUE_METHOD_DAMAGE_TOLERANT = 0;
@@ -298,6 +310,7 @@ message FatigueDetail {
   FatigueMethod method = 4;
   repeated FatigueBand spectrum = 5;
   string stress_history = 6;
+  FatigueConsequence consequence = 7;
 }
 enum FireRating {
   FIRE_RATING_R30 = 0;
@@ -409,6 +422,9 @@ message PlatedPanel {
   double stiffener_flange_thickness = 47;
   double lateral_pressure = 48;
   double lateral_pressure_coefficient = 49;
+  string steel_grade = 50;
+  string steel_subgrade = 51;
+  double design_temperature = 52;
 }
 enum FabricationToleranceClass {
   FABRICATION_TOLERANCE_CLASS_UNSET = 0;
@@ -496,6 +512,7 @@ message BridgeFatigue {
   double surfacing_thickness = 23;
   double wheel_load = 24;
   double wheel_patch = 25;
+  FatigueConsequence consequence = 26;
 }
 enum LatticeKind {
   LATTICE_KIND_UNSET = 0;
@@ -803,6 +820,7 @@ message JointPlate {
   double weld_throat = 22;
   double weld_fu = 23;
   double weld_beta_w = 24;
+  BoltGroupMethod group_method = 25;
 }
 message FoundationBlock {
   string id = 1;
@@ -866,4 +884,104 @@ enum HollowFabrication {
   HOLLOW_FABRICATION_UNSET = 0;
   HOLLOW_FABRICATION_HOT_FINISHED = 1;
   HOLLOW_FABRICATION_COLD_FORMED = 2;
+}
+
+enum FatigueConsequence {
+  FATIGUE_CONSEQUENCE_LOW = 0;
+  FATIGUE_CONSEQUENCE_HIGH = 1;
+}
+enum BoltGroupMethod {
+  BOLT_GROUP_METHOD_ELASTIC = 0;
+  BOLT_GROUP_METHOD_INSTANTANEOUS_CENTRE = 1;
+}
+enum StressRelief {
+  STRESS_RELIEF_AS_WELDED = 0;
+  STRESS_RELIEF_STRESS_RELIEVED = 1;
+  STRESS_RELIEF_NON_WELDED = 2;
+}
+enum BucklingPlane {
+  BUCKLING_PLANE_MAJOR_AXIS = 0;
+  BUCKLING_PLANE_MINOR_AXIS = 1;
+}
+enum FrameSway {
+  FRAME_SWAY_NON_SWAY = 0;
+  FRAME_SWAY_SWAY = 1;
+}
+enum NodeARestraint {
+  NODE_A_RESTRAINT_FRAMED = 0;
+  NODE_A_RESTRAINT_FIXED = 1;
+  NODE_A_RESTRAINT_PINNED = 2;
+}
+enum NodeBRestraint {
+  NODE_B_RESTRAINT_FRAMED = 0;
+  NODE_B_RESTRAINT_FIXED = 1;
+  NODE_B_RESTRAINT_PINNED = 2;
+}
+enum FormingProcess {
+  FORMING_PROCESS_ROLL_FORMING = 0;
+  FORMING_PROCESS_OTHER_FORMING = 1;
+}
+enum FastenerKind {
+  FASTENER_KIND_SELF_TAPPING_SCREW = 0;
+  FASTENER_KIND_BLIND_RIVET = 1;
+}
+message FatigueStress {
+  string id = 1;
+  string detail_id = 2;
+  string max_case_id = 3;
+  string min_case_id = 4;
+  double fibre_z = 5;
+  double fibre_y = 6;
+  StressRelief relief = 7;
+  double concentration = 8;
+  double thickness = 9;
+  double cycles = 10;
+}
+message BucklingLength {
+  string id = 1;
+  string member_id = 2;
+  BucklingPlane plane = 3;
+  FrameSway sway = 4;
+  NodeARestraint restraint_a = 5;
+  double column_stiffness_a = 6;
+  double beam_stiffness_a = 7;
+  NodeBRestraint restraint_b = 8;
+  double column_stiffness_b = 9;
+  double beam_stiffness_b = 10;
+}
+message FormingGain {
+  string id = 1;
+  string member_id = 2;
+  FormingProcess forming = 3;
+  double ultimate_strength = 4;
+  double gross_area = 5;
+  uint32 bends = 6;
+  double used_yield = 7;
+}
+message MaterialDuctility {
+  string id = 1;
+  string material_id = 2;
+  double elongation = 3;
+  double ultimate_strain = 4;
+}
+message FastenedJoint {
+  string id = 1;
+  string member_id = 2;
+  FastenerKind kind = 3;
+  double diameter = 4;
+  double washer_diameter = 5;
+  uint32 count = 6;
+  uint32 per_row = 7;
+  double head_thickness = 8;
+  double base_thickness = 9;
+  double head_strength = 10;
+  double base_strength = 11;
+  double end_distance = 12;
+  double edge_distance = 13;
+  double pitch = 14;
+  double gauge = 15;
+  double sheet_width = 16;
+  double shear_force = 17;
+  double tension_force = 18;
+  double shear_resistance = 19;
 }

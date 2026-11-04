@@ -43,9 +43,7 @@
       "mimes": [
         "model/step"
       ],
-      "extensions": [
-        ".step"
-      ],
+      "extensions": [".step", ".stp"],
       "is_binary": false,
       "aliases": [],
       "neutral": true,
@@ -263,7 +261,7 @@
     {
       "id": "s.stdio.step.standard.ap214.representation.mime-model-step-extension-step",
       "category": "representation",
-      "descriptor": "runtime-capability:representation:mime:model/step|extension:.step",
+      "descriptor": "runtime-capability:representation:mime:model/step|extension:.step|extension:.stp",
       "claims": [
         {
           "namespace": "mime",
@@ -272,6 +270,10 @@
         {
           "namespace": "extension",
           "value": ".step"
+        },
+        {
+          "namespace": "extension",
+          "value": ".stp"
         }
       ]
     },

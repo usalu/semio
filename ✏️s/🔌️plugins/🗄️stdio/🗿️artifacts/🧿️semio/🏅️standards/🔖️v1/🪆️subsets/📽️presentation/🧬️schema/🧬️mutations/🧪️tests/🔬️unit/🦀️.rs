@@ -47,7 +47,7 @@ fn text_block(text: &str) -> DocBlock {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioPresentationSnapshot {
     SemioPresentationSnapshot {
-        schema: "s.stdio.semio.presentation".into(),
+        schema: "stdio.semio.presentation".into(),
         masters: vec![SlideMaster { id: "master1".into(), shapes: Vec::new() }],
         layouts: vec![SlideLayout { id: "layout1".into(), master_id: "master1".into(), shapes: Vec::new() }],
         slides: vec![
@@ -61,7 +61,7 @@ fn fixture() -> SemioPresentationSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_a() -> SemioPresentationSnapshot {
     SemioPresentationSnapshot {
-        schema: "s.stdio.semio.presentation".into(),
+        schema: "stdio.semio.presentation".into(),
         masters: vec![
             SlideMaster { id: "keep".into(), shapes: vec![SlideShape::Placeholder { frame: frame(0.0, 0.0, 5.0, 5.0), kind: PlaceholderKind::Title }] },
             SlideMaster { id: "toModify".into(), shapes: Vec::new() },
@@ -79,7 +79,7 @@ fn sweep_a() -> SemioPresentationSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_b() -> SemioPresentationSnapshot {
     SemioPresentationSnapshot {
-        schema: "s.stdio.semio.presentation".into(),
+        schema: "stdio.semio.presentation".into(),
         masters: vec![
             SlideMaster { id: "keep".into(), shapes: vec![SlideShape::Placeholder { frame: frame(0.0, 0.0, 5.0, 5.0), kind: PlaceholderKind::Title }] },
             SlideMaster { id: "toModify".into(), shapes: vec![SlideShape::Placeholder { frame: frame(1.0, 1.0, 2.0, 2.0), kind: PlaceholderKind::Body }] },

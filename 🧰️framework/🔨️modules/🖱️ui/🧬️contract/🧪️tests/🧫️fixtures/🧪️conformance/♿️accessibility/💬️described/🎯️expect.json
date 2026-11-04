@@ -1,7 +1,7 @@
 {
   "case": "described",
   "kind": "accessibility",
-  "description": "A Slider carrying an accessible description in addition to its (absent) label.",
+  "description": "A Slider carrying an accessible description in addition to its label.",
   "outcome": "accept",
   "limits": null,
   "tree": {
@@ -19,7 +19,7 @@
   "accessibility": [
     {
       "id": 0,
-      "label": null,
+      "label": "Volume",
       "description": "Playback volume, zero to one hundred percent.",
       "live": "off",
       "shortcut": null,

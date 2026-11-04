@@ -77,7 +77,7 @@ use crate::schema::mutations::replace_surface;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioBrepSnapshot, diff = SemioBrepDiff, schema = "s.stdio.semio.brep", reference = SemioBrepSnapshot, reference_diff = SemioBrepDiff)]
+#[mutations(snapshot = SemioBrepSnapshot, diff = SemioBrepDiff, schema = "stdio.semio.brep", reference = SemioBrepSnapshot, reference_diff = SemioBrepDiff)]
 pub enum SemioBrepMutation {
     CreateVertex(create_vertex::CreateVertex),
     DeleteVertex(delete_vertex::DeleteVertex),

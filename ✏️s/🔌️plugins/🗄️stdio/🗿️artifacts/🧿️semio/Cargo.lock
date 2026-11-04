@@ -8986,9 +8986,9 @@ dependencies = [
  "semio-framework-replication-local-interaction",
  "semio-framework-replication-mutation",
  "semio-framework-replication-mutation-messages",
- "semio-framework-replication-mutation-retained",
- "semio-framework-replication-mutation-retained-field",
  "semio-framework-replication-presence",
+ "semio-framework-replication-retained",
+ "semio-framework-replication-retained-field",
  "semio-framework-replication-wire-core",
  "semio-framework-value",
 ]
@@ -9188,31 +9188,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-replication-mutation-retained"
-version = "0.1.0"
-dependencies = [
- "semio-framework-diagnostic",
- "semio-framework-mutation-diff",
- "semio-framework-replication-mutation",
- "semio-framework-replication-mutation-messages",
- "semio-framework-replication-mutation-retained-field",
- "semio-framework-value",
- "semio-framework-value-factory",
- "semio-framework-value-native-owned",
- "semio-framework-value-persistent",
- "semio-framework-value-snapshot-projection",
-]
-
-[[package]]
-name = "semio-framework-replication-mutation-retained-field"
-version = "0.1.0"
-dependencies = [
- "semio-framework-mutation-diff",
- "semio-framework-value",
- "semio-framework-value-persistent",
-]
-
-[[package]]
 name = "semio-framework-replication-presence"
 version = "0.1.0"
 dependencies = [
@@ -9221,6 +9196,31 @@ dependencies = [
  "semio-framework-replication-interaction",
  "semio-framework-replication-wire-core",
  "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-replication-retained"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-mutation-diff",
+ "semio-framework-replication-mutation",
+ "semio-framework-replication-mutation-messages",
+ "semio-framework-replication-retained-field",
+ "semio-framework-value",
+ "semio-framework-value-factory",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
+ "semio-framework-value-snapshot-projection",
+]
+
+[[package]]
+name = "semio-framework-replication-retained-field"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-mutation-diff",
+ "semio-framework-value",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]
@@ -11152,6 +11152,7 @@ dependencies = [
  "semio-framework-dsl",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -11491,6 +11492,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-os-kernel",
  "semio-framework-pack",
+ "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-ui-contract",
  "semio-framework-ui-locale",
@@ -12800,6 +12802,7 @@ dependencies = [
  "semio-framework-dsl",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -14060,8 +14063,6 @@ dependencies = [
  "semio-framework-value-paged-list",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-ifc-declarations",
- "semio-s-artifact-stdio-ifc-geometry",
- "semio-s-artifact-stdio-ifc4-catalog",
 ]
 
 [[package]]
@@ -14069,125 +14070,6 @@ name = "semio-s-artifact-stdio-ifc-declarations"
 version = "0.1.0"
 dependencies = [
  "semio-framework-deflate",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-ifc-geometry"
-version = "0.1.0"
-dependencies = [
- "semio-framework-job",
- "semio-framework-pack-json",
- "semio-framework-value",
- "semio-framework-value-paged-list",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-ifc-geometry-rings",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-ifc-geometry-rings"
-version = "0.1.0"
-
-[[package]]
-name = "semio-s-artifact-stdio-ifc4-catalog"
-version = "0.1.0"
-dependencies = [
- "semio-s-artifact-stdio-ifc-declarations",
- "semio-s-artifact-stdio-ifc4-catalog-entities-00",
- "semio-s-artifact-stdio-ifc4-catalog-entities-01",
- "semio-s-artifact-stdio-ifc4-catalog-entities-02",
- "semio-s-artifact-stdio-ifc4-catalog-entities-03",
- "semio-s-artifact-stdio-ifc4-catalog-entities-04",
- "semio-s-artifact-stdio-ifc4-catalog-entities-05",
- "semio-s-artifact-stdio-ifc4-catalog-entities-06",
- "semio-s-artifact-stdio-ifc4-catalog-entities-07",
- "semio-s-artifact-stdio-ifc4-catalog-entities-08",
- "semio-s-artifact-stdio-ifc4-catalog-functions-00",
- "semio-s-artifact-stdio-ifc4-catalog-rules-00",
- "semio-s-artifact-stdio-ifc4-catalog-types-00",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-ifc4-catalog-entities-00"
-version = "0.1.0"
-dependencies = [
- "semio-s-artifact-stdio-ifc-declarations",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-ifc4-catalog-entities-01"
-version = "0.1.0"
-dependencies = [
- "semio-s-artifact-stdio-ifc-declarations",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-ifc4-catalog-entities-02"
-version = "0.1.0"
-dependencies = [
- "semio-s-artifact-stdio-ifc-declarations",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-ifc4-catalog-entities-03"
-version = "0.1.0"
-dependencies = [
- "semio-s-artifact-stdio-ifc-declarations",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-ifc4-catalog-entities-04"
-version = "0.1.0"
-dependencies = [
- "semio-s-artifact-stdio-ifc-declarations",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-ifc4-catalog-entities-05"
-version = "0.1.0"
-dependencies = [
- "semio-s-artifact-stdio-ifc-declarations",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-ifc4-catalog-entities-06"
-version = "0.1.0"
-dependencies = [
- "semio-s-artifact-stdio-ifc-declarations",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-ifc4-catalog-entities-07"
-version = "0.1.0"
-dependencies = [
- "semio-s-artifact-stdio-ifc-declarations",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-ifc4-catalog-entities-08"
-version = "0.1.0"
-dependencies = [
- "semio-s-artifact-stdio-ifc-declarations",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-ifc4-catalog-functions-00"
-version = "0.1.0"
-dependencies = [
- "semio-s-artifact-stdio-ifc-declarations",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-ifc4-catalog-rules-00"
-version = "0.1.0"
-dependencies = [
- "semio-s-artifact-stdio-ifc-declarations",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-ifc4-catalog-types-00"
-version = "0.1.0"
-dependencies = [
- "semio-s-artifact-stdio-ifc-declarations",
 ]
 
 [[package]]
@@ -17355,6 +17237,7 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-pdf-diff",
+ "semio-s-artifact-stdio-pdf-graph-projection",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-base",
  "semio-s-artifact-stdio-pdf-mut-base-2",
@@ -25022,6 +24905,7 @@ dependencies = [
  "semio-framework-dsl",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -25083,6 +24967,7 @@ dependencies = [
  "semio-framework-dsl",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",

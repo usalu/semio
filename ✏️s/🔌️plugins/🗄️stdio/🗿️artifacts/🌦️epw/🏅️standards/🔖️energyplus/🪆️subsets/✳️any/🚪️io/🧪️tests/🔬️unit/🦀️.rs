@@ -43,7 +43,7 @@ async fn decodes_the_real_fixture_with_all_24_records_and_35_columns() {
 
 //#region 🔖️CodecRetentionLaw
 /// 🔁️ decode→encode is byte-preserving on the real W0 fixture
-/// (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📚️examples/🎬️demo/🖼️assets/🌦️example.epw`,
+/// (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🖼️assets/🎬️demo/🧪️example/🌦️.epw`,
 /// verified upstream by `verify_epw.py`): all 24 records × 35 columns exact, all 8 header
 /// lines exact, byte-for-byte incl. CRLF.
 #[semio_framework_async_macros::async_test]

@@ -44,6 +44,9 @@ path = "../../../../../🧰️framework/🔨️modules/🗿️artifact-reference
 [workspace.dependencies.semio-framework-async-macros]
 path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-hash]
+path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-job]
 path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
 

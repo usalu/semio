@@ -1,6 +1,6 @@
 //! 🧪️ `edit-text` fixture — `⚠️warns`.
 //!
-//! `edit-text` is the ONLY writer mutation that reaches the composed `s.stdio.semio.document`
+//! `edit-text` is the ONLY writer mutation that reaches the composed `stdio.semio.document`
 //! child: on a real edit it hands off to `diff_set_text`, which mints a fresh content-addressed
 //! handle and attaches its local text owner. Its diff oracle guards that with an equality check
 //! against the CURRENT body (`writer_text(base) == payload.text` ⇒ Warning `mutation.no-op`), and

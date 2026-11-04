@@ -86,6 +86,11 @@ impl ArtifactActor {
             last_written_hash: None,
             folder_held_hash: None,
             folder_bootstrapped: false,
+            folder_write_failures: 0,
+            folder_retry_at: None,
+            unsaved: None,
+            folder_unread: false,
+            folder_diverged: false,
             #[cfg(any(test, feature = "testing"))]
             folder_writes: 0,
             remote_state: RemoteState::Detached,
@@ -155,16 +160,9 @@ impl ArtifactActor {
                 return false;
             }
         };
-        if let Some(folder) = self.folder.as_ref() {
-            if folder.write_archive(&archive).await.is_ok() {
-                self.last_written_hash = Some(document_archive_hash(&archive));
-            }
-        }
         self.known_op_ids = op_ids;
         self.server_frontier = Some(canonical_pair_baseline(baseline));
-        self.current_pack = Some(pack);
-        self.current_spr = Some(spr);
-        self.current_archive = Some(archive);
+        self.commit_archive(archive, pack, spr).await;
         true
     }
 
@@ -201,6 +199,25 @@ impl ArtifactActor {
                         }
                         None => ArtifactDrive::Idle { deadline: Some(deadline) },
                     };
+                }
+            }
+            if self.unsaved.is_some() {
+                let deadline = *self.close_drain_deadline.get_or_insert_with(|| Instant::now() + ARTIFACT_CLOSE_OUTBOX_DRAIN);
+                let flushable = !self.folder_unread && !self.folder_diverged;
+                if flushable && Instant::now() < deadline {
+                    self.folder_retry_at = Some(Instant::now());
+                    self.retry_folder_write().await;
+                    if self.unsaved.is_some() {
+                        return ArtifactDrive::Idle { deadline: Some(self.folder_retry_at.map_or(deadline, |due| due.min(deadline))) };
+                    }
+                } else {
+                    self.emit(ArtifactEvent::Conflict(MutationMessage {
+                        level: semio_framework_diagnostic::Severity::Error,
+                        code: semio_framework_diagnostic::FaultCode::new("closeWithUnsavedState"),
+                        message: "the document closed with edits the folder never acknowledged".into(),
+                        target: vec![format!("folder://{}", self.document_id)],
+                        op_index: None,
+                    }));
                 }
             }
             self.connect_future = None;
@@ -284,6 +301,7 @@ impl ArtifactActor {
             }
             ArtifactDrivePhase::Status => {
                 self.tick_link().await;
+                self.retry_folder_write().await;
                 self.emit_status_if_changed().await;
                 if self.cmd_rx.close_handle().has_pending() {
                     return ArtifactDrive::MoreWork;
@@ -292,7 +310,7 @@ impl ArtifactActor {
                     self.drive_phase = ArtifactDrivePhase::Backbone;
                     return ArtifactDrive::MoreWork;
                 }
-                return ArtifactDrive::Idle { deadline: [self.reconnect_at, self.link_expires_at, self.fs_deadline].into_iter().flatten().min() };
+                return ArtifactDrive::Idle { deadline: [self.reconnect_at, self.link_expires_at, self.fs_deadline, self.folder_retry_at].into_iter().flatten().min() };
             }
         }
         ArtifactDrive::MoreWork
@@ -320,22 +338,28 @@ impl ArtifactActor {
             self.emit(ArtifactEvent::DocumentArchiveAbsent);
         }
         self.folder_bootstrapped |= matches!(read, Some(Ok(_)));
+        if let Some(Err(error)) = &read {
+            self.block_folder("folderReadFailed", format!("the document folder could not be read; nothing is written over it until it can: {error}")).await;
+        }
         let seeded = read.and_then(|read| read.ok().flatten());
         self.folder_held_hash = seeded.as_deref().map(document_archive_hash).or(self.folder_held_hash.take());
         if let Some(bytes) = seeded {
-            if let Ok(archive) = semio_framework_os_spr::decode_document_archive_bytes(&bytes).await {
-                let pack = archive.parent_pack;
-                let spr = archive.parent_spr;
-                if let Ok(op_ids) = spr_op_ids(&spr).await {
-                self.known_op_ids = op_ids;
-                self.last_written_hash = Some(document_archive_hash(&bytes));
-                self.current_pack = Some(pack);
-                self.current_spr = Some(spr);
-                self.current_archive = Some(bytes);
+            let decoded = match semio_framework_os_spr::decode_document_archive_bytes(&bytes).await {
+                Ok(archive) => spr_op_ids(&archive.parent_spr).await.map(|op_ids| (archive.parent_pack, archive.parent_spr, op_ids)).map_err(|error| error.to_string()),
+                Err(error) => Err(error.to_string()),
+            };
+            match decoded {
+                Ok((pack, spr, op_ids)) => {
+                    self.known_op_ids = op_ids;
+                    self.last_written_hash = Some(document_archive_hash(&bytes));
+                    self.current_pack = Some(pack);
+                    self.current_spr = Some(spr);
+                    self.current_archive = Some(bytes);
                 }
+                Err(error) => self.block_folder("folderArchiveCorrupt", format!("the folder archive does not decode; nothing is written over it: {error}")).await,
             }
         }
-        if self.watch_external {
+        if self.watch_external && self.watcher.is_none() {
             if let Some(watch_path) = self.folder_watch_path.clone() {
                 if let Some(readiness) = self.readiness.clone() {
                     self.watcher = Some(install_watcher(&watch_path, self.pool.clone(), readiness));

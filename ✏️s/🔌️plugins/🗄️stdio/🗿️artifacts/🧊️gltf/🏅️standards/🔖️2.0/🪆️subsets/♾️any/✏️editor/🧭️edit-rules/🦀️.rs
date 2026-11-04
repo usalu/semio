@@ -449,11 +449,61 @@ fn length(base: &GltfSnapshot, rule: &ListRule, ix: &[usize]) -> usize {
     }
 }
 
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+/// 📐️ The gesture moves the scene roots (the default scene, else every scene) as one rigid group: matrix nodes are left-multiplied, TRS nodes keep their TRS form and a shear-producing request is refused.
+fn transform_roots(base: &GltfSnapshot, transform: &super::editing::Transform) -> Rows {
+    let scenes = &base.document.scenes;
+    let mut roots: Vec<usize> = match base.document.scene {
+        Some(index) => scenes.get(index).ok_or_else(|| refuse(format!("default scene {index} does not exist")))?.nodes.clone(),
+        None => scenes.iter().flat_map(|scene| scene.nodes.iter().copied()).collect(),
+    };
+    roots.sort_unstable();
+    roots.dedup();
+    if roots.is_empty() {
+        return Err(refuse("the document has no scene root to transform"));
+    }
+    let rotation = transform.rotation();
+    let linear: [[f64; 3]; 3] = std::array::from_fn(|row| std::array::from_fn(|col| rotation[row][col] * transform.scale[col]));
+    let uniform = transform.scale[0] == transform.scale[1] && transform.scale[1] == transform.scale[2];
+    let offset: [f64; 3] = std::array::from_fn(|row| transform.pivot[row] + transform.translate[row] - (0..3).map(|col| linear[row][col] * transform.pivot[col]).sum::<f64>());
+    roots.into_iter().map(|index| {
+        let node = row(&base.document.nodes, index)?;
+        let payload = match node.matrix {
+            Some(matrix) => {
+                let at = |row: usize, col: usize| matrix[col * 4 + row];
+                let mut next = matrix;
+                for col in 0..4 {
+                    for r in 0..3 {
+                        next[col * 4 + r] = (0..3).map(|k| linear[r][k] * at(k, col)).sum::<f64>() + if col == 3 { offset[r] } else { 0.0 };
+                    }
+                }
+                kinds::change_node_transform::GltfNodeTransform::Matrix { matrix: next }
+            }
+            None => {
+                let turned = node.rotation.is_some_and(|quaternion| quaternion != [0.0, 0.0, 0.0, 1.0]);
+                if !uniform && (transform.rotate_degrees != [0.0; 3] || turned) {
+                    return Err(refuse(format!("a non-uniform scale with rotation would shear node {index}")));
+                }
+                let scale = node.scale.unwrap_or([1.0; 3]);
+                kinds::change_node_transform::GltfNodeTransform::Trs {
+                    translation: Some(transform.point(node.translation.unwrap_or([0.0; 3]))),
+                    rotation: if transform.rotate_degrees == [0.0; 3] { node.rotation } else { Some(transform.quaternion(node.rotation.unwrap_or([0.0, 0.0, 0.0, 1.0]))) },
+                    scale: if transform.scale == [1.0; 3] { node.scale } else { Some(std::array::from_fn(|axis| scale[axis] * transform.scale[axis])) },
+                }
+            }
+        };
+        Ok(kinds::change_node_transform::mutation(kinds::change_node_transform::GltfTransformNodePayload { node: index, transform: payload }))
+    }).collect()
+}
+
 /// 🎯️ The gestures [`RULES`] cannot express because the payload is computed from the addressed entry (a bind or unbind chosen by the new value, a
 /// removal by value, a move, a transform composed from the node's other components): the ONE concrete kind they raise, reading only the addressed
 /// entry of `base`. `None` hands the edit to [`RULES`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn resolve_special(base: &GltfSnapshot, event: &SnapshotEditEvent) -> Result<Option<Vec<GltfMutation>>, Fault> {
+    if let Some(transform) = super::editing::Transform::from_event(event) {
+        return transform_roots(base, &transform?).map(Some);
+    }
     let measure = |rule: &ListRule, ix: &[usize]| length(base, rule, ix);
     match event {
         SnapshotEditEvent::SetValue { path, value } => field(base, path, Some(value)),

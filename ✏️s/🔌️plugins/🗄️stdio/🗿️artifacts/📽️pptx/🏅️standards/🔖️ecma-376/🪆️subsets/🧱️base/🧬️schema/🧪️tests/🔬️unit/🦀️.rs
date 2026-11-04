@@ -321,6 +321,29 @@ async fn unmodeled_slide_master_survives_decode_encode_logically() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn custom_xml_with_comments_and_instructions_and_part_order_survive_round_trip() {
+    const CUSTOM: &str = "customXml/item1.xml";
+    const SOURCE: &str = "<root xmlns:x=\"urn:x\"><!--keep me--><?custom-pi data=\"1\"?><x:a><![CDATA[a<b]]></x:a></root>";
+    let mut snap = build_minimal_pptx(sample_presentation().await);
+    snap.opc.set_part("ppt/media/first.bin", "application/octet-stream", vec![1, 2, 3]);
+    snap.opc.content_types.set_override(CUSTOM, "application/xml");
+    snap.xml_parts.push(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxXmlPart { path: CUSTOM.into(), content_type: "application/xml".into(), document: xml_document_from_text(SOURCE).expect("custom xml") });
+    snap.opc.set_part("ppt/media/last.bin", "application/octet-stream", vec![9, 8, 7]);
+    let once = decode_pptx(&encode_pptx(&snap).expect("encode")).expect("decode");
+    let twice = decode_pptx(&encode_pptx(&once).expect("re-encode")).expect("re-decode");
+    let text = twice.part_text(CUSTOM).expect("custom part survives");
+    assert!(text.contains("<!--keep me-->") && text.contains("<?custom-pi data=\"1\"?>") && (text.contains("a<b") || text.contains("a&lt;b")), "{text}");
+    assert_eq!(twice.part_text(CUSTOM), once.part_text(CUSTOM), "custom XML text is stable across saves");
+    assert_eq!(twice.opc.part_bytes("ppt/media/first.bin"), Some([1u8, 2, 3].as_slice()));
+    assert_eq!(twice.opc.part_bytes("ppt/media/last.bin"), Some([9u8, 8, 7].as_slice()));
+    let order = |bytes: &[u8]| opc::decode_opc(bytes).expect("package").parts.iter().map(|part| part.path.clone()).collect::<Vec<_>>();
+    let first_order = order(&encode_pptx(&once).expect("encode once"));
+    assert_eq!(first_order, order(&encode_pptx(&twice).expect("encode twice")), "part order is stable across saves");
+    let position = |name: &str| first_order.iter().position(|path| path == name).unwrap_or_else(|| panic!("{name} missing from {first_order:?}"));
+    assert!(position("ppt/media/first.bin") < position("ppt/media/last.bin"));
+}
+
+#[semio_framework_async_macros::async_test]
 async fn analyzer_builder_round_trip() {
     let original = build_minimal_pptx(sample_presentation().await);
     let bytes = encode_pptx(&original).expect("encode");

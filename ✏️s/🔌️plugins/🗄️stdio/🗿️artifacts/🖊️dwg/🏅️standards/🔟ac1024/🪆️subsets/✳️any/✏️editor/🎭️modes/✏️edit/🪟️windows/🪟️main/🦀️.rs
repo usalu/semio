@@ -1,70 +1,26 @@
-//! 🧊 DWG AC1024 editor — the Main window: the SAME world-3d mesh scene shape as the sibling
-//! viewer window, built with the shared `MeshWindowKit`'s EDITABLE variant (contract §2.6, action id
-//! `set-vertex`). Render is identical to the viewer's read: both surfaces are pure reads of the same
-//! artifact-level `DwgSnapshot` — this window itself never mutates; mutation is the surface
-//! root's `handle()` responsibility.
+//! 🖼️ DWG AC1024 editor — Main window: a real 2D `ImageWindowKit` render of the typed drawing geometry (read-only canvas; typed header, summary and drawing-object edits live in Details).
+//! Objects without a typed geometry stay in the logical model untouched and are not drawn.
 
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
+use semio_s_artifact_stdio_dwg_snapshot_drawing::standards::v_ac1024::subsets::any::schema::snapshot::drawing::preview::{preview_svg, DWG_PREVIEW_CANVAS};
+use semio_framework_plugin::app::{ImageView, ImageWindowKit};
+use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 
-//#region 🔖️Constants
-pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
-pub const BODY_KEY: &str = MeshWindowKit::KIND_ID;
-const DWG_AC1024_EDIT_FALLBACK_MESH_KIND: &str = "box";
-const DWG_AC1024_EDIT_DEFAULT_CAMERA_POSITION: [f64; 3] = [8.0, -8.0, 6.0];
-const DWG_AC1024_EDIT_DEFAULT_CAMERA_TARGET: [f64; 3] = [0.0, 0.0, 0.0];
-const DWG_AC1024_EDIT_DEFAULT_CAMERA_FOV: f64 = 45.0;
-//#endregion 🔖️Constants
+pub const WINDOW_KIND_ID: &str = ImageWindowKit::KIND_ID;
+pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
 
-//#region 🔖️Definition
-/// 🧱️ Stitched into the editor manifest by the surface root's `create_*_editor`. The EDITABLE
-/// variant — `MeshWindowKit::window_kind()` — carries the frozen `set-vertex` action.
+/// 🧱️ Stitched into the editor manifest by the surface root's `create_*_editor`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
-    MeshWindowKit::window_kind()
-}
-//#endregion 🔖️Definition
-
-//#region 🔖️Render
-/// ✏️ Same kind-agnostic content signal as the sibling viewer window (duplicated, not imported —
-/// `policyViewerPurityBreaches` is one-directional but the two surfaces still never reference each
-/// other by design).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entity_count(document: &DwgSnapshot) -> usize {
-    semio_framework_value::ToValue::to_value(document).as_object().map_or(0, |object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).clamp(1, 6)
+    ImageWindowKit::window_kind()
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn world_instances_json(document: &DwgSnapshot) -> String {
-    let count = entity_count(document);
-    let instances: Vec<semio_framework_pack_json::Value> = (0..count)
-        .map(|index| {
-            semio_framework_pack_json::json!({
-                "id": format!("dwg_ac1024-{index}"),
-                "meshId": DWG_AC1024_EDIT_FALLBACK_MESH_KIND,
-                "position": [index as f64 * 2.0, 0.0, 0.0],
-                "rotation": [0.0, 0.0, 0.0, 1.0],
-                "scale": [1.0, 1.0, 1.0],
-                "label": format!("DWG AC1024 {index}"),
-                "smoothShading": false,
-            })
-        })
-        .collect();
-    semio_framework_pack_json::to_string(&semio_framework_pack_json::array(instances))
-}
-
+/// 🖼️ Pure `DwgSnapshot -> BuiltNode` read.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &DwgSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let meshes_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::array([semio_framework_pack_json::json!({ "id": DWG_AC1024_EDIT_FALLBACK_MESH_KIND, "data": mesh_from_kind(DWG_AC1024_EDIT_FALLBACK_MESH_KIND) })]));
-    let view = MeshView {
-        camera_json: world3d_camera_json(DWG_AC1024_EDIT_DEFAULT_CAMERA_POSITION, DWG_AC1024_EDIT_DEFAULT_CAMERA_TARGET, DWG_AC1024_EDIT_DEFAULT_CAMERA_FOV),
-        meshes_json,
-        instances_json: world_instances_json(document),
-        selection_json: world3d_selection_json("rectangle", &[], None),
-    };
-    MeshWindowKit::render(&view)
+    let (width, height) = DWG_PREVIEW_CANVAS;
+    ImageWindowKit::render(&ImageView { width, height, mime: "image/svg+xml".into(), base64: semio_s_artifact_stdio_contract::base64_standard(preview_svg(&document.drawing).as_bytes()) })
 }
-//#endregion 🔖️Render
 
 //#region 🧪️Tests
 #[cfg(test)]

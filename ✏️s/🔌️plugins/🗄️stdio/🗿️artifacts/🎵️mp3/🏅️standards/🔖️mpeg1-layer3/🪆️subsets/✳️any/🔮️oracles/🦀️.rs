@@ -43,7 +43,7 @@ use semio_repo_test_host::Json;
 /// `kinds_match_the_catalog_and_the_vocabulary` below reads the committed manifest, vocabulary and
 /// feature as text and fails if any of them drift apart. The check that a kind exists as a real
 /// enum variant is the production-side test's, and only it can make that claim.
-pub const KINDS: [&str; 3] = ["set-id3v2", "set-frames", "set-id3v1"];
+pub const KINDS: [&str; 6] = ["set-id3v2", "set-frames", "set-id3v1", "patch-frames", "set-id3-frame", "remove-id3-frame"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Layers
@@ -285,7 +285,7 @@ mod layers {
             other=>return Err(format!("unsupported semantic oracle frame {other:?}")),
         };Ok(Json::Object(fields.into_iter().map(|(k,v)|(k.into(),v)).collect()))
     }
-    fn metadata_frames_json(frames:&[MetadataFrame])->Result<Json,String>{Ok(Json::Array(frames.iter().map(|frame|Ok(Json::Object(vec![("id".into(),Json::String(frame.id.clone())),("content".into(),content_json(&frame.content)?)]))).collect::<Result<_,String>>()?))}
+    pub(super) fn metadata_frames_json(frames:&[MetadataFrame])->Result<Json,String>{Ok(Json::Array(frames.iter().map(|frame|Ok(Json::Object(vec![("id".into(),Json::String(frame.id.clone())),("content".into(),content_json(&frame.content)?)]))).collect::<Result<_,String>>()?))}
     /// 🎯️ The projection `semantic-mp3-mpeg1-layer3-v1` compares. ID3v2 padding, the synchsafe size
     /// field and the flags byte are writer freedom and are not projected at all.
     pub(super) fn project(input: &[u8]) -> Result<Json, String> {
@@ -355,6 +355,50 @@ fn wire_bool(value: &Json, key: &str) -> Result<bool, String> {
     }
 }
 
+/// 🔎️ A non-negative whole-number member of a wire value.
+fn wire_count(value: &Json, key: &str) -> Result<usize, String> {
+    match value.get(key) {
+        Some(Json::Number(n)) if *n >= 0.0 && n.fract() == 0.0 => Ok(*n as usize),
+        other => Err(format!("`{key}` must be a non-negative integer, not {}", other.map(Json::to_string).unwrap_or_else(|| "nothing".to_string()))),
+    }
+}
+
+/// 🩹️ Splices the audio region at walked frame boundaries: the bytes before frame `index`, the packed inserted frames, then the bytes from frame `index + removeCount` on.
+fn patch_audio(audio: &[u8], params: &Json) -> Result<Vec<u8>, String> {
+    let frames = layers::walk(audio)?;
+    let index = wire_count(params, "index")?;
+    let end = index.checked_add(wire_count(params, "removeCount")?).filter(|end| *end <= frames.len()).ok_or_else(|| "patch-frames range leaves the walked frame list".to_string())?;
+    let at = |position: usize| frames.get(position).map_or(audio.len(), |frame| frame.offset);
+    let mut patched = audio[..at(index)].to_vec();
+    patched.extend_from_slice(&audio_region(params.get("frames"))?);
+    patched.extend_from_slice(&audio[at(end)..]);
+    Ok(patched)
+}
+/// 🏷️ Replaces, appends or removes one ID3v2 frame by id, reading the existing frames with the `id3` crate and writing the edited list back through the same independent writer.
+fn id3_frame_edit(v2: &[u8], params: &Json, remove: bool) -> Result<Vec<u8>, String> {
+    let mut frames = match layers::read_v2(v2)? {
+        None => Vec::new(),
+        Some((_version, frames)) => match layers::metadata_frames_json(&frames)? {
+            Json::Array(items) => items,
+            other => return Err(format!("the frame projection is not a list: {}", other.to_string())),
+        },
+    };
+    let frame = if remove { None } else { Some(params.get("frame").ok_or_else(|| "set-id3-frame carries no `frame`".to_string())?.clone()) };
+    let id = match &frame {
+        Some(frame) => frame.str("id"),
+        None => params.str("id"),
+    };
+    let position = frames.iter().position(|existing| existing.str("id") == id);
+    match (frame, position) {
+        (Some(frame), Some(at)) => frames[at] = frame,
+        (Some(frame), None) => frames.push(frame),
+        (None, Some(at)) => {
+            frames.remove(at);
+        }
+        (None, None) => return Err(format!("the stream carries no ID3 frame {id}")),
+    }
+    id3v2_region(Some(&Json::Object(vec![("frames".to_string(), Json::Array(frames))])))
+}
 //#endregion 🔖️WireReaders
 
 //#region 🔖️Projection
@@ -425,6 +469,9 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         "set-id3v2" => regions.v2 = id3v2_region(params.get("id3v2"))?,
         "set-frames" => regions.audio = audio_region(params.get("frames"))?,
         "set-id3v1" => regions.v1 = id3v1_region(params.get("id3v1"))?,
+        "patch-frames" => regions.audio = patch_audio(&regions.audio, &params)?,
+        "set-id3-frame" => regions.v2 = id3_frame_edit(&regions.v2, &params, false)?,
+        "remove-id3-frame" => regions.v2 = id3_frame_edit(&regions.v2, &params, true)?,
         "" => return Err("mutation spec carries no `kind`".to_string()),
         other => return Err(format!("mutation kind {other:?} has no oracle implementation ({} input byte(s))", input.len())),
     }
@@ -441,8 +488,8 @@ pub fn oracle_apply_mutation_inverse(base: &[u8], spec: &Json, mutated: &[u8]) -
     let original = layers::split(base)?;
     let mut restored = layers::split(mutated)?;
     match spec.str("kind").as_str() {
-        "set-id3v2" => restored.v2 = original.v2,
-        "set-frames" => restored.audio = original.audio,
+        "set-id3v2" | "set-id3-frame" | "remove-id3-frame" => restored.v2 = original.v2,
+        "set-frames" | "patch-frames" => restored.audio = original.audio,
         "set-id3v1" => restored.v1 = original.v1,
         other => return Err(format!("mutation kind {other:?} has no oracle inverse")),
     }

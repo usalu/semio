@@ -230,6 +230,15 @@ pub struct ArtifactActor {
     /// 🪹️ Whether this open's first folder read was answered, or an archive was read or written: no later read announces an
     /// absent archive ([`ArtifactEvent::DocumentArchiveAbsent`]).
     pub(super) folder_bootstrapped: bool,
+    /// 🔁️ Consecutive failed folder writes and when the next retry of [`ArtifactActor::current_archive`] is due; a failed write keeps the document unsaved ([`ArtifactSyncStatus::persisted`]) and is retried with backoff until the folder acknowledges it.
+    pub(super) folder_write_failures: u32,
+    pub(super) folder_retry_at: Option<Instant>,
+    /// 📝️ The newest archive the folder has not acknowledged: edits live here, never lost, while `current_*` stays the last acknowledged state; every later write builds on it and the retry writes it.
+    pub(super) unsaved: Option<Vec<u8>>,
+    /// 🚧️ The folder could not be read at setup: nothing is written over it until a read answers, so an unreadable archive is never replaced by a genesis.
+    pub(super) folder_unread: bool,
+    /// ⚔️ The folder changed under unsaved edits: nothing is written until it holds what this actor last read or wrote again.
+    pub(super) folder_diverged: bool,
     #[cfg(any(test, feature = "testing"))]
     pub(super) folder_writes: usize,
     pub remote_state: RemoteState,

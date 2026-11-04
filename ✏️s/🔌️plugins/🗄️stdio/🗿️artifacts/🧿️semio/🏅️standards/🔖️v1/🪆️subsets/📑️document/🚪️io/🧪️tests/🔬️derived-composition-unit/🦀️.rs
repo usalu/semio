@@ -80,7 +80,7 @@ mod tests {
     //#endregion 🔖️IoRoundTrips
 
     //#region 🔖️ConformanceLaws
-    /// 🧪️ Per-artifact conformance laws (grammar recipe §4 item 8) for `s.stdio.semio.document`'s
+    /// 🧪️ Per-artifact conformance laws (grammar recipe §4 item 8) for `stdio.semio.document`'s
     /// three facets — ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION document wave,
     /// following the flow/model/brep pilots' proven pattern. Lives in this composer's own test
     /// region: document has no per-standard `⚙️engine` dir the way json/csv/zip/png do, and v1's

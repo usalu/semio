@@ -70,6 +70,7 @@ use semio_s_artifact_norm_en1998_mut_members::remove_tie_beam::RemoveTieBeam;
 use semio_s_artifact_norm_en1998_mut_members::remove_seismic_slope::RemoveSeismicSlope;
 use semio_s_artifact_norm_en1998_mut_members::change_joint_col_moment_rd_nm::ChangeJointColMomentRdNm;
 use semio_s_artifact_norm_en1998_mut_members::change_assessment_mid_steel_area_m2::ChangeAssessmentMidSteelAreaM2;
+use semio_s_artifact_norm_en1998_mut_members::change_assessment_analysis_method::ChangeAssessmentAnalysisMethod;
 
 /// ✍️ Prints `change-member-detailing` as an op-text line.
 pub fn print_change_member_detailing(p: &ChangeMemberDetailing) -> String {
@@ -806,4 +807,15 @@ pub fn print_change_assessment_mid_steel_area_m2(p: &ChangeAssessmentMidSteelAre
 pub fn parse_change_assessment_mid_steel_area_m2(args: &Args) -> Result<ChangeAssessmentMidSteelAreaM2, String> {
     let arg = |k: &str| required(args, "change-assessment-mid-steel-area-m2", k);
     Ok(ChangeAssessmentMidSteelAreaM2 { id: dec_json(&arg("id")?)?, new_intermediate_steel_area_m2: dec_json(&arg("new-intermediate-steel-area-m2")?)? })
+}
+
+/// ✍️ Prints `change-assessment-analysis-method` as an op-text line.
+pub fn print_change_assessment_analysis_method(p: &ChangeAssessmentAnalysisMethod) -> String {
+    format!("change-assessment-analysis-method id={} new-analysis-method={}", enc_json(&p.id), enc_json(&p.new_analysis_method_choice))
+}
+
+/// 📖 Parses the arguments of `change-assessment-analysis-method`.
+pub fn parse_change_assessment_analysis_method(args: &Args) -> Result<ChangeAssessmentAnalysisMethod, String> {
+    let arg = |k: &str| required(args, "change-assessment-analysis-method", k);
+    Ok(ChangeAssessmentAnalysisMethod { id: dec_json(&arg("id")?)?, new_analysis_method_choice: dec_json(&arg("new-analysis-method")?)? })
 }

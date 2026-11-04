@@ -15,7 +15,7 @@ start document
 # `document` matches the fixture-honesty harness's own reconstructed body shape (mandatory `semio
 # stdio.semio.animation.dsl v1` preamble stripped and replaced with the bare `envelope_id()` token —
 # `artifact-mark` below — before recognition, same convention every prior semio wave's grammar uses).
-artifact-mark = "s.stdio.semio.animation"
+artifact-mark = "stdio.semio.animation"
 document = artifact-mark schema-line timelines-line
 
 schema-line = "schema" "=" hex

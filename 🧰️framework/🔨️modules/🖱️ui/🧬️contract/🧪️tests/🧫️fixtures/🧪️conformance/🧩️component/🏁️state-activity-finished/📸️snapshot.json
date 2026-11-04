@@ -20,7 +20,9 @@
       },
       "style": {},
       "activity": "finished",
-      "accessibility": {}
+      "accessibility": {
+        "label": "Level"
+      }
     }
   ],
   "layoutEpoch": 0

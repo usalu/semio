@@ -28,7 +28,7 @@
     }
   },
   "before": {
-    "schema": "s.stdio.semio.animation",
+    "schema": "stdio.semio.animation",
     "timelines": [
       {
         "name": "walk",
@@ -135,7 +135,7 @@
     ]
   },
   "after": {
-    "schema": "s.stdio.semio.animation",
+    "schema": "stdio.semio.animation",
     "timelines": [
       {
         "name": "walk",

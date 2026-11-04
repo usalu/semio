@@ -1,3 +1,10 @@
-dialect protocol stdio.wav.diff
-; 🚧 scaffolded by W1b — full protocol description lands in W2/W3
-magic = "stdio.wav.diff"
+dialect protocol
+protocol stdio.wav.diff
+version 1
+schema stdio.wav.diff
+start diff
+
+# The binary diff frame `DiffBinary::encode_diff` emits is the text diff line verbatim as UTF-8 (../🦀️.rs); its clauses are described by ../../📝️text/🔺️diff/📖️.grammar.semio.
+framing record
+
+field line bytes

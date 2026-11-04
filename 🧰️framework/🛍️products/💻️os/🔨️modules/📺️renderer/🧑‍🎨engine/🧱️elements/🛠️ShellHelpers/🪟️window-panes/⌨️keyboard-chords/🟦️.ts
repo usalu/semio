@@ -12,9 +12,25 @@ export function isEditableEventTarget(target: EventTarget | null): boolean {
   return target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"],[role="searchbox"]') !== null;
 }
 
+/** ⏪️ Whether a chord asks for document history (`mod+z` undo, `mod+shift+z` or `ctrl+y` redo). */
+export function isHistoryChord(event: KeyboardEventLike): boolean {
+  const key = event.key.toLowerCase();
+  const mod = event.ctrlKey || event.metaKey;
+  return mod && !event.altKey && (key === "z" || (key === "y" && event.ctrlKey && !event.shiftKey));
+}
+
+/** ⏪️ A Details field with no uncommitted draft has nothing of its own to undo, so history chords reach the editor's history; a dirty draft (`data-draft-dirty`) keeps native text undo. Only fields the interpreter owns (`data-ui-node-id`) qualify. */
+export function cleanInterpreterFieldYieldsHistory(event: KeyboardEventLike & { readonly target: EventTarget | null }): boolean {
+  if (!isHistoryChord(event) || !(event.target instanceof Element)) return false;
+  const field = event.target.closest("input,textarea");
+  return field !== null && field.hasAttribute("data-ui-node-id") && field.getAttribute("data-draft-dirty") !== "true";
+}
+
 /** 🎹️ Focused widgets own ordinary keys; text editors also retain modified editing chords. */
 export function controlOwnsKeyboardEvent(event: KeyboardEventLike & { readonly target: EventTarget | null; readonly isComposing?: boolean }): boolean {
-  if (event.isComposing || isEditableEventTarget(event.target)) return true;
+  if (event.isComposing) return true;
+  if (cleanInterpreterFieldYieldsHistory(event)) return false;
+  if (isEditableEventTarget(event.target)) return true;
   if (event.ctrlKey || event.metaKey || event.altKey || !(event.target instanceof Element)) return false;
   return event.target.closest('button,a[href],summary,audio[controls],video[controls],[role="button"],[role="link"],[role="checkbox"],[role="radio"],[role="switch"],[role="combobox"],[role="listbox"],[role="option"],[role="menu"],[role="menuitem"],[role="menuitemcheckbox"],[role="menuitemradio"],[role="slider"],[role="spinbutton"],[role="tab"],[role="tree"],[role="treeitem"],[role="gridcell"]') !== null;
 }

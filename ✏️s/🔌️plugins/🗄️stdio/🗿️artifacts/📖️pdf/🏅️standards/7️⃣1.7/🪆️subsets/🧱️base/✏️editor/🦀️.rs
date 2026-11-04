@@ -56,8 +56,10 @@ impl protocol::OpText for Pdf17EditorCommand {
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
         let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
+        match variants.iter().find(|(k, _)| k == &keyword) {
+            Some((_, spec_fn)) => semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline),
+            None => keyword.to_string(),
+        }
     }
 }
 
@@ -195,6 +197,7 @@ impl ArtifactEditor for Pdf17Editor {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render_windowed(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale).map(built_to_component_tree),
+            crate::editor::page::TEXT_LAYER_BODY_KEY => crate::editor::page::render_text_layer(doc.snapshot, view_state.locale).map(built_to_component_tree),
             crate::editor::page::INSPECTOR_BODY_KEY => crate::editor::page::render_inspector(doc.snapshot, None, "s.stdio.pdf@1.7/*#editor", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree),
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc,
@@ -220,6 +223,9 @@ impl ArtifactEditor for Pdf17Editor {
         let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         if body_key == main::BODY_KEY {
             return crate::editor::page::render_selected(doc.snapshot, interaction).map(built_to_component_tree);
+        }
+        if body_key == crate::editor::page::TEXT_LAYER_BODY_KEY {
+            return crate::editor::page::render_text_layer(doc.snapshot, view_state.locale).map(built_to_component_tree);
         }
         if body_key == crate::editor::page::INSPECTOR_BODY_KEY {
             let selected = interaction.selection(crate::editor::page::OBJECT_DOMAIN).ids.first().map(String::as_str);
@@ -279,6 +285,7 @@ pub fn create_pdf17_editor() -> semio_framework_plugin::AppDefinition {
     let builder = builder.default_mode_id(edit::PDF17_EDIT_MODE_ID);
     let builder = builder.window_kind_def(main::definition());
     let builder = builder.window_kind_def(crate::editor::page::inspector_window_definition());
+    let builder = builder.window_kind_def(crate::editor::page::text_layer_window_definition());
     let builder = builder.window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition());
     let builder = builder.default_layout(crate::editor::page::document_layout(main::WINDOW_KIND_ID));
     let mut definition = semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition();

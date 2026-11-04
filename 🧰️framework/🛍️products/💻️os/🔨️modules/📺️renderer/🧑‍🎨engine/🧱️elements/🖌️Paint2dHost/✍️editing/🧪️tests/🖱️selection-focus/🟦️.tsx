@@ -48,7 +48,7 @@ for(const action of fixture.actions) test("selection survives focus moving to "+
   const dispatch=vi.fn();
   const view=render(<PixelEditingOverlay documentJson={JSON.stringify({layers:[{kind:"pixel",id:"p",width:fixture.width,height:fixture.height,transform:{x:0,y:0,a:1,b:0,c:0,d:1}}]})} assetsJson="{}" assetExtentsJson="{}" selectionJson='["p"]' activeUtility="select" brushSize={24} brushOpacity={1} brushColor="#2878dc" brushHardness={1} camera={{current:{x:0,y:0,zoom:1}}} container={{current:host}} dispatch={dispatch} onWheel={()=>{}} onCameraChange={()=>{}}/>);
   fireEvent.click(view.getByRole("button",{name:"Rectangle selection"}));
-  const canvas=view.getByRole("application",{name:"Image tools"});
+  const canvas=view.getByRole("application",{name:"Image editor"});
   canvas.setPointerCapture=()=>{};canvas.releasePointerCapture=()=>{};canvas.hasPointerCapture=()=>true;
   act(()=>{
     canvas.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,pointerId:1,button:0,clientX:fixture.start[0],clientY:fixture.start[1]}));
@@ -108,7 +108,7 @@ for(const kind of ["pixel","group"]) test(kind+" mask target sends coverage stro
   expect((view.getByRole("button",{name:"Deselect"}) as HTMLButtonElement).disabled).toBe(true);
   const prompt=(view.getByRole("combobox",{name:"Layer",exact:true}) as HTMLSelectElement).options[0]!;expect(prompt.text).toBe("Choose a layer with a mask");expect(prompt.disabled).toBe(true);
   fireEvent.click(view.getByRole("button",{name:"Eraser",exact:true}));
-  const canvas=view.getByRole("application",{name:"Image tools"});
+  const canvas=view.getByRole("application",{name:"Image editor"});
   canvas.setPointerCapture=()=>{};canvas.releasePointerCapture=()=>{};canvas.hasPointerCapture=()=>true;
   act(()=>{
     canvas.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,pointerId:1,button:0,clientX:50,clientY:50}));
@@ -186,7 +186,7 @@ for(const modifier of fixture.selectionControls.keyboardModifiers)test(modifier+
   const {width,height,firstProgress}=fixture.selectionControls;
   const host=document.createElement("div"),dispatch=vi.fn();
   const view=render(<PixelEditingOverlay documentJson={JSON.stringify({layers:[{kind:"pixel",id:"p",width,height,transform:{x:0,y:0,a:1,b:0,c:0,d:1}}]})} assetsJson="{}" assetExtentsJson="{}" selectionJson='["p"]' activeUtility="paintBrush" brushSize={24} brushOpacity={1} brushColor="#2878dc" brushHardness={1} camera={{current:{x:0,y:0,zoom:1}}} container={{current:host}} dispatch={dispatch} onWheel={()=>{}} onCameraChange={()=>{}}/>);
-  const canvas=view.getByRole("application",{name:"Image tools"});
+  const canvas=view.getByRole("application",{name:"Image editor"});
   fireEvent.keyDown(canvas,{key:"a",code:"KeyA",[modifier]:true});
   expect(view.container.querySelector("progress")?.value).toBe(firstProgress);
   fireEvent.keyDown(canvas,{key:"d",code:"KeyD",[modifier]:true});
@@ -213,7 +213,7 @@ for(const cancellation of fixture.combinationCancellation.actions)test("selectio
     if(!progress.done)gate.hold();
     return progress;
   });
-  const canvas=view.getByRole("application",{name:"Image tools"});canvas.setPointerCapture=()=>{};canvas.releasePointerCapture=()=>{};canvas.hasPointerCapture=()=>true;
+  const canvas=view.getByRole("application",{name:"Image editor"});canvas.setPointerCapture=()=>{};canvas.releasePointerCapture=()=>{};canvas.hasPointerCapture=()=>true;
   act(()=>{
     canvas.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,pointerId:1,button:0,clientX:0,clientY:0}));
     canvas.dispatchEvent(new PointerEvent("pointerup",{bubbles:true,pointerId:1,button:0,clientX:width,clientY:height}));
@@ -240,7 +240,7 @@ for(const inherited of [false,true])test((inherited?"Inherited":"Own")+" layer p
   const layers=inherited?[{kind:"group",id:"g",locked:true,children:[layer]}]:[layer];
   const view=render(<PixelEditingOverlay documentJson={JSON.stringify({layers})} assetsJson="{}" assetExtentsJson="{}" selectionJson='["p"]' activeUtility="paintBrush" brushSize={1} brushOpacity={1} brushColor="#2878dc" brushHardness={1} camera={{current:{x:0,y:0,zoom:1}}} container={{current:host}} dispatch={dispatch} onWheel={()=>{}} onCameraChange={()=>{}}/>);
   expect(view.getByText("Unlock this layer or its parent in Inspection to edit pixels or masks.")).toBeDefined();
-  const canvas=view.getByRole("application",{name:"Image tools"});
+  const canvas=view.getByRole("application",{name:"Image editor"});
   canvas.setPointerCapture=()=>{};canvas.releasePointerCapture=()=>{};canvas.hasPointerCapture=()=>true;
   act(()=>{
     canvas.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,pointerId:1,button:0,clientX:50,clientY:50}));
@@ -293,7 +293,7 @@ for(const kind of ["pixel","group"])for(const sample of fixture.affineMaskTarget
   const view=render(<PixelEditingOverlay documentJson={JSON.stringify({layers:[layer]})} assetsJson="{}" assetExtentsJson="{}" selectionJson='["p"]' activeUtility="paintBrush" brushSize={1} brushOpacity={1} brushColor="#ffffff" brushHardness={1} camera={{current:{x:0,y:0,zoom:1}}} container={{current:host}} dispatch={dispatch} onWheel={()=>{}} onCameraChange={()=>{}}/>);
   fireEvent.change(view.getByRole("combobox",{name:"Edit target"}),{target:{value:"mask"}});
   expect(dispatch).toHaveBeenLastCalledWith("setPaintTarget",{value:"mask"});dispatch.mockClear();
-  const canvas=view.getByRole("application",{name:"Image tools"});
+  const canvas=view.getByRole("application",{name:"Image editor"});
   canvas.setPointerCapture=()=>{};canvas.releasePointerCapture=()=>{};canvas.hasPointerCapture=()=>true;
   act(()=>{for(const type of ["pointerdown","pointerup"])canvas.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerId:1,button:0,clientX:sample.client[0],clientY:sample.client[1]}));});
   await waitFor(()=>expect(editCalls(dispatch)).toHaveLength(1));
@@ -310,7 +310,7 @@ for(const row of revisions.cases)test("active stroke handles target revision "+r
   const host=document.createElement("div"),dispatch=vi.fn();host.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100} as DOMRect);
   const props={documentJson:JSON.stringify(revisions.document),assetsJson:"{}",assetExtentsJson:"{}",selectionJson:'["paint"]',activeUtility:"paintBrush",brushSize:1,brushOpacity:1,brushColor:"#2878dc",brushHardness:1,camera:{current:{x:0,y:0,zoom:1}},container:{current:host},dispatch,onWheel:()=>{},onCameraChange:()=>{}};
   const view=render(<PixelEditingOverlay {...props}/>);
-  const canvas=view.getByRole("application",{name:"Image tools"});canvas.setPointerCapture=()=>{};canvas.releasePointerCapture=()=>{};canvas.hasPointerCapture=()=>true;
+  const canvas=view.getByRole("application",{name:"Image editor"});canvas.setPointerCapture=()=>{};canvas.releasePointerCapture=()=>{};canvas.hasPointerCapture=()=>true;
   fireEvent.pointerDown(canvas,{pointerId:1,button:0,clientX:50,clientY:50});
   const changed=patch.applyPatch(revisions.document,row.patch as Operation[],true,false).newDocument;
   view.rerender(<PixelEditingOverlay {...props} documentJson={JSON.stringify(changed)} selectionJson={JSON.stringify(row.selected)} activeUtility={row.utility}/>);
@@ -367,7 +367,7 @@ test("incoming shared coverage cancels an in-flight brush stroke",async()=>{
   vi.stubGlobal("ResizeObserver",class{observe(){}disconnect(){}});vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div"),dispatch=vi.fn();host.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100} as DOMRect);
   const props={documentJson:'{"layers":[{"kind":"pixel","id":"p","width":3,"height":2}]}',assetsJson:"{}",assetExtentsJson:"{}",selectionJson:'["p"]',activeUtility:"paintBrush",brushSize:1,brushOpacity:1,brushColor:"#2878dc",brushHardness:1,paintTarget:"pixels" as const,maskValue:255,fillTolerance:24,camera:{current:{x:0,y:0,zoom:1}},container:{current:host},dispatch,onWheel:()=>{},onCameraChange:()=>{}};
-  const view=render(<ControlledPixelEditingOverlay {...props}/>),canvas=view.getByRole("application",{name:"Image tools"});
+  const view=render(<ControlledPixelEditingOverlay {...props}/>),canvas=view.getByRole("application",{name:"Image editor"});
   canvas.setPointerCapture=()=>{};canvas.releasePointerCapture=()=>{};canvas.hasPointerCapture=()=>true;
   act(()=>{canvas.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,pointerId:1,button:0,clientX:50,clientY:50}));});
   view.rerender(<ControlledPixelEditingOverlay {...props} pixelSelectionJson='{"layerId":"p","target":"pixels","width":3,"height":2,"spans":[]}'/>);
@@ -383,7 +383,7 @@ test("the bucket dispatches ONE parametric fillRegion click and never floods or 
   host.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100} as DOMRect);
   const view=render(<PixelEditingOverlay documentJson={JSON.stringify({layers:[{kind:"pixel",id:"p",width:3,height:1,transform:{x:0,y:0,a:1,b:0,c:0,d:1}}]})} assetsJson="{}" assetExtentsJson="{}" selectionJson='["p"]' activeUtility="select" brushSize={1} brushOpacity={1} brushColor="#ff0000" brushHardness={1} camera={{current:{x:0,y:0,zoom:1}}} container={{current:host}} dispatch={dispatch} onWheel={()=>{}} onCameraChange={()=>{}}/>);
   fireEvent.click(view.getByRole("button",{name:"Fill",exact:true}));
-  const canvas=view.getByRole("application",{name:"Image tools"});
+  const canvas=view.getByRole("application",{name:"Image editor"});
   canvas.setPointerCapture=()=>{};canvas.releasePointerCapture=()=>{};canvas.hasPointerCapture=()=>true;
   act(()=>{canvas.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,pointerId:1,button:0,clientX:50,clientY:50}));});
   await waitFor(()=>expect(dispatch.mock.calls.some(call=>call[0]==="fillRegion")).toBe(true),10_000);
@@ -396,7 +396,7 @@ function strokeCanvas(dispatch:ComponentProps<typeof ControlledPixelEditingOverl
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
   const host=document.createElement("div");host.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100} as DOMRect);
   const view=render(<PixelEditingOverlay documentJson='{"layers":[{"kind":"pixel","id":"p","width":64,"height":64}]}' assetsJson="{}" assetExtentsJson="{}" selectionJson='["p"]' activeUtility="paintBrush" brushSize={1} brushOpacity={1} brushColor="#2878dc" brushHardness={1} camera={{current:{x:0,y:0,zoom:1}}} container={{current:host}} dispatch={dispatch} onWheel={()=>{}} onCameraChange={()=>{}}/>);
-  const canvas=view.getByRole("application",{name:"Image tools"});
+  const canvas=view.getByRole("application",{name:"Image editor"});
   canvas.setPointerCapture=()=>{};canvas.releasePointerCapture=()=>{};canvas.hasPointerCapture=()=>true;
   return canvas;
 }

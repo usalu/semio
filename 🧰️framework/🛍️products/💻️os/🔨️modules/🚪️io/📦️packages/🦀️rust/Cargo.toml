@@ -22,6 +22,10 @@ workspace = true
 path = "../../🦀️.rs"
 
 [[test]]
+name = "format_resolution"
+path = "../../🧪️tests/🧭️format-resolution/🦀️.rs"
+
+[[test]]
 name = "owned_serializer_rejections"
 path = "../../📤️serialization/📦️owned/🧪️tests/🦀️.rs"
 

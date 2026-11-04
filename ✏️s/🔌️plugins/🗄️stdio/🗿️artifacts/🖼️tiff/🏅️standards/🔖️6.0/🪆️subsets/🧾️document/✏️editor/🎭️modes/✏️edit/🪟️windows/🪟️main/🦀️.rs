@@ -17,8 +17,8 @@ const CONTROLLER_ID: &str = "s.stdio.tiff@6.0/*#editor";
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
-    let mut definition = ImageWindowKit::window_kind();
-    definition.actions.push(select_ifd_action());
+    let mut definition = ImageWindowKit::editable_window_kind();
+    definition.actions.extend([crate::editor::tiff_any::paint_region::action(), select_ifd_action()]);
     definition
 }
 

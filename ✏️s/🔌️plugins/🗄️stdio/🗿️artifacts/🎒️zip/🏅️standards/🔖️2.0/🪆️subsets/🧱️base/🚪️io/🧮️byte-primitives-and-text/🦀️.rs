@@ -70,6 +70,7 @@ pub enum ZipError {
     UnsupportedMultiDisk,
     UnsupportedZip64Write,
     DataDescriptorMismatch { name: String },
+    UnsafeEntryName { name: String },
     Malformed(String),
 }
 
@@ -90,12 +91,23 @@ impl std::fmt::Display for ZipError {
             Self::UnsupportedMultiDisk => write!(f, "zip: multi-disk archives are unsupported"),
             Self::UnsupportedZip64Write => write!(f, "zip: snapshot requires ZIP64 (>4GiB entry, >65535 entries, or >4GiB archive) which this writer does not emit"),
             Self::DataDescriptorMismatch { name } => write!(f, "zip: trailing data descriptor disagrees with central directory for {name}"),
+            Self::UnsafeEntryName { name } => write!(f, "zip: unsafe member path {name:?} would escape the extraction root"),
             Self::Malformed(msg) => write!(f, "zip: malformed archive: {msg}"),
         }
     }
 }
 
 impl std::error::Error for ZipError {}
+
+/// 🛡️ Rejects member paths that extraction would resolve outside its root: absolute, drive-rooted, backslash-separated, NUL-bearing or `..` traversal.
+pub fn check_entry_name(name: &str) -> Result<(), ZipError> {
+    let bytes = name.as_bytes();
+    let drive = bytes.len() >= 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':' && matches!(bytes.get(2), None | Some(b'/') | Some(b'\\'));
+    if name.starts_with('/') || name.contains(['\\', '\0']) || drive || name.split('/').any(|segment| segment == "..") {
+        return Err(ZipError::UnsafeEntryName { name: name.into() });
+    }
+    Ok(())
+}
 
 impl ZipError {
     /// 🧷️ Unsupported methods, extra fields, multi-disk and ZIP64 writes are unsupported owners; every other archive refusal is invalid input.
@@ -120,7 +132,7 @@ impl ZipError {
         use semio_framework_value::ValueRefusalKind;
         let kind = match &self {
             Self::UnsupportedMethod { .. } | Self::UnsupportedExtraField { .. } | Self::UnsupportedMultiDisk | Self::UnsupportedZip64Write => ValueRefusalKind::UnsupportedOwner,
-            Self::Truncated(_) | Self::BadSignature { .. } | Self::Utf8 { .. } | Self::Crc32Mismatch { .. } | Self::MethodMismatch { .. } | Self::DataDescriptorMismatch { .. } | Self::Malformed(_) => ValueRefusalKind::InvalidValue,
+            Self::Truncated(_) | Self::BadSignature { .. } | Self::Utf8 { .. } | Self::Crc32Mismatch { .. } | Self::MethodMismatch { .. } | Self::DataDescriptorMismatch { .. } | Self::UnsafeEntryName { .. } | Self::Malformed(_) => ValueRefusalKind::InvalidValue,
         };
         semio_framework_value::ValueError::new(kind, self.to_string())
     }

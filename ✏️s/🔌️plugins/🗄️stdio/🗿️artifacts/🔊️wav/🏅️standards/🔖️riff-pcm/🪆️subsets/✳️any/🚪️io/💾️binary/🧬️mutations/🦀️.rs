@@ -1,5 +1,4 @@
-//! 🚧 scaffolded by W1b — binary representation marker for `stdio.wav.mutations`. Full field-layout
-//! parse/print lands in W2/W3.
+//! 🧬️ The `stdio.wav.mutations` binary facet.
 pub const BINARY_MAGIC: &str = "stdio.wav.mutations";
 
 #[allow(unused_imports)]

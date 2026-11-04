@@ -11,9 +11,9 @@ import { isPluginInstanceRetiredV1, markPluginInstanceRetiredV1 } from "../../�
 import { createContributionsPublisher } from "../../🧱️elements/🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 import browserSchema from "@semio-tech/framework-plugin/browser-bundle/schema.json";
 import faultVectors from "@semio-tech/framework-plugin/runtime-fault-vectors.json";
-import panelHostingSource from "../../🧱️elements/🏛️ShellHost/📋️panel-hosting/🟦️.tsx?raw";
+import panelHostingSource from "../../🧱️elements/🏛️ShellHost/📋️panel-hosting/🟠️mode-windows/🟦️.tsx?raw";
 import contributionsRefreshSource from "../../🧱️elements/🏛️ShellHost/🔁️contributions-refresh/🟦️.ts?raw";
-import { uiI18nBundleSourceText as uiBundleSource } from "@semio-tech/ui/i18n/source-text";
+import uiBundleSource from "../../../../../../../🔨️modules/🖱️ui/🌐️i18n/⚙️configuration/🟦️.ts?raw";
 
 const shellTreeSource = Object.values(import.meta.glob<string>(["../../🧱️elements/🏛️ShellHost/🟦️.tsx", "../../🧱️elements/🏛️ShellHost/**/🟦️.ts", "../../🧱️elements/🏛️ShellHost/**/🟦️.tsx", "!../../🧱️elements/🏛️ShellHost/🧪️tests/**"], { query: "?raw", import: "default", eager: true })).join("\n");
 
@@ -83,7 +83,7 @@ describe("window fault discriminators", () => {
     expect(WINDOW_FAULT_ATTRIBUTE).toBe("data-semio-window-fault");
     const shell = shellTreeSource;
     expect(shell).toContain(`${WINDOW_FAULT_ATTRIBUTE}={fault.class}`);
-    expect(shell).toContain('role="status"');
+    expect(shell).toContain('role="alert" aria-live="assertive"');
     expect(shell).toContain("refreshUi(current).catch((renderError) => reportRefreshFault(current.pluginId, renderError))");
     expect(shell).toContain("liveInstanceWindowFaultV1(error, pluginSupervisorByIdRef.current[pluginId], isPluginInstanceRetiredV1)");
     expect(shell).toContain("liveInstanceWindowFaultV1(renderError, pluginSupervisorByIdRef.current[activeSpawned.pluginId], isPluginInstanceRetiredV1)");
@@ -93,7 +93,7 @@ describe("window fault discriminators", () => {
 
   it("carries a distinct English and German label for every class, with no default language", () => {
     const bundles = uiBundleSource;
-    const windowFaultBlocks = [...bundles.matchAll(/windowFault: \{([\s\S]*?)\n        \},/g)].map((match) => match[1]!);
+    const windowFaultBlocks = [...bundles.matchAll(/windowFault: \{([\s\S]*?)\n  \},/g)].map((match) => match[1]!);
     expect(windowFaultBlocks.length).toBe(2);
     const [de, en] = windowFaultBlocks;
     for (const key of ["title", "abiMismatch", "interactiveCeiling", "clock", "pluginInternal", "installFailed", "unknown"]) {

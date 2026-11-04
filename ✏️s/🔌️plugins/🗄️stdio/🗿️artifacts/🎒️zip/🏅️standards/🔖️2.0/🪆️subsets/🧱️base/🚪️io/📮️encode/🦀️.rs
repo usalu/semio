@@ -77,6 +77,7 @@ pub fn validate_zip_snapshot_serialization(snapshot: &ZipSnapshot) -> Result<(),
         if entry.name.is_empty() || !names.insert(entry.name.as_str()) {
             return Err(ZipError::Malformed("ZIP member names must be nonempty and unique".into()));
         }
+        check_entry_name(&entry.name)?;
         let metadata = &entry.metadata;
         NativeCompressionMethod::from_code(metadata.compression_method).ok_or_else(|| ZipError::UnsupportedMethod { name: entry.name.clone(), method: metadata.compression_method })?;
         validate_flags(metadata.local.flags, &entry.name)?;

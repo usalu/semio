@@ -76,7 +76,7 @@ fn value_apply_undo_redo_at_depth_sixty_four() {
 
 #[test]
 fn document_apply_undo_redo_inside_a_nested_quote() {
-    let snapshot = |inner: DocBlock| SemioDocumentSnapshot { schema: "s.stdio.semio.document".into(), styles: Vec::new(), images: Vec::new(), blocks: vec![DocBlock::paragraph("alpha"), DocBlock::Quote { blocks: vec![inner] }] };
+    let snapshot = |inner: DocBlock| SemioDocumentSnapshot { schema: "stdio.semio.document".into(), styles: Vec::new(), images: Vec::new(), blocks: vec![DocBlock::paragraph("alpha"), DocBlock::Quote { blocks: vec![inner] }] };
     let heading = DocBlock::Heading { level: 2, style_id: None, runs: vec![DocRun::plain("beta")] };
     let path = DocBlockPath { segments: vec![DocPathSegment::Quote { block_index: 1 }], index: 0 };
     authoring_law::<SemioDocumentEditor>("document set-block-content", snapshot(DocBlock::paragraph("beta")), SemioDocumentMutation::SetBlockContent(SetBlockContent { path, block: heading.clone() }), snapshot(heading));

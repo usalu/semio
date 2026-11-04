@@ -13,6 +13,7 @@ use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, Ar
 use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactBoundedFirstStepProof;
 use semio_framework_plugin::ArtifactOwnedToolJobRequest;
 use semio_framework_plugin::ArtifactStoreInitializationJob;
 use semio_framework_plugin::ArtifactToolFactoryRegistry;
@@ -43,12 +44,13 @@ use semio_framework_plugin::ToolOperationSpec;
 use semio_framework_ui_locale::Label;
 use semio_s_artifact_stdio_contract::editing;
 
+#[path = "🎭️modes/✏️edit/🎮️commands/🎨️paint-region/🦀️.rs"]
+pub(crate) mod paint_region;
+
 //#region 🔖️Command
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum JpgAnyEditCommand {
-    SetPixelRegion {
-        pixels: Vec<u8>,
-    },
+    PaintRegion(paint_region::PaintRegionCommand),
     /// 🎬️ Navbar example picker payload.
     SetActiveExample {
         example_id: String,
@@ -73,6 +75,7 @@ impl protocol::OpBinary for JpgAnyEditCommand {
 
 const STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID];
 const STDIO_JPG_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
+    paint_region::ACTION_ID,
     semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     editing::SET_SNAPSHOT_VALUE_ACTION_ID,
     editing::INSERT_SNAPSHOT_VALUE_ACTION_ID,
@@ -97,6 +100,7 @@ fn jpg_any_editor_command_id(command: &JpgAnyEditCommand) -> &'static str {
     }
     match command {
         JpgAnyEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
+        JpgAnyEditCommand::PaintRegion(_) => paint_region::ACTION_ID,
         _ => "other",
     }
 }
@@ -105,6 +109,7 @@ fn jpg_any_editor_command_from_action(action: &str, args: Option<&semio_framewor
         return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| JpgAnyEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit"))));
     }
     match action {
+        paint_region::ACTION_ID => Ok(JpgAnyEditCommand::PaintRegion(paint_region::PaintRegionCommand::from_action(args)?)),
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(JpgAnyEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
         _ => Err(Fault::from(format!("action '{action}' is not setActiveExample"))),
     }
@@ -159,6 +164,29 @@ impl ArtifactOwnedToolJobFactory for JpgAnyEditorExampleFactory {
 
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
+const STDIO_PAINT_REGION_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: paint_region::ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] };
+const fn jpgany_editor_paint_region_execution_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(paint_region::MAXIMUM_RAW_BYTES, 64, paint_region::CAPACITY.work_items() as u64, 65_536, 7_500)
+}
+struct JpgAnyPaintRegionFactory { keys: Vec<ToolFactoryKey> }
+impl JpgAnyPaintRegionFactory {
+    fn new(controller_id: &str) -> Self { Self { keys: paint_region::TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() } }
+}
+impl ToolJobFactory for JpgAnyPaintRegionFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<JpgAnyEditor>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<JpgAnyEditor>>;
+    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
+    fn payload_schema_id(&self) -> &str { paint_region::PAYLOAD_SCHEMA }
+    fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
+    fn execution_contract(&self) -> ToolExecutionContract { jpgany_editor_paint_region_execution_contract() }
+    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: paint_region::MAXIMUM_RAW_BYTES, checkpoint_resume: false);
+}
+impl ArtifactOwnedToolJobFactory for JpgAnyPaintRegionFactory {
+    type Owner = EditorApp<JpgAnyEditor>;
+    const TOOL_IDS: &'static [&'static str] = paint_region::TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = STDIO_JPG_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[STDIO_PAINT_REGION_CONTRACT];
+}
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
 pub struct JpgAnyEditor;
@@ -198,24 +226,29 @@ impl ArtifactEditor for JpgAnyEditor {
         crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))
     }
 
-    semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
-        owner: EditorApp<JpgAnyEditor>,
-        owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/✏️editor/🦀️.rs",
-        controller: "s.stdio.jpg@jfif-1.01/*#editor",
-        artifact_schema: "stdio.jpg",
-        factory: "JpgAnyEditorExampleFactory",
-        factory_type: JpgAnyEditorExampleFactory,
-        contract: ToolExecutionContract::bounded_first_step(STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500),
-        tools: ["setActiveExample"]
+    fn bounded_first_step_tool_proofs() -> Vec<ArtifactBoundedFirstStepProof> {
+        const OWNER_FILE: &str = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/✏️editor/🦀️.rs";
+        const CONTROLLER: &str = "s.stdio.jpg@jfif-1.01/*#editor";
+        let mut proofs = vec![
+            ArtifactBoundedFirstStepProof::new::<EditorApp<JpgAnyEditor>>(OWNER_FILE, CONTROLLER, "JpgAnyEditorExampleFactory", semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, "stdio.jpg", ToolExecutionContract::bounded_first_step(STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500)).with_factory_type::<EditorApp<JpgAnyEditor>, JpgAnyEditorExampleFactory>(),
+            ArtifactBoundedFirstStepProof::new::<EditorApp<JpgAnyEditor>>(OWNER_FILE, CONTROLLER, "JpgAnyPaintRegionFactory", paint_region::ACTION_ID, "stdio.jpg", jpgany_editor_paint_region_execution_contract()).with_factory_type::<EditorApp<JpgAnyEditor>, JpgAnyPaintRegionFactory>(),
+        ];
+        proofs.extend(editing::snapshot_edit_bounded_first_step_proofs::<Self>(OWNER_FILE, CONTROLLER, "stdio.jpg"));
+        proofs
     }
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         registry.register(JpgAnyEditorExampleFactory::new(registry.controller_id()))?;
+        registry.register(JpgAnyPaintRegionFactory::new(registry.controller_id()))?;
         editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
     fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if editing::is_snapshot_edit_action(&original.tool_id) {
             return editing::build_snapshot_edit_tool_job::<Self>(request, output, cx);
+        }
+        if original.tool_id == paint_region::ACTION_ID {
+            if jpg_any_editor_command_id(&original.command) != original.tool_id { return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-paint-region-tool-mismatch").into()); }
+            return semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, jpg_any_editor_command_id, paint_region::MAXIMUM_RAW_BYTES, paint_region::CAPACITY.work_items(), false, |request| paint_region::PaintRegionWork::new());
         }
         if !STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
@@ -261,13 +294,13 @@ impl ArtifactEditor for JpgAnyEditor {
         match command {
             JpgAnyEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             JpgAnyEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&jpg_any_editor_example_snapshot(example_id), STDIO_JPG_DOCUMENT_SCHEMA)], ..Default::default() }),
-            JpgAnyEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![JpgMutation::ReplacePixels(crate::schema::mutations::ReplacePixelsMutation { pixels: pixels.clone() })])),
+            JpgAnyEditCommand::PaintRegion(_) => Err(Fault::from("region painting requires the cancellable retained route")),
         }
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render(doc.snapshot, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
             editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.jpg@jfif-1.01/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY))
                 .map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
@@ -298,12 +331,15 @@ pub fn create_jpg_any_editor() -> semio_framework_plugin::AppDefinition {
         .default_mode_id(edit::MODE_ID)
         .window_kind_def(main::definition())
         .window_kind_def(editing::snapshot_details_window_definition())
-        .default_layout(edit::layout())
+        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Main"))
         .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated);
+    let builder = builder.action_with(paint_region::action())
+        .action_describe(paint_region::ACTION_ID, semio_framework_ui_locale::LocalizedLabel::native("Paints a checked solid color or palette index into a rectangular region and records exact undo history.", "Malt eine geprüfte Volltonfarbe oder einen Palettenindex in einen rechteckigen Bereich und speichert einen exakten Rückgängig-Verlauf."))
+        .action_interactive_job(paint_region::ACTION_ID, InteractiveJobClassification::Migrated);
     editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest

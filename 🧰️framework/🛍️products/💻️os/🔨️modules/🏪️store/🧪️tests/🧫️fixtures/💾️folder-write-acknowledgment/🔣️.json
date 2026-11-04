@@ -1,0 +1,199 @@
+{
+  "schema": "semio.fixture.folder-write-acknowledgment/v2",
+  "law": "One law for every host: a document is saved only after the folder acknowledged the newest archive covering every admitted edit; a refused write, an unreadable or corrupt folder, and a folder that changed under unsaved edits keep it unsaved with a typed failure and never overwrite the folder or roll back the edits. `native` cases run against the Rust actor, `worker` cases against the TypeScript worker.",
+  "native": [
+    {
+      "name": "acknowledged-write",
+      "binding": "eventLog",
+      "expected": {
+        "persisted": true,
+        "failures": 0,
+        "retryScheduled": false
+      },
+      "steps": []
+    },
+    {
+      "name": "refused-write",
+      "binding": "unregisteredPackCodec",
+      "expected": {
+        "persisted": false,
+        "failures": 1,
+        "retryScheduled": true
+      },
+      "steps": []
+    },
+    {
+      "name": "retry-refused-again",
+      "binding": "unregisteredPackCodec",
+      "expected": {
+        "persisted": false,
+        "failures": 2,
+        "retryScheduled": true
+      },
+      "steps": [
+        "retry"
+      ]
+    },
+    {
+      "name": "unreadable-folder-is-never-overwritten",
+      "binding": "unreadableFolder",
+      "expected": {
+        "persisted": false,
+        "failures": 1,
+        "retryScheduled": true
+      },
+      "steps": []
+    },
+    {
+      "name": "corrupt-archive-blocks-genesis",
+      "binding": "corruptPackArchive",
+      "steps": [],
+      "expected": {
+        "persisted": false,
+        "failures": 1,
+        "retryScheduled": true,
+        "conflict": "folderArchiveCorrupt"
+      }
+    },
+    {
+      "name": "external-divergence-blocks-retry",
+      "binding": "unregisteredPackCodec",
+      "steps": [
+        "externalArchive",
+        "retry"
+      ],
+      "expected": {
+        "persisted": false,
+        "failures": 1,
+        "retryScheduled": false,
+        "conflict": "externalDivergence"
+      }
+    },
+    {
+      "name": "external-change-after-refused-write-never-rolls-back",
+      "binding": "unregisteredPackCodec",
+      "steps": [
+        "externalChanged"
+      ],
+      "expected": {
+        "persisted": false,
+        "failures": 1,
+        "retryScheduled": true,
+        "replaced": false
+      }
+    }
+  ],
+  "worker": [
+    {
+      "name": "edit-during-write-stays-unsaved",
+      "steps": [
+        {
+          "admit": "m1"
+        },
+        {
+          "archive": "a1",
+          "folder": "hold"
+        },
+        {
+          "admit": "m2"
+        },
+        {
+          "release": "a1"
+        },
+        {
+          "expect": {
+            "pending": 1,
+            "persisted": false,
+            "puts": [
+              "a1"
+            ]
+          }
+        },
+        {
+          "archive": "a2",
+          "folder": "accept"
+        },
+        {
+          "expect": {
+            "pending": 0,
+            "persisted": true,
+            "puts": [
+              "a1",
+              "a2"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "refused-write-is-retried",
+      "steps": [
+        {
+          "admit": "m1"
+        },
+        {
+          "archive": "a1",
+          "folder": "refuse"
+        },
+        {
+          "expect": {
+            "pending": 1,
+            "persisted": false,
+            "puts": []
+          }
+        },
+        {
+          "retry": "accept"
+        },
+        {
+          "expect": {
+            "pending": 0,
+            "persisted": true,
+            "puts": [
+              "a1"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "newer-archive-supersedes-queued-older",
+      "steps": [
+        {
+          "admit": "m1"
+        },
+        {
+          "archive": "a1",
+          "folder": "hold"
+        },
+        {
+          "admit": "m2"
+        },
+        {
+          "archive": "a2",
+          "folder": "accept"
+        },
+        {
+          "admit": "m3"
+        },
+        {
+          "archive": "a3",
+          "folder": "accept"
+        },
+        {
+          "release": "a1"
+        },
+        {
+          "expect": {
+            "pending": 0,
+            "persisted": true,
+            "puts": [
+              "a1",
+              "a3"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

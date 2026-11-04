@@ -31,7 +31,7 @@ use framework_schema::ArtifactSchema;
 /// 🏷️ Document schema / DSL envelope id AND `ArtifactSchema` descriptor id — same literal for
 /// both, per the master plan's "Schema descriptor ids `s.stdio.semio` + `s.stdio.semio.<subset>`"
 /// convention, one per subset.
-pub const STDIO_SEMIOTABLE_DOCUMENT_SCHEMA: &str = "s.stdio.semio.table";
+pub const STDIO_SEMIOTABLE_DOCUMENT_SCHEMA: &str = "stdio.semio.table";
 //#endregion 🔖️Ids
 
 //#region 🔖️CellKind
@@ -83,7 +83,7 @@ pub struct SemioTableRow {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(layout = "lines")]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.table")]
+#[artifact_schema(id = "stdio.semio.table")]
 pub struct SemioTableSnapshot {
     #[state(artifact)]
     pub schema: String,
@@ -150,7 +150,7 @@ impl Default for SemioTableSnapshot {
 //#endregion 🔖️Wire
 
 //#region 🔖️Demo
-/// 🌱 The demo `s.stdio.semio.table` document — three columns (`label: Str`, `score: Float`,
+/// 🌱 The demo `stdio.semio.table` document — three columns (`label: Str`, `score: Float`,
 /// `active: Bool`) across three rows, exercising every `SemioTableCellKind`/`SemioValue` scalar
 /// variant at least once (`Str`/`Float`/`Bool` via the declared column kinds; `Null`/`Int`/`Bytes`
 /// via cell values — a cell's actual `SemioValue` kind is independent of its column's declared

@@ -1,0 +1,329 @@
+{
+ "stems": [
+  {
+   "name": "Plan: A/B?",
+   "fallback": "2d.note",
+   "stem": "Plan_ A_B_"
+  },
+  {
+   "name": "  Ground floor.  ",
+   "fallback": "2d.note",
+   "stem": "Ground floor"
+  },
+  {
+   "name": "",
+   "fallback": "",
+   "stem": "document"
+  },
+  {
+   "name": "con",
+   "fallback": "k",
+   "stem": "_con"
+  },
+  {
+   "name": "CON.final",
+   "fallback": "k",
+   "stem": "_CON.final"
+  },
+  {
+   "name": "prn",
+   "fallback": "k",
+   "stem": "_prn"
+  },
+  {
+   "name": "PRN.final",
+   "fallback": "k",
+   "stem": "_PRN.final"
+  },
+  {
+   "name": "aux",
+   "fallback": "k",
+   "stem": "_aux"
+  },
+  {
+   "name": "AUX.final",
+   "fallback": "k",
+   "stem": "_AUX.final"
+  },
+  {
+   "name": "nul",
+   "fallback": "k",
+   "stem": "_nul"
+  },
+  {
+   "name": "NUL.final",
+   "fallback": "k",
+   "stem": "_NUL.final"
+  },
+  {
+   "name": "com1",
+   "fallback": "k",
+   "stem": "_com1"
+  },
+  {
+   "name": "COM1.final",
+   "fallback": "k",
+   "stem": "_COM1.final"
+  },
+  {
+   "name": "com2",
+   "fallback": "k",
+   "stem": "_com2"
+  },
+  {
+   "name": "COM2.final",
+   "fallback": "k",
+   "stem": "_COM2.final"
+  },
+  {
+   "name": "com3",
+   "fallback": "k",
+   "stem": "_com3"
+  },
+  {
+   "name": "COM3.final",
+   "fallback": "k",
+   "stem": "_COM3.final"
+  },
+  {
+   "name": "com4",
+   "fallback": "k",
+   "stem": "_com4"
+  },
+  {
+   "name": "COM4.final",
+   "fallback": "k",
+   "stem": "_COM4.final"
+  },
+  {
+   "name": "com5",
+   "fallback": "k",
+   "stem": "_com5"
+  },
+  {
+   "name": "COM5.final",
+   "fallback": "k",
+   "stem": "_COM5.final"
+  },
+  {
+   "name": "com6",
+   "fallback": "k",
+   "stem": "_com6"
+  },
+  {
+   "name": "COM6.final",
+   "fallback": "k",
+   "stem": "_COM6.final"
+  },
+  {
+   "name": "com7",
+   "fallback": "k",
+   "stem": "_com7"
+  },
+  {
+   "name": "COM7.final",
+   "fallback": "k",
+   "stem": "_COM7.final"
+  },
+  {
+   "name": "com8",
+   "fallback": "k",
+   "stem": "_com8"
+  },
+  {
+   "name": "COM8.final",
+   "fallback": "k",
+   "stem": "_COM8.final"
+  },
+  {
+   "name": "com9",
+   "fallback": "k",
+   "stem": "_com9"
+  },
+  {
+   "name": "COM9.final",
+   "fallback": "k",
+   "stem": "_COM9.final"
+  },
+  {
+   "name": "com\u00b9",
+   "fallback": "k",
+   "stem": "_com\u00b9"
+  },
+  {
+   "name": "COM\u00b9.final",
+   "fallback": "k",
+   "stem": "_COM\u00b9.final"
+  },
+  {
+   "name": "com\u00b2",
+   "fallback": "k",
+   "stem": "_com\u00b2"
+  },
+  {
+   "name": "COM\u00b2.final",
+   "fallback": "k",
+   "stem": "_COM\u00b2.final"
+  },
+  {
+   "name": "com\u00b3",
+   "fallback": "k",
+   "stem": "_com\u00b3"
+  },
+  {
+   "name": "COM\u00b3.final",
+   "fallback": "k",
+   "stem": "_COM\u00b3.final"
+  },
+  {
+   "name": "lpt1",
+   "fallback": "k",
+   "stem": "_lpt1"
+  },
+  {
+   "name": "LPT1.final",
+   "fallback": "k",
+   "stem": "_LPT1.final"
+  },
+  {
+   "name": "lpt2",
+   "fallback": "k",
+   "stem": "_lpt2"
+  },
+  {
+   "name": "LPT2.final",
+   "fallback": "k",
+   "stem": "_LPT2.final"
+  },
+  {
+   "name": "lpt3",
+   "fallback": "k",
+   "stem": "_lpt3"
+  },
+  {
+   "name": "LPT3.final",
+   "fallback": "k",
+   "stem": "_LPT3.final"
+  },
+  {
+   "name": "lpt4",
+   "fallback": "k",
+   "stem": "_lpt4"
+  },
+  {
+   "name": "LPT4.final",
+   "fallback": "k",
+   "stem": "_LPT4.final"
+  },
+  {
+   "name": "lpt5",
+   "fallback": "k",
+   "stem": "_lpt5"
+  },
+  {
+   "name": "LPT5.final",
+   "fallback": "k",
+   "stem": "_LPT5.final"
+  },
+  {
+   "name": "lpt6",
+   "fallback": "k",
+   "stem": "_lpt6"
+  },
+  {
+   "name": "LPT6.final",
+   "fallback": "k",
+   "stem": "_LPT6.final"
+  },
+  {
+   "name": "lpt7",
+   "fallback": "k",
+   "stem": "_lpt7"
+  },
+  {
+   "name": "LPT7.final",
+   "fallback": "k",
+   "stem": "_LPT7.final"
+  },
+  {
+   "name": "lpt8",
+   "fallback": "k",
+   "stem": "_lpt8"
+  },
+  {
+   "name": "LPT8.final",
+   "fallback": "k",
+   "stem": "_LPT8.final"
+  },
+  {
+   "name": "lpt9",
+   "fallback": "k",
+   "stem": "_lpt9"
+  },
+  {
+   "name": "LPT9.final",
+   "fallback": "k",
+   "stem": "_LPT9.final"
+  },
+  {
+   "name": "lpt\u00b9",
+   "fallback": "k",
+   "stem": "_lpt\u00b9"
+  },
+  {
+   "name": "LPT\u00b9.final",
+   "fallback": "k",
+   "stem": "_LPT\u00b9.final"
+  },
+  {
+   "name": "lpt\u00b2",
+   "fallback": "k",
+   "stem": "_lpt\u00b2"
+  },
+  {
+   "name": "LPT\u00b2.final",
+   "fallback": "k",
+   "stem": "_LPT\u00b2.final"
+  },
+  {
+   "name": "lpt\u00b3",
+   "fallback": "k",
+   "stem": "_lpt\u00b3"
+  },
+  {
+   "name": "LPT\u00b3.final",
+   "fallback": "k",
+   "stem": "_LPT\u00b3.final"
+  }
+ ],
+ "reservedDeviceNames": [
+  "CON",
+  "PRN",
+  "AUX",
+  "NUL",
+  "COM1",
+  "COM2",
+  "COM3",
+  "COM4",
+  "COM5",
+  "COM6",
+  "COM7",
+  "COM8",
+  "COM9",
+  "COM\u00b9",
+  "COM\u00b2",
+  "COM\u00b3",
+  "LPT1",
+  "LPT2",
+  "LPT3",
+  "LPT4",
+  "LPT5",
+  "LPT6",
+  "LPT7",
+  "LPT8",
+  "LPT9",
+  "LPT\u00b9",
+  "LPT\u00b2",
+  "LPT\u00b3"
+ ]
+}

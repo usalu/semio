@@ -1,7 +1,6 @@
-//! 🚪️ IO — 🚧 scaffolded by W1b: structure only. Registration flows through
-//! 🎹️composer::register (matching the repo-wide convention — see gif's own io leaf doc comment).
-//! W4 adds the real import/export leaves under 📥️import/🧩️deserializers and
-//! 📤️export/🧵️serializers.
+//! 🚪️ IO — registration flows through 🎹️composer::register (matching the repo-wide convention — see gif's own io leaf doc comment).
+//! Import reads HTML5 source through `text::snapshot::parse_html_document`, export writes it through `write_html_document`, and
+//! the `📥️Sniff` region below recognizes a real HTML5 document from its bytes.
 #[cfg(test)]
 use semio_s_artifact_stdio_contract::apply_mutation;
 //#region 🎹️DerivedComposition
@@ -66,10 +65,8 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 📥️Sniff
-/// ⚙️ Html (5, WHATWG) sniff — 🚧 scaffolded by W1b: real `<!DOCTYPE html>` detection (case-
-/// insensitive, leading-whitespace-tolerant — genuinely inspects the bytes, not a fixed offset
-/// check). The full tokenizer/node tree (Element/Text/Comment/RawText, void-element set) lands
-/// in W3.
+/// ⚙️ Html (5, WHATWG) sniff: `<!DOCTYPE html` detection (case-insensitive, leading-whitespace-tolerant) that genuinely inspects
+/// the bytes, not a fixed offset check. The tokenizer and node tree live in `text::snapshot`.
 pub mod import {
     pub mod deserializers {
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeReliabilityMemberId",
+  "id": "R",
+  "newMemberId": "probe"
+}

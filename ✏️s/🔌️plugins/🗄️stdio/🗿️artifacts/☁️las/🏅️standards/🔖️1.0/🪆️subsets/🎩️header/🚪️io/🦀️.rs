@@ -762,3 +762,11 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 }
 }
 //#endregion 🧩️ArtifactItems10
+
+//#region 🔖️SceneGeometry
+/// 🧊️ What the point-cloud windows draw: every point at its real coordinates (the scene samples evenly beyond its marker cap).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn scene_geometry(snapshot: &crate::LasSnapshot) -> (Vec<[f64; 3]>, Vec<u32>, Vec<[f64; 3]>) {
+    (Vec::new(), Vec::new(), snapshot.points.iter().map(|point| [point.x, point.y, point.z]).collect())
+}
+//#endregion 🔖️SceneGeometry

@@ -11,7 +11,7 @@ use protocol::{ColdMutationDiff, OpBinary as _, OpText as _};
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioDocumentSnapshot {
     SemioDocumentSnapshot {
-        schema: "s.stdio.semio.document".into(),
+        schema: "stdio.semio.document".into(),
         styles: vec![DocStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }],
         images: Vec::new(),
         blocks: vec![DocBlock::paragraph("first"), DocBlock::paragraph("second")],
@@ -146,7 +146,7 @@ fn kinds_match_the_enum_and_the_catalog() {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_a() -> SemioDocumentSnapshot {
     SemioDocumentSnapshot {
-        schema: "s.stdio.semio.document".into(),
+        schema: "stdio.semio.document".into(),
         styles: vec![DocStyle { id: "keep".into(), name: "Keep".into(), based_on: None }, DocStyle { id: "toModify".into(), name: "old".into(), based_on: None }, DocStyle { id: "toRemove".into(), name: "Gone".into(), based_on: None }],
         images: vec![DocImage { id: "toModify".into(), mime: "image/png".into(), bytes: vec![1] }, DocImage { id: "toRemove".into(), mime: "image/gif".into(), bytes: vec![2] }],
         blocks: vec![
@@ -160,7 +160,7 @@ fn sweep_a() -> SemioDocumentSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_b() -> SemioDocumentSnapshot {
     SemioDocumentSnapshot {
-        schema: "s.stdio.semio.document".into(),
+        schema: "stdio.semio.document".into(),
         styles: vec![DocStyle { id: "keep".into(), name: "Keep".into(), based_on: None }, DocStyle { id: "toModify".into(), name: "new".into(), based_on: Some("keep".into()) }, DocStyle { id: "added".into(), name: "Added".into(), based_on: None }],
         images: vec![DocImage { id: "toModify".into(), mime: "image/jpeg".into(), bytes: vec![9, 9] }, DocImage { id: "added".into(), mime: "image/webp".into(), bytes: vec![3] }],
         blocks: vec![DocBlock::Paragraph { style_id: Some("keep".into()), runs: vec![DocRun { text: "new".into(), style: RunStyle { bold: true, ..Default::default() } }, DocRun::plain("second run")] }, DocBlock::paragraph("stay")],

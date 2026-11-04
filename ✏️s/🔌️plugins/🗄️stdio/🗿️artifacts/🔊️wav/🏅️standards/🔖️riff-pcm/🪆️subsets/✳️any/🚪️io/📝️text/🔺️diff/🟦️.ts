@@ -1,10 +1,4 @@
-/** 🧬️ Semio_wav_diff schema. 🚧 scaffolded by W1b — generic facet mirror; the Semio_wav_diff
- * `🦀️.rs` sibling is the real source of truth (matches existing repo convention). */
-export interface Semio_wav_diffEntry {
-  key: string;
-  value: string;
-}
+/** 🧬️ Semio_wav_diff: the facet carries the one-line diff as one UTF-8 string; the `🦀️.rs` sibling holds the codec. */
 export interface Semio_wav_diff {
-  /** 🔺️ @state artifact */ schema: string;
-  /** 🔄️ @state artifact */ entries: Semio_wav_diffEntry[];
+  readonly line: string;
 }

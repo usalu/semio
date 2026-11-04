@@ -1,5 +1,6 @@
 use crate::editor::json_i_json::modes::edit::windows::main;
-use crate::{JsonMutation, JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use crate::standards::v_rfc8259::subsets::i_json::schema::mutations::{insert_array_element, remove_array_element, remove_member, rename_member, set_safe_number, set_string, JsonIJsonMutation};
+use crate::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::EditorApp;
@@ -74,16 +75,21 @@ async fn op_text_roundtrip() {
 #[semio_framework_async_macros::async_test]
 async fn set_node_preserves_every_json_value_kind_and_rejects_invalid_source() {
     register_document_schema();
-    for source in ["null", "true", "-123.4500e+9", "\"text %20\\n日本語\"", "[1,false,null]", "{\"answer\":42}"] {
+    for source in ["[1,false,null,-123.4500e+9,\"text %20\\n日本語\"]", "{\"answer\":42}"] {
         let snapshot = JsonSnapshot { schema: JsonSnapshot::default().schema, value: JsonValue::String { value: "before".into() } };
         let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
         let command = JsonIJsonIJsonEditorCommand::SetNode { node_id: main::JSON_ROOT_NODE_ID.into(), revision, value: source.into() };
         let emit = json_i_json_emit(&command, &snapshot, None).expect("valid JSON value");
-        let next = protocol::apply_diff_cold(<JsonMutation as protocol::ColdMutation<JsonSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("compact node patch applies");
+        let next = protocol::apply_diff_cold(<JsonIJsonMutation as protocol::ColdMutation<JsonSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("compact node patch applies");
         let native = crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(source).expect("JSON file parser");
         let expected = serde_json::from_str::<serde_json::Value>(source).expect("serde_json oracle");
         assert_eq!(next.value, native);
         assert_eq!(serde_json::Value::from(&next.value), expected);
+    }
+    for scalar in ["null", "true", "7", "\"text\""] {
+        let snapshot = JsonSnapshot { schema: JsonSnapshot::default().schema, value: JsonValue::Array { items: Vec::new() } };
+        let command = JsonIJsonIJsonEditorCommand::SetNode { node_id: main::JSON_ROOT_NODE_ID.into(), revision: semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot), value: scalar.into() };
+        assert!(json_i_json_emit(&command, &snapshot, None).is_err(), "RFC 7493 §2.1: a bare {scalar} is not an I-JSON top-level value");
     }
     let snapshot = JsonSnapshot::default();
     let invalid = JsonIJsonIJsonEditorCommand::SetNode { node_id: main::JSON_ROOT_NODE_ID.into(), revision: semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot), value: "{invalid".into() };
@@ -184,3 +190,36 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
 //#endregion 🪟️KitVerbLaws
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", JsonIJsonEditor, || semio_framework_plugin::App { definition: create_json_i_json_editor(), examples: Vec::new() }, "../..");
+
+/// ⚖️ LAW: the Details pane reaches the I-JSON leaves structurally: member insert and remove, a rename that keeps the position and refuses a
+/// duplicate, element insert and remove, and string and number writes, each exactly one leaf of the right kind.
+#[semio_framework_async_macros::async_test]
+async fn details_edits_raise_the_i_json_leaves() {
+    use crate::standards::v_rfc8259::subsets::base::schema::snapshot::JsonMember;
+    use semio_s_artifact_stdio_contract::editing::{SnapshotEditEvent, SnapshotEditingEditor};
+    let base = JsonSnapshot {
+        schema: JsonSnapshot::default().schema,
+        value: JsonValue::Object {
+            members: vec![
+                JsonMember { key: "a".into(), value: JsonValue::String { value: "x".into() } },
+                JsonMember { key: "b".into(), value: JsonValue::Array { items: vec![JsonValue::Number { lexeme: "1".into() }, JsonValue::Bool { value: true }] } },
+            ],
+        },
+    };
+    let emit = |event: SnapshotEditEvent| <JsonIJsonEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
+    let text = |value: &str| semio_framework_value::DslValue::String(value.into());
+    let leaves = |event: SnapshotEditEvent| emit(event).expect("the edit resolves").artifact_mutations;
+    assert!(matches!(leaves(SnapshotEditEvent::RemoveValue { path: "/value/members/0".into() }).as_slice(), [JsonIJsonMutation::RemoveMember(remove_member::RemoveMember { key, .. })] if key == "a"));
+    assert!(matches!(leaves(SnapshotEditEvent::SetValue { path: "/value/members/0/key".into(), value: text("renamed") }).as_slice(), [JsonIJsonMutation::RenameMember(rename_member::RenameMember { from, to, .. })] if from == "a" && to == "renamed"));
+    assert!(matches!(leaves(SnapshotEditEvent::RemoveValue { path: "/value/members/1/value/items/0".into() }).as_slice(), [JsonIJsonMutation::RemoveArrayElement(remove_array_element::RemoveArrayElement { index: 0, .. })]));
+    assert!(matches!(leaves(SnapshotEditEvent::SetValue { path: "/value/members/0/value/value".into(), value: text("y") }).as_slice(), [JsonIJsonMutation::SetString(set_string::SetString { value, .. })] if value == "y"));
+    assert!(matches!(leaves(SnapshotEditEvent::SetValue { path: "/value/members/1/value/items/0/lexeme".into(), value: text("2") }).as_slice(), [JsonIJsonMutation::SetSafeNumber(set_safe_number::SetSafeNumber { lexeme, .. })] if lexeme == "2"));
+    assert!(matches!(leaves(SnapshotEditEvent::SetValue { path: "/value/members/1/value/items/1/value".into(), value: semio_framework_value::DslValue::Bool(false) }).as_slice(), [JsonIJsonMutation::RemoveArrayElement(_), JsonIJsonMutation::InsertArrayElement(insert_array_element::InsertArrayElement { index: 1, .. })]));
+    let duplicate = leaves(SnapshotEditEvent::SetValue { path: "/value/members/0/key".into(), value: text("b") });
+    let mut state = base.clone();
+    for leaf in &duplicate {
+        let outcome = crate::apply_mutation(&mut state, leaf);
+        assert!(outcome.messages().iter().any(|message| message.level == semio_framework_diagnostic::Severity::Fatal), "RFC 7493 §2.3: a rename onto an existing key is refused");
+    }
+    assert_eq!(state, base);
+}

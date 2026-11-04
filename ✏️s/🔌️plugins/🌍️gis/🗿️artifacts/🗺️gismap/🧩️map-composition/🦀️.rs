@@ -11,7 +11,7 @@ use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapsh
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
 
 //#region 🔖️Composition
-/// 🧩️ Composed `s.stdio.semio.drawing`/`s.stdio.semio.image`/`s.stdio.semio.value` child slots
+/// 🧩️ Composed `s.stdio.semio.drawing`/`stdio.semio.image`/`s.stdio.semio.value` child slots
 /// (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`, design map §4: "map C:drawing+image+value").
 /// `positions`/`routes`/`regions` stay gis's own domain-specific id-keyed feature lists (analogous to
 /// `📐️cad`'s `nodes`/`references_by_model_definition_id`, kept inline rather than gutted — see that

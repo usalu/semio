@@ -41,7 +41,7 @@
       "standard": "s.stdio.md.standard.commonmark",
       "representation": "document",
       "mimes": ["text/markdown"],
-      "extensions": [".md"],
+      "extensions": [".md", ".markdown"],
       "is_binary": false,
       "aliases": [],
       "neutral": true,
@@ -179,7 +179,7 @@
     {
       "id": "s.stdio.md.standard.commonmark.representation.mime-text-markdown-extension-md",
       "category": "representation",
-      "descriptor": "runtime-capability:representation:mime:text/markdown|extension:.md",
+      "descriptor": "runtime-capability:representation:mime:text/markdown|extension:.md|extension:.markdown",
       "claims": [
         {
           "namespace": "mime",
@@ -188,6 +188,10 @@
         {
           "namespace": "extension",
           "value": ".md"
+        },
+        {
+          "namespace": "extension",
+          "value": ".markdown"
         }
       ]
     },

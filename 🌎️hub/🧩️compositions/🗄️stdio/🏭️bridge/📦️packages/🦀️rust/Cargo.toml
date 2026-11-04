@@ -54,6 +54,7 @@ semio-s-artifact-stdio-ifc-2x3-cv20 = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-sav = { workspace = true }
 semio-s-artifact-stdio-ifc-4-model = { workspace = true }
 semio-s-artifact-stdio-ifc-4-mutations = { workspace = true }
+semio-s-artifact-stdio-ifc-4x3 = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-dwg-mutations = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
@@ -108,4 +109,5 @@ semio-s-artifact-stdio-wav = { workspace = true }
 semio-s-artifact-stdio-epw = { workspace = true }
 semio-s-artifact-stdio-tsv = { workspace = true }
 semio-s-artifact-stdio-html = { workspace = true }
+semio-s-artifact-stdio-idml = { workspace = true }
 # /🧩️ Composition Dependencies

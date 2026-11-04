@@ -471,6 +471,17 @@ impl ArtifactActor {
     }
 
     #[cfg(any(test, feature = "testing"))]
+    pub fn folder_write_acknowledgment_test(&self) -> (bool, u32, bool) {
+        (self.status().persisted, self.folder_write_failures, self.folder_retry_at.is_some())
+    }
+
+    #[cfg(any(test, feature = "testing"))]
+    pub async fn retry_folder_write_test(&mut self) {
+        self.folder_retry_at = Some(Instant::now());
+        self.retry_folder_write().await;
+    }
+
+    #[cfg(any(test, feature = "testing"))]
     pub fn folder_writes_test(&self) -> usize {
         self.folder_writes
     }

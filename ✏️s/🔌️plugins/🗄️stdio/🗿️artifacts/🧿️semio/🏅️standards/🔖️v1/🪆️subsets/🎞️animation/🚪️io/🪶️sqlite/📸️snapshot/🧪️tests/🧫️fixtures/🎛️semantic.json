@@ -14,7 +14,7 @@
     {
       "id": "full",
       "sourceSnapshot": {
-        "schema": "s.stdio.semio.animation",
+        "schema": "stdio.semio.animation",
         "timelines": [
           {
             "name": null,
@@ -1407,7 +1407,7 @@
     {
       "id": "metadataRetainingEmpty",
       "sourceSnapshot": {
-        "schema": "s.stdio.semio.animation",
+        "schema": "stdio.semio.animation",
         "timelines": []
       },
       "rows": 1,

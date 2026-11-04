@@ -234,6 +234,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "json"
+version = "0.12.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "078e285eafdfb6c4b434e0d31e8cfcb5115b651496faca5749b88fafd4f23bfd"
+
+[[package]]
 name = "leb128fmt"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6663,6 +6669,13 @@ name = "semio-framework-value-sort"
 version = "0.1.0"
 
 [[package]]
+name = "semio-repo-test-host"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-process-routing-workspace",
+]
+
+[[package]]
 name = "semio-s-artifact-stdio-binary"
 version = "0.1.0"
 dependencies = [
@@ -6973,6 +6986,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-os-kernel",
  "semio-framework-pack",
+ "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-ui-contract",
  "semio-framework-ui-locale",
@@ -7039,6 +7053,7 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-gltf-model",
  "semio-s-artifact-stdio-gltf-mutations",
+ "semio-s-artifact-stdio-gltf-test-oracle",
 ]
 
 [[package]]
@@ -8136,6 +8151,14 @@ dependencies = [
  "semio-s-artifact-stdio-gltf-mutations-mut-any-2",
  "semio-s-artifact-stdio-gltf-mutations-mut-any-3",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-gltf-test-oracle"
+version = "0.1.0"
+dependencies = [
+ "json",
+ "semio-repo-test-host",
 ]
 
 [[package]]

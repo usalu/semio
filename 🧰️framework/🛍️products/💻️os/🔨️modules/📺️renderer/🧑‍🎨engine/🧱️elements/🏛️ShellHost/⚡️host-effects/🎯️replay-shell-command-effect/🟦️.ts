@@ -15,11 +15,12 @@ import { makeEffectDispatchOne } from "../../../🛠️ShellHelpers/🔩️plumb
 import { reduceArtifactCreationProgressUiV1 } from "../../🌱️artifact-creation/🟦️.tsx";
 import { replayRefusalCodeV1, replayRefusalNoticeTextV1, type ReplayRefusalReasonV1 } from "../../📣️replay-refusal/🟦️.ts";
 import { captureSpaceArtifactCreationCatalogAuthorityV1, directoryCommandFromAction, mintDirectoryCommandRequestId, SPACE_INDEX_DOCUMENT_ID, type SpaceArtifactCreationOwnerV1, spaceArtifactCreationRequestFromAction, spaceIndexOpeningArgsV1 } from "../../🧾️space-artifact-creation/🟦️.ts";
+import { replayOpenArtifactV1 } from "./🚪️open-artifact/🟦️.ts";
 import { shellSpaceAdministrationOpening } from "../../🏠️space-administration/🟦️.ts";
 import type { ShellCoreAfterSpawnedSession } from "../../🛫️spawned-session/🟦️.ts";
 
 /** 🎭️ Replays a shell-owned command against the directory, the space index and the artifact creation lane. */
-export async function applyReplayShellCommandEffect({ showTransientNoticeRef, uiLocaleRef, spaceAdministrationEpochRef, identityRef, ensureBackboneWorker, spaceAdministrationRef, setSpaceAdministration, openDocumentSessionsRef, shellStateRef, spaceArtifactCreationCatalogRef, spaceArtifactCreationCatalogUiRef, spaceArtifactCreationOwnersRef, setSpaceArtifactCreationUi, spaceDirectoryHistoriesRef, hostPorts, adoptSharedSpaceAccess, resolveArtifactOpeningWithActivationRef, openArtifactWithAppRefRef, isCurrentEffectOwner, openDocumentRef, localDataDir, writeLocalDocumentRef, recordLocalCatalogRef, loadedPluginsRef, resolvedTargetViewState, rehydratedLocalDocumentsRef, localCatalogRef, replayShellOwnedCommandRef, exampleOptionsRef, defaults, lastDispatchedExampleIdRef, dispatch, effect, baseSession, effectOrigin, effectOwner, applyHostEffects, core }: Pick<ShellCoreAfterSpawnedSession, "showTransientNoticeRef" | "uiLocaleRef" | "spaceAdministrationEpochRef" | "identityRef" | "ensureBackboneWorker" | "spaceAdministrationRef" | "setSpaceAdministration" | "openDocumentSessionsRef" | "shellStateRef" | "spaceArtifactCreationCatalogRef" | "spaceArtifactCreationCatalogUiRef" | "spaceArtifactCreationOwnersRef" | "setSpaceArtifactCreationUi" | "spaceDirectoryHistoriesRef" | "hostPorts" | "adoptSharedSpaceAccess" | "resolveArtifactOpeningWithActivationRef" | "openArtifactWithAppRefRef" | "isCurrentEffectOwner" | "openDocumentRef" | "localDataDir" | "writeLocalDocumentRef" | "recordLocalCatalogRef" | "loadedPluginsRef" | "resolvedTargetViewState" | "rehydratedLocalDocumentsRef" | "localCatalogRef" | "replayShellOwnedCommandRef" | "exampleOptionsRef" | "defaults" | "lastDispatchedExampleIdRef" | "dispatch"> & {
+export async function applyReplayShellCommandEffect({ showTransientNoticeRef, uiLocaleRef, spaceAdministrationEpochRef, identityRef, ensureBackboneWorker, spaceAdministrationRef, setSpaceAdministration, openDocumentSessionsRef, shellStateRef, spaceArtifactCreationCatalogRef, spaceArtifactCreationCatalogUiRef, spaceArtifactCreationOwnersRef, setSpaceArtifactCreationUi, spaceDirectoryHistoriesRef, hostPorts, adoptSharedSpaceAccess, resolveArtifactOpeningWithActivationRef, openResolvedArtifactRef, isCurrentEffectOwner, openDocumentRef, localDataDir, writeLocalDocumentRef, recordLocalCatalogRef, loadedPluginsRef, resolvedTargetViewState, rehydratedLocalDocumentsRef, localCatalogRef, replayShellOwnedCommandRef, exampleOptionsRef, defaults, lastDispatchedExampleIdRef, dispatch, effect, baseSession, effectOrigin, effectOwner, applyHostEffects, core }: Pick<ShellCoreAfterSpawnedSession, "showTransientNoticeRef" | "uiLocaleRef" | "spaceAdministrationEpochRef" | "identityRef" | "ensureBackboneWorker" | "spaceAdministrationRef" | "setSpaceAdministration" | "openDocumentSessionsRef" | "shellStateRef" | "spaceArtifactCreationCatalogRef" | "spaceArtifactCreationCatalogUiRef" | "spaceArtifactCreationOwnersRef" | "setSpaceArtifactCreationUi" | "spaceDirectoryHistoriesRef" | "hostPorts" | "adoptSharedSpaceAccess" | "resolveArtifactOpeningWithActivationRef" | "openResolvedArtifactRef" | "isCurrentEffectOwner" | "openDocumentRef" | "localDataDir" | "writeLocalDocumentRef" | "recordLocalCatalogRef" | "loadedPluginsRef" | "resolvedTargetViewState" | "rehydratedLocalDocumentsRef" | "localCatalogRef" | "replayShellOwnedCommandRef" | "exampleOptionsRef" | "defaults" | "lastDispatchedExampleIdRef" | "dispatch"> & {
   readonly effect: Extract<Effect, Readonly<Record<"replayShellCommand", unknown>>>;
   readonly baseSession: ActiveSession;
   readonly effectOrigin: ReturnType<ShellCoreAfterSpawnedSession["captureEffectOwner"]>["presentation"];
@@ -113,15 +114,11 @@ export async function applyReplayShellCommandEffect({ showTransientNoticeRef, ui
         refuseReplay("view-only-access", "a read-only member asked to edit", args);
         return;
       }
-      const opening = await resolveArtifactOpeningWithActivationRef.current(actionId, accessRole === "viewer" && actionId === "os.open-artifact" ? { ...openingArgs, role: "viewer" } : openingArgs);
-      if (!opening) {
-        refuseReplay("router-not-ready", "artifact router is not ready", args);
-        return;
-      }
-      const target = await openArtifactWithAppRefRef.current(opening.app, opening.dialect, opening.role, () => isCurrentEffectOwner(effectOwner));
-      if (target && opening.documentId && opening.schema) {
-        await openDocumentRef.current({ documentId: opening.documentId, schema: opening.schema, ...(opening.spaceId ? { spaceId: opening.spaceId } : {}) }, undefined, target);
-      }
+      await replayOpenArtifactV1({
+        resolve: () => resolveArtifactOpeningWithActivationRef.current(actionId, accessRole === "viewer" && actionId === "os.open-artifact" ? { ...openingArgs, role: "viewer" } : openingArgs),
+        open: (opening) => openResolvedArtifactRef.current(opening, () => isCurrentEffectOwner(effectOwner)),
+        refuse: (reason, cause) => refuseReplay(reason, reason === "router-not-ready" ? "artifact router is not ready" : "artifact opening rejected", ...(cause === undefined ? [args] : [cause, args])),
+      });
     } catch (openingError) {
       refuseReplay("open-rejected", "artifact opening rejected", openingError, args);
     }

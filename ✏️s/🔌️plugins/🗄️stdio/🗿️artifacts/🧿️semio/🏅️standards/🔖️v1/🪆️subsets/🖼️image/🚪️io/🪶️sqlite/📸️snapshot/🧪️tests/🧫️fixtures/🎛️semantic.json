@@ -12,7 +12,7 @@
       "rows": 21,
       "valueBytes": 835,
       "sourceSnapshot": {
-        "schema": "s.stdio.semio.image",
+        "schema": "stdio.semio.image",
         "width": 2,
         "height": 1,
         "colorspace": "indexed",
@@ -67,7 +67,7 @@
       "rows": 3,
       "valueBytes": 131,
       "sourceSnapshot": {
-        "schema": "s.stdio.semio.image",
+        "schema": "stdio.semio.image",
         "width": 2,
         "height": 1,
         "colorspace": "indexed",

@@ -187,26 +187,36 @@ export class BrowserFrameTransport {
     return true;
   }
 
+  /** 🎬️ Sends one bounded operation to the worker for an accepted slot and settles with its result. */
+  private sendMediaOperation(slotToken: string, instanceId: number, operation: BrowserMediaOperation): Promise<BrowserMediaValue> {
+    const slot = this.mediaSlots.get(slotToken);
+    if (this.status !== "ready" || !slot || slot.appInstanceId !== instanceId) return Promise.reject(new Error("browser-media.retired"));
+    if ([...this.mediaPending.values()].some((pending) => pending.token === slotToken)) return Promise.reject(new Error("browser-media.in-flight"));
+    if (this.mediaPending.size >= BROWSER_MEDIA_CAPACITY.slots) return Promise.reject(new Error("browser-media.capacity"));
+    const requestId = ++this.mediaRequestId;
+    return new Promise((resolve, reject) => {
+      const timer = this.setTimer(() => {
+        this.mediaPending.delete(requestId);
+        this.mediaSlots.delete(slotToken);
+        try { this.worker.postMessage({ kind: "media-release", lifecycle: this.lifecycle, slotToken }); } catch {}
+        reject(new Error("browser-media.timeout"));
+      }, BROWSER_MEDIA_CAPACITY.commandTimeoutMs);
+      this.mediaPending.set(requestId, { token: slotToken, resolve, reject, timer });
+      try { this.worker.postMessage({ kind: "media-command", lifecycle: this.lifecycle, requestId, slotToken, ...operation }); }
+      catch (error) { this.mediaPending.delete(requestId); this.clearTimer(timer); reject(error instanceof Error ? error : new Error(String(error))); }
+    });
+  }
+
+  /** ✂️ Runs one slot-scoped action (the trim "Cut selection") through the worker into the shell's UI action queue. */
+  applyMediaAction(slotToken: string, action: string, args: Readonly<Record<string, unknown>>): Promise<void> {
+    const slot = this.mediaSlots.get(slotToken);
+    if (!slot) return Promise.reject(new Error("browser-media.retired"));
+    return this.sendMediaOperation(slotToken, slot.appInstanceId, { operation: "apply", action, args }).then(() => undefined);
+  }
+
   /** 🎬️ Creates the serial runner's bounded port for an accepted resource token. */
   mediaPort(slotToken: string): MediaTransportPort {
-    const send = (instanceId: number, operation: BrowserMediaOperation): Promise<BrowserMediaValue> => {
-      const slot = this.mediaSlots.get(slotToken);
-      if (this.status !== "ready" || !slot || slot.appInstanceId !== instanceId) return Promise.reject(new Error("browser-media.retired"));
-      if ([...this.mediaPending.values()].some((pending) => pending.token === slotToken)) return Promise.reject(new Error("browser-media.in-flight"));
-      if (this.mediaPending.size >= BROWSER_MEDIA_CAPACITY.slots) return Promise.reject(new Error("browser-media.capacity"));
-      const requestId = ++this.mediaRequestId;
-      return new Promise((resolve, reject) => {
-        const timer = this.setTimer(() => {
-          this.mediaPending.delete(requestId);
-          this.mediaSlots.delete(slotToken);
-          try { this.worker.postMessage({ kind: "media-release", lifecycle: this.lifecycle, slotToken }); } catch {}
-          reject(new Error("browser-media.timeout"));
-        }, BROWSER_MEDIA_CAPACITY.commandTimeoutMs);
-        this.mediaPending.set(requestId, { token: slotToken, resolve, reject, timer });
-        try { this.worker.postMessage({ kind: "media-command", lifecycle: this.lifecycle, requestId, slotToken, ...operation }); }
-        catch (error) { this.mediaPending.delete(requestId); this.clearTimer(timer); reject(error instanceof Error ? error : new Error(String(error))); }
-      });
-    };
+    const send = (instanceId: number, operation: BrowserMediaOperation): Promise<BrowserMediaValue> => this.sendMediaOperation(slotToken, instanceId, operation);
     return {
       submitMediaExport: async (instanceId, port, parentDocumentId, revision) => {
         const slot = this.mediaSlots.get(slotToken);

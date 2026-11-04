@@ -1,5 +1,4 @@
-//! 🚧 scaffolded by W1b — binary representation marker for `stdio.wav.diff`. Full field-layout
-//! parse/print lands in W2/W3.
+//! 🧬️ The `stdio.wav.diff` binary facet.
 pub const BINARY_MAGIC: &str = "stdio.wav.diff";
 
 #[allow(unused_imports)]

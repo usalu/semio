@@ -1,4 +1,5 @@
 /** 🔸️ The document transfer ref phase of useDocumentTransferAndTabs. */
+import { resolveRuntimeKeyV1 } from "../../🗄️shell-uri-documents/🔑️runtime-key/🟦️.ts";
 import { useCallback, useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { FOCUS_ROW_CONTROL_ACTION_ID, FOCUS_ROW_CONTROL_ARG_ROW, type LocalizedLabel, panelTabKindId, resolveWindowActions, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID } from "@semio-tech/framework";
 import { focusedRowKeyV1, isFocusRowControlKeyV1 } from "../../🎯️focus-row-control/🟦️.ts";
@@ -153,13 +154,7 @@ export function useDocumentTransferRefState({ exportDocumentArchive, importDocum
    * the other way around (no `ActiveSession.documentId` field exists — see `📓️w3-a-report.md`'s
    * "Design decisions"). This tiny scan intentionally runs on every render because `openDocument`
    * fills the ref while retaining the same visible session identity. */
-  const currentDocumentRuntimeKey = (() => {
-    if (!session) return null;
-    for (const [runtimeKey, entry] of openDocumentSessionsRef.current) {
-      if (entry.session.pluginId === session.pluginId && entry.session.instanceId === session.instanceId) return runtimeKey;
-    }
-    return null;
-  })();
+  const currentDocumentRuntimeKey = session ? resolveRuntimeKeyV1(openDocumentSessionsRef.current, session) : null;
   const currentDocumentEntry = currentDocumentRuntimeKey === null ? undefined : openDocumentSessionsRef.current.get(currentDocumentRuntimeKey);
   const currentLocalDocumentOwnerIdentity = !session
     ? null

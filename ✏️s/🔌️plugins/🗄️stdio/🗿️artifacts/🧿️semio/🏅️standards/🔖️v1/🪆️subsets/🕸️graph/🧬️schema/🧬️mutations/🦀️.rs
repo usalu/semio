@@ -53,7 +53,7 @@ use crate::schema::mutations::set_node_property;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioGraphSnapshot, diff = SemioGraphDiff, schema = "s.stdio.semio.graph", reference = SemioGraphSnapshot, reference_diff = SemioGraphDiff)]
+#[mutations(snapshot = SemioGraphSnapshot, diff = SemioGraphDiff, schema = "stdio.semio.graph", reference = SemioGraphSnapshot, reference_diff = SemioGraphDiff)]
 pub enum SemioGraphMutation {
     CreateNode(create_node::CreateNode),
     DeleteNode(delete_node::DeleteNode),

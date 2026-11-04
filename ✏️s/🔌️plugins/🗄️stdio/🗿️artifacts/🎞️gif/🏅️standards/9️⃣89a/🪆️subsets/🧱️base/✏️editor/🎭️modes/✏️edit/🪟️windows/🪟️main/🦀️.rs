@@ -1,5 +1,5 @@
 //! ✏️ `gif` edit (any) — Main window: real `ImageWindowKit`
-//! render of the current document (read-only native canvas; typed edits live in Details).
+//! render of the current document (editable native canvas with per-frame region painting; typed edits live in Details).
 
 use crate::standards::v89a::subsets::any::io::encode_gif;
 use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
@@ -11,7 +11,9 @@ pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
-    ImageWindowKit::window_kind()
+    let mut definition = ImageWindowKit::editable_window_kind();
+    definition.actions.push(crate::editor::gif_89a::paint_region::action());
+    definition
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

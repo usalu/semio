@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "../⚛️react-port/🟦️.ts";
-import { MEDIA_TRANSPORT_EXTENSION_ID, parseMediaTransportProps, type MediaTransportProps } from "@semio-tech/plugin-window-kits/media";
+import { MEDIA_TRANSPORT_EXTENSION_ID, formatMediaTime, mediaKeyCommand, mediaTimeValueText, parseMediaTransportProps, seekedMediaPosition, trimValueForSelection, type MediaTransportProps } from "@semio-tech/plugin-window-kits/media";
 import { collectMediaTransportBytes, type MediaTransportPort } from "@semio-tech/framework-os/modules/renderer/engine/media/lifecycle";
 import { useMediaTransportOwner } from "./🔗️owner-scope/🟦️.tsx";
 
@@ -12,6 +12,7 @@ type MediaTransportRun = { cancelRequested: boolean; admitted: boolean };
 type TransportState =
   | { readonly kind: "loading"; readonly progress: bigint; readonly detail: string }
   | { readonly kind: "ready"; readonly url: string; readonly mimeType: string }
+  | { readonly kind: "cancelled" }
   | { readonly kind: "unsupported"; readonly detail: string }
   | { readonly kind: "failed"; readonly detail: string };
 
@@ -107,11 +108,14 @@ export function MediaTransportHost({ value, nodeId, nodeKey }: { readonly value:
           cancelled: () => run.cancelRequested || !active,
           progress: (status) => {
             run.admitted = true;
-            if (active) setState({ kind: "loading", progress: status.applied_progress, detail: status.detail || props.labels.loading });
+            if (active && !run.cancelRequested) setState({ kind: "loading", progress: status.applied_progress, detail: status.detail || props.labels.loading });
           },
         });
         run.admitted = false;
-        if (!bytes || run.cancelRequested || !active) return;
+        if (!bytes || run.cancelRequested || !active) {
+          if (active) setState({ kind: "cancelled" });
+          return;
+        }
         const url = URL.createObjectURL(new Blob(bytes.chunks.map((chunk) => chunk.slice().buffer as ArrayBuffer), { type: bytes.mediaType }));
         if (!active) {
           URL.revokeObjectURL(url);
@@ -121,7 +125,7 @@ export function MediaTransportHost({ value, nodeId, nodeKey }: { readonly value:
         setState({ kind: "ready", url, mimeType: bytes.mediaType });
       } catch (error) {
         run.admitted = false;
-        if (active) setState({ kind: "failed", detail: error instanceof Error ? error.message : String(error) });
+        if (active) setState(run.cancelRequested ? { kind: "cancelled" } : { kind: "failed", detail: error instanceof Error ? error.message : String(error) });
       }
     })();
     return () => {
@@ -142,16 +146,18 @@ export function MediaTransportHost({ value, nodeId, nodeKey }: { readonly value:
 
   if (!props) return <div role="alert" data-media-state="invalid" data-ui-node-id={nodeId} data-ui-node-key={nodeKey}>{invalidContractLabel(value)}</div>;
   if (state.kind === "unsupported" || state.kind === "failed") return <div role="status" data-media-state={state.kind} data-ui-node-id={nodeId} data-ui-node-key={nodeKey}>{state.detail || props.labels.unsupported}</div>;
+  if (state.kind === "cancelled") return <div role="status" data-media-state="cancelled" data-ui-node-id={nodeId} data-ui-node-key={nodeKey}>{props.labels.cancelled}</div>;
   if (state.kind === "loading") return (
     <div role="status" aria-live="polite" data-media-state="loading" data-ui-node-id={nodeId} data-ui-node-key={nodeKey} className="flex min-h-0 flex-col gap-single p-single">
       <span>{state.detail || props.labels.loading}</span>
       <progress aria-label={props.labels.progress} />
-      {runRef.current?.admitted ? <button type="button" onClick={() => { if (runRef.current) runRef.current.cancelRequested = true; setState({ kind: "loading", progress: state.progress, detail: props.labels.cancel }); }}>{props.labels.cancel}</button> : null}
+      <button type="button" onClick={() => { if (runRef.current) runRef.current.cancelRequested = true; setState({ kind: "cancelled" }); }}>{props.labels.cancel}</button>
     </div>
   );
   const knownDuration = durationMs ?? props.durationMs;
   const maximum = Math.max(1, knownDuration ?? 1);
   const currentSelection = selection ?? [0, maximum];
+  const cutValue = props.trim ? trimValueForSelection(props.trim, currentSelection[0], currentSelection[1]) : null;
   const mediaProps = {
     src: state.url,
     preload: "metadata" as const,
@@ -164,19 +170,35 @@ export function MediaTransportHost({ value, nodeId, nodeKey }: { readonly value:
     onDurationChange: () => { const duration = mediaRef.current?.duration; if (duration != null && Number.isFinite(duration)) setDurationMs(Math.max(1, Math.round(duration * 1000))); },
     onError: () => failPlayback(props.labels.unsupported),
   };
+  const onKeyDown = (event: { readonly key: string; readonly shiftKey: boolean; readonly ctrlKey: boolean; readonly altKey: boolean; readonly metaKey: boolean; readonly target: EventTarget; preventDefault(): void }): void => {
+    const media = mediaRef.current;
+    const target = event.target as { readonly tagName?: string; readonly type?: string };
+    const command = media ? mediaKeyCommand({ key: event.key, shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, altKey: event.altKey, metaKey: event.metaKey, targetTag: target.tagName ?? "", targetType: target.type ?? null }, knownDuration) : null;
+    if (!media || !command) return;
+    event.preventDefault();
+    if (command.kind === "toggle") {
+      if (media.paused) void media.play().catch((error: unknown) => { if (!(error instanceof DOMException && error.name === "AbortError")) failPlayback(props.labels.unsupported); });
+      else media.pause();
+      return;
+    }
+    const next = seekedMediaPosition(command, Math.round(media.currentTime * 1000), knownDuration);
+    media.currentTime = next / 1000;
+    setPositionMs(next);
+  };
   return (
-    <div data-media-state="ready" data-media-window={owner?.windowId} data-ui-node-id={nodeId} data-ui-node-key={nodeKey} className="flex min-h-0 flex-col gap-single p-single" style={{ height: props.hostContentHeight }}>
+    <div data-media-state="ready" data-media-window={owner?.windowId} data-ui-node-id={nodeId} data-ui-node-key={nodeKey} className="flex min-h-0 flex-col gap-single p-single" style={{ height: props.hostContentHeight }} tabIndex={0} aria-keyshortcuts="Space ArrowLeft ArrowRight Home End" lang={props.locale} onKeyDown={onKeyDown}>
       {props.kind === "audio" ? <audio ref={(element) => { mediaRef.current = element; }} {...mediaProps} /> : <video ref={(element) => { mediaRef.current = element; }} {...mediaProps} className="min-h-0 w-full flex-1" />}
       <div className="flex items-center gap-single">
         <button type="button" aria-label={playing ? props.labels.pause : props.labels.play} onClick={() => { const media = mediaRef.current; if (!media) return; if (media.paused) void media.play().catch((error: unknown) => { if (!(error instanceof DOMException && error.name === "AbortError")) failPlayback(props.labels.unsupported); }); else media.pause(); }}>{playing ? props.labels.pause : props.labels.play}</button>
-        <label className="min-w-0 flex-1">{props.labels.seek}<input type="range" min={0} max={maximum} value={Math.min(maximum, positionMs)} aria-label={props.labels.seek} onChange={(event) => { const next = Number(event.currentTarget.value); setPositionMs(next); if (mediaRef.current) mediaRef.current.currentTime = next / 1000; }} /></label>
-        <output aria-label={props.labels.position}>{positionMs}</output>
-        <span aria-label={props.labels.duration}>{knownDuration ?? props.labels.unknownDuration}</span>
+        <label className="min-w-0 flex-1">{props.labels.seek}<input type="range" min={0} max={maximum} value={Math.min(maximum, positionMs)} aria-label={props.labels.seek} aria-valuetext={mediaTimeValueText(positionMs, props.locale, props.labels)} onChange={(event) => { const next = Number(event.currentTarget.value); setPositionMs(next); if (mediaRef.current) mediaRef.current.currentTime = next / 1000; }} /></label>
+        <output aria-label={props.labels.position} aria-valuetext={mediaTimeValueText(positionMs, props.locale, props.labels)}>{formatMediaTime(positionMs, props.locale)}</output>
+        <span aria-label={props.labels.duration} aria-valuetext={knownDuration === null ? undefined : mediaTimeValueText(knownDuration, props.locale, props.labels)}>{knownDuration === null ? props.labels.unknownDuration : formatMediaTime(knownDuration, props.locale)}</span>
       </div>
       {knownDuration !== null ? <div className="grid grid-cols-2 gap-single">
-        <label>{props.labels.selectionStart}<input type="range" min={0} max={Math.max(0, currentSelection[1] - 1)} value={currentSelection[0]} aria-label={props.labels.selectionStart} onChange={(event) => setSelection([Number(event.currentTarget.value), currentSelection[1]])} /></label>
-        <label>{props.labels.selectionEnd}<input type="range" min={Math.min(maximum, currentSelection[0] + 1)} max={maximum} value={currentSelection[1]} aria-label={props.labels.selectionEnd} onChange={(event) => setSelection([currentSelection[0], Number(event.currentTarget.value)])} /></label>
+        <label>{props.labels.selectionStart}<input type="range" min={0} max={Math.max(0, currentSelection[1] - 1)} value={currentSelection[0]} aria-label={props.labels.selectionStart} aria-valuetext={mediaTimeValueText(currentSelection[0], props.locale, props.labels)} onChange={(event) => setSelection([Number(event.currentTarget.value), currentSelection[1]])} /></label>
+        <label>{props.labels.selectionEnd}<input type="range" min={Math.min(maximum, currentSelection[0] + 1)} max={maximum} value={currentSelection[1]} aria-label={props.labels.selectionEnd} aria-valuetext={mediaTimeValueText(currentSelection[1], props.locale, props.labels)} onChange={(event) => setSelection([currentSelection[0], Number(event.currentTarget.value)])} /></label>
       </div> : null}
+      {props.trim && owner?.apply && knownDuration !== null ? <button type="button" aria-label={props.labels.cutSelection} disabled={cutValue === null} onClick={() => { if (cutValue !== null) owner.apply?.(props.trim!.actionId, { revision: props.trim!.revision, value: cutValue }); }}>{props.labels.cutSelection}</button> : null}
     </div>
   );
 }

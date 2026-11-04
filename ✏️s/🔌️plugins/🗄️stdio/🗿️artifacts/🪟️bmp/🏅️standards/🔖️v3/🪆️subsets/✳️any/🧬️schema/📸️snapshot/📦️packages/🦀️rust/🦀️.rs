@@ -12,7 +12,6 @@ pub mod schema {
 }
 pub use crate::standards::v_v3::subsets::any::io::binary::snapshot::artifact_items::{STDIO_BMP_DOCUMENT_SCHEMA};
 pub use crate::standards::v_v3::subsets::any::io::binary::snapshot::artifact_items_2::{BMP_ARTIFACT_SCHEMA_ID};
-pub use crate::standards::v_v3::subsets::any::io::binary::snapshot::artifact_items_6::{native_codecs};
 
 #[path = "."]
 pub mod standards {

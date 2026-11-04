@@ -316,3 +316,51 @@ async fn folder_event_log_ignores_an_incomplete_tail_and_coordinates_handles() {
     assert_eq!(first.read("doc-a").await.expect("read a").expect("doc a"), (b"pack-a".to_vec(), b"spr-a".to_vec()));
     assert_eq!(second.read("doc-b").await.expect("read b").expect("doc b"), (b"pack-b".to_vec(), b"spr-b".to_vec()));
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn folder_event_log_truncates_an_interrupted_final_record_before_appending() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🩹️folder-event-log-torn-tail/🔣️.json")).expect("the corpus parses");
+    for case in corpus["cases"].as_array().expect("cases") {
+        let name = case["name"].as_str().expect("a case name");
+        let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+        let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
+        storage.write("doc-a", "demo/v1", b"pack-1", b"spr-1").await.expect("first write");
+        let mut tail = case["tail"].as_str().expect("tail").as_bytes().to_vec();
+        if let Some(length) = case["headerLength"].as_u64() {
+            tail.extend_from_slice(&length.to_le_bytes());
+            tail.extend_from_slice(&0u64.to_le_bytes());
+            tail.extend(std::iter::repeat(7u8).take(case["payloadBytes"].as_u64().expect("payload bytes") as usize));
+        }
+        std::fs::OpenOptions::new().append(true).open(storage.event_path()).and_then(|mut file| std::io::Write::write_all(&mut file, &tail)).expect("tear the tail");
+        assert_eq!(storage.torn_tail_bytes().expect("scan"), tail.len() as u64, "{name}: the damage is reported");
+        assert_eq!(storage.read("doc-a").await.expect("read through the tear").expect("first survives"), (b"pack-1".to_vec(), b"spr-1".to_vec()), "{name}");
+        storage.write("doc-a", "demo/v1", b"pack-2", b"spr-2").await.expect("append after the tear");
+        assert_eq!(storage.torn_tail_bytes().expect("rescan"), 0, "{name}: nothing torn remains");
+        assert_eq!(storage.read("doc-a").await.expect("reread").expect("second survives"), (b"pack-2".to_vec(), b"spr-2".to_vec()), "{name}: the new record is readable");
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn folder_text_storage_concurrent_archive_writes_never_tear_or_leave_staged_files() {
+    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let mut archives = Vec::new();
+    for index in 0u8..6 {
+        let mut archive = persisted_recursive_document_archive();
+        archive.parent_pack = vec![index; 64];
+        archives.push(semio_framework_os_spr::encode_document_archive_bytes(&archive).expect("encode"));
+    }
+    let files = ArtifactPackFiles { pack: vec![1], spr: vec![2], ops: String::new() };
+    let writers: Vec<_> = archives.iter().cloned().map(|archive| {
+        let (folder, files) = (dir.path().to_path_buf(), ArtifactPackFiles { pack: files.pack.clone(), spr: files.spr.clone(), ops: files.ops.clone() });
+        std::thread::spawn(move || futures::executor::block_on(async { FolderTextStorage::new(folder).await.write_archive("doc", "ext", &archive, &files, "dsl").await }))
+    }).collect();
+    for writer in writers {
+        writer.join().expect("writer joins").expect("every concurrent write is acknowledged");
+    }
+    let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
+    let held = storage.read_archive("doc", "ext").await.expect("read").expect("an archive exists");
+    assert!(archives.contains(&held), "the folder holds exactly one complete written archive");
+    assert!(!std::fs::read_dir(dir.path()).expect("list").filter_map(|entry| entry.ok()).any(|entry| entry.file_name().to_string_lossy().ends_with(".stage")), "no staged file remains");
+}

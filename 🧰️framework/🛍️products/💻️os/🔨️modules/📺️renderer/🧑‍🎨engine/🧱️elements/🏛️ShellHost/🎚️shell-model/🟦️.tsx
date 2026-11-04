@@ -134,7 +134,7 @@ const WINDOW_FAULT_LABEL_KEYS: Readonly<Record<WindowFaultClass, UiTranslationKe
  * message stay visible underneath for a human reading the window. */
 export function WindowFaultStatus({ fault }: { readonly fault: WindowFault }): React.ReactElement {
   return (
-    <div className="flex h-full min-h-0 w-full flex-col gap-single p-double text-sm" role="status" aria-live="polite" data-semio-window-fault={fault.class} data-semio-window-fault-code={fault.code ?? ""} data-semio-window-fault-origin={fault.origin ?? ""}>
+    <div className="flex h-full min-h-0 w-full flex-col gap-single p-double text-sm" role="alert" aria-live="assertive" data-semio-window-fault={fault.class} data-semio-window-fault-code={fault.code ?? ""} data-semio-window-fault-origin={fault.origin ?? ""}>
       <p className="font-semibold text-destructive">{shellLabel("ui.windowFault.title")}</p>
       <p className="text-muted-foreground">{shellLabel(WINDOW_FAULT_LABEL_KEYS[fault.class])}</p>
       <p className="font-mono text-xs text-muted-foreground">{uiDataLabel(fault.code ? `${fault.code}: ${fault.message}` : fault.message)}</p>

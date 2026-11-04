@@ -119,6 +119,10 @@ fn format_table(document: &WavSnapshot, revision: &str, publication_revision: se
         Locale::De => "Abtastrate (Hz)",
         Locale::En => "Sample rate (Hz)",
     };
+    let cut_column = match locale {
+        Locale::De => "Frames ausschneiden (Start-Ende)",
+        Locale::En => "Cut frames (start-end)",
+    };
     TableWindowKit::render_indexed_rows_with_id(
         windows,
         FORMAT_TABLE_ID,
@@ -126,7 +130,7 @@ fn format_table(document: &WavSnapshot, revision: &str, publication_revision: se
             Locale::De => "Audioformat",
             Locale::En => "Audio format",
         },
-        &[column],
+        &[column, cut_column],
         None,
         1,
         |_| {
@@ -135,6 +139,8 @@ fn format_table(document: &WavSnapshot, revision: &str, publication_revision: se
                 CONTROLLER_ID,
                 locale,
                 [WindowedEditableTableCell::new(document.fmt.sample_rate.to_string(), column, edit_audio::SET_SAMPLE_RATE_ACTION_ID, semio_s_artifact_stdio_contract::window_kit_revision_arguments(revision)?)
+                    .publication_revision(publication_revision),
+                WindowedEditableTableCell::new("0-0".to_string(), cut_column, edit_audio::CUT_FRAMES_ACTION_ID, semio_s_artifact_stdio_contract::window_kit_revision_arguments(revision)?)
                     .publication_revision(publication_revision)],
                 Vec::new(),
                 None,

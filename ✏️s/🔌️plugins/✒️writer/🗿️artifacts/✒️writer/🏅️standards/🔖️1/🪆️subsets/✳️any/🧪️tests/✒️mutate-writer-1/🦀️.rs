@@ -20,7 +20,7 @@
 //! `kinds_match_the_enum_and_the_catalog` keeps that honest.
 //!
 //! **Why `edit-text` needs one extra step and the other three do not.** `WriterSnapshot::document`
-//! is a composed `s.stdio.semio.document` child HANDLE, and its live body is local-only content
+//! is a composed `stdio.semio.document` child HANDLE, and its live body is local-only content
 //! owned by that exact handle. `edit-text`'s diff oracle reads the current body to decide whether
 //! the edit is a no-op, so the handler materializes it before applying. The body is the committed payload's OWN `text` — that is
 //! sound for exactly this vector and no other, because `⚠️warns` is

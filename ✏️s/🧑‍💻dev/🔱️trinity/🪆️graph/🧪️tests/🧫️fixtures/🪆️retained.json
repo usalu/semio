@@ -154,7 +154,7 @@
     "query": "MATCH (a:Piece) WHERE a.name = 'null' RETURN a.name"
   },
   "childSnapshot": {
-    "schema": "s.stdio.semio.graph",
+    "schema": "stdio.semio.graph",
     "nodes": [
       {
         "id": {

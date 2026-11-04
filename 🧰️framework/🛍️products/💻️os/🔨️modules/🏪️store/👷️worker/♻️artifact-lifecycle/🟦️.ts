@@ -3,16 +3,16 @@ import { HUB_RECONNECT_MIN_MS, noteAuthoredEnvelopeIds, parseDocumentBackboneMes
 import { DOCUMENT_ACTOR_RECOVERY_FRESH_V1 } from "../🚑️actor-recovery/🟦️.ts";
 import type { MutationEnvelope, ExactWireMutationEnvelope } from "@semio-tech/framework-replication";
 import { DOCUMENT_BACKBONE_RETENTION_LIMITS, encodePresencePeer } from "@semio-tech/framework-replication";
-import { type ArtifactState, artifactRuntimeKey, artifacts } from "../🧾️document-state/🟦️.ts";
+import { type ArtifactState, artifactRuntimeKey, artifacts, emitEvent } from "../🧾️document-state/🟦️.ts";
 import { CONFIG_FACETS, foldConfigFacet } from "../🗂️config-lane/🟦️.ts";
 import { hubBinding } from "../🧩️actor-wire-helpers/🟦️.ts";
 import { closeArtifactRuntime } from "../🛑️session-teardown/🟦️.ts";
-import { documentBackboneAdmissionReady, rejectDocumentBackboneBootstrapAdmission, rejectDocumentBackboneCapacity, rejectLocally, rejectMutationQueueOverflow, rejectReadOnlyExecutionTarget, releaseDocumentBackboneOwnership } from "../📮️hub-outbox/🟦️.ts";
+import { documentBackboneAdmissionReady, rejectDocumentBackboneBootstrapAdmission, rejectDocumentBackboneCapacity, rejectLocally, rejectMutationQueueOverflow, rejectReadOnlyExecutionTarget } from "../📮️hub-outbox/🟦️.ts";
 import { PENDING_MUTATIONS_QUEUE_LIMIT } from "../⚙️constants/🟦️.ts";
 import { folderBinding, setStatus } from "../🎭️actor-lifecycle/🟦️.ts";
 import { relayMutationsToHub, sendWireFrame } from "../🛰️hub-relay/🟦️.ts";
 import { opaqueEnvelopeFromWire, stampSession } from "../🌉️wire-bridge/🟦️.ts";
-import { writeFolder } from "../📁️folder/✍️write/🟦️.ts";
+import { folderWorkUnacknowledged, persistFolderArchive, settleFolderArchive } from "../📁️folder/✍️write/🟦️.ts";
 
 /** 🌱️ A just-opened document's runtime state: nothing linked, nothing pending, no pair, no lease. The ONE constructor —
  * {@link openArtifact} and every law's hand-built state go through it, so a new field is never missing from a test state.
@@ -93,7 +93,20 @@ export function closeArtifact(documentId: string, spaceId?: string, clientInstan
   if (runtimeKey === null) return;
   const state = artifacts.get(runtimeKey);
   if (state !== undefined && clientInstanceId !== undefined && state.openClientInstanceId !== clientInstanceId) return;
+  if (state !== undefined && folderWorkUnacknowledged(state)) {
+    emitEvent(state, { kind: "conflict", code: "closeWithUnsavedState", message: "the document closed with edits the folder never acknowledged", unsavedMutations: state.pendingMutations.length });
+  }
   closeArtifactRuntime(runtimeKey);
+}
+
+const CLOSE_FLUSH_TIMEOUT_MS = 10_000;
+
+/** 🛑️ Closes a document after the folder acknowledged everything admitted; unsaved work is waited for (status events show the progress, `signal` cancels the wait) and, when it cannot be saved, reported as the `closeWithUnsavedState` conflict instead of being dropped silently. */
+export async function closeArtifactFlushed(documentId: string, spaceId?: string, clientInstanceId?: string, signal?: AbortSignal): Promise<void> {
+  const runtimeKey = artifactRuntimeKey(documentId, spaceId);
+  const state = runtimeKey === null ? undefined : artifacts.get(runtimeKey);
+  if (state !== undefined && (clientInstanceId === undefined || state.openClientInstanceId === clientInstanceId)) await settleFolderArchive(state, CLOSE_FLUSH_TIMEOUT_MS, signal);
+  closeArtifact(documentId, spaceId, clientInstanceId);
 }
 
 function admitLocalMutations(
@@ -128,7 +141,7 @@ function admitLocalMutations(
   setStatus(state, { pendingMutations: state.pendingMutations.length });
   if (exactEnvelopes === null || !hubBinding(state.config)) state.channel.postMessage(channelMessage);
   relayMutationsToHub(state, envelopes);
-  if (folderBinding(state.config)) setStatus(state, { persisted: false });
+  if (folderBinding(state.config)) setStatus(state, {});
   return true;
 }
 
@@ -162,14 +175,7 @@ export async function handleLocalMsg(state: ArtifactState, message: ArtifactActo
       }
 const folder = folderBinding(state.config);
       if (folder) {
-        try {
-          await writeFolder(state, folder, message.archive);
-          releaseDocumentBackboneOwnership(state, state.pendingMutations);
-          state.pendingMutations = [];
-          setStatus(state, { pendingMutations: 0 });
-        } catch (error) {
-          console.error("[backbone-worker] folder write failed", state.config.documentId, error);
-        }
+        await persistFolderArchive(state, folder, message.archive);
       }
       break;
     }

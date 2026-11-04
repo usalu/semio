@@ -86,7 +86,7 @@ pub struct CadBlock {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(layout = "lines")]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.cad")]
+#[artifact_schema(id = "stdio.semio.cad")]
 pub struct SemioCadSnapshot {
     #[state(artifact)]
     pub schema: String,

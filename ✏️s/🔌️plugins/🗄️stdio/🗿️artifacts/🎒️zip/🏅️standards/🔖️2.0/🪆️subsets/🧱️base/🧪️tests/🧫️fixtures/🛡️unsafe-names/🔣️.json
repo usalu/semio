@@ -1,0 +1,22 @@
+{
+  "description": "Member paths and whether an extractor may place them under its root. Language-agnostic: every implementation must refuse each unsafe path on decode, encode and edit.",
+  "names": [
+    { "name": "a.txt", "safe": true },
+    { "name": "nested/dir/b.txt", "safe": true },
+    { "name": "dir/", "safe": true },
+    { "name": "[Content_Types].xml", "safe": true },
+    { "name": "x:y.txt", "safe": true },
+    { "name": "weird..name.txt", "safe": true },
+    { "name": "../evil.txt", "safe": false },
+    { "name": "a/../../evil.txt", "safe": false },
+    { "name": "a/../b.txt", "safe": false },
+    { "name": "/etc/passwd", "safe": false },
+    { "name": "C:/windows/evil.dll", "safe": false },
+    { "name": "C:/evil", "safe": false },
+    { "name": "C:\\evil", "safe": false },
+    { "name": "C:", "safe": false },
+    { "name": "..\\evil.txt", "safe": false },
+    { "name": "dir\\file.txt", "safe": false },
+    { "name": "nul\u0000.txt", "safe": false }
+  ]
+}

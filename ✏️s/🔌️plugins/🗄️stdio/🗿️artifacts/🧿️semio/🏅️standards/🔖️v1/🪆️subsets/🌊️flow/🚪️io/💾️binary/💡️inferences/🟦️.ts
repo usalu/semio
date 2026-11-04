@@ -1,2 +1,2 @@
-/** 💾️ Binary representation for `s.stdio.semio.flow.inference`. */
+/** 💾️ Binary representation for `stdio.semio.flow.inference`. */
 export type SemioFlowInferenceBinary = Uint8Array;

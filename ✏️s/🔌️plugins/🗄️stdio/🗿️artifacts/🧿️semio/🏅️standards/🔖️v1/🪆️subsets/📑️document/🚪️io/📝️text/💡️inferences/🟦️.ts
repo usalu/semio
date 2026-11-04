@@ -1,4 +1,4 @@
-/** 📝️ Text representation for `s.stdio.semio.document.inference`. */
+/** 📝️ Text representation for `stdio.semio.document.inference`. */
 export type SemioDocumentInferenceText = string;
 
 //#region 🚪️Parsers

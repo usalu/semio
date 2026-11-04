@@ -229,6 +229,9 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-assessment-limit-state/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-assessment-analysis-method/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-assessment-supported-building-id/schema.json"
     },
     {

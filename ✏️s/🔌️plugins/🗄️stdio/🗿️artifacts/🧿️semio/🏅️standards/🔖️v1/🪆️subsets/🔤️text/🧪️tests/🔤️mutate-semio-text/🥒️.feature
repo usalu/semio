@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 @mutations-semio-v1-text
 Feature: Apply every typed semio TEXT mutation to a real published article, against an independent Python implementation
-  `s.stdio.semio.text` is a semio-NATIVE format: no third party reads or writes `.dsl.semio` or
+  `stdio.semio.text` is a semio-NATIVE format: no third party reads or writes `.dsl.semio` or
   `.pack.semio`, so the second producer a differential comparison needs is a second IMPLEMENTATION.
   `🐍️component.py` beside this file is that implementation — the carrier, the DSL grammar, the pack
   frame and all seven verbs, written in Python from the committed specification documents alone
@@ -14,7 +14,7 @@ Feature: Apply every typed semio TEXT mutation to a real published article, agai
   `semio-text-python-independent` in `…/🔤️text/🔮️oracles/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against.
 
-  📰️ **The document under test is a real published article.** The richest `s.stdio.semio.text`
+  📰️ **The document under test is a real published article.** The richest `stdio.semio.text`
   document committed anywhere in this artifact is the three-run demo note — 203 bytes, which is a
   fixture, not a document. So the document every mutation row below runs on was derived ONCE — by
   `🐍️derive-text-fixture.py` in the ticket folder — from

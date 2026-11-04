@@ -1,4 +1,4 @@
-"""🐍️ Independent Python implementation of the `s.stdio.semio.text` carrier and its seven-verb
+"""🐍️ Independent Python implementation of the `stdio.semio.text` carrier and its seven-verb
 mutation vocabulary — the differential ORACLE this case is measured against.
 
 Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. `.dsl.semio`/`.pack.semio` is a semio-native carrier
@@ -42,7 +42,7 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 
 # region 🔖️Carrier
 DSL_PREAMBLE = "semio s.stdio.semio.text.dsl v1"
-DOCUMENT_SCHEMA = "s.stdio.semio.text"
+DOCUMENT_SCHEMA = "stdio.semio.text"
 
 MARK_LETTER = {"bold": "b", "italic": "i", "code": "c", "link": "l"}
 LETTER_MARK = {letter: kind for kind, letter in MARK_LETTER.items()}

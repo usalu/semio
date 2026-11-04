@@ -1,5 +1,5 @@
 {
-  "schema": "s.stdio.semio.presentation",
+  "schema": "stdio.semio.presentation",
   "masters": [],
   "layouts": [
     {

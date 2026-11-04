@@ -30,6 +30,23 @@ fn natural_file_route_exports_commonmark_and_reopens_the_same_document() {
     assert_eq!(reopened, edited);
 }
 
+#[test]
+fn bom_and_leading_whitespace_survive_the_dsl_and_natural_file_round_trips() {
+    for source in ["\u{feff}# Title\n\ntext\n", "    indented code\n\n  - item\n"] {
+        let edited = MdSnapshot::from_text(source);
+        let printed = <MdSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&edited);
+        assert_eq!(<MdSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).expect("DSL reopens"), edited);
+        let bytes = <MdEditor as ArtifactEditor>::encode_natural_file(&edited).expect("Markdown natural bytes");
+        assert_eq!(bytes, source.as_bytes());
+        assert_eq!(<MdEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("Markdown reopens"), edited);
+    }
+}
+
+#[test]
+fn natural_file_import_refuses_invalid_utf8() {
+    assert!(<MdEditor as ArtifactEditor>::decode_natural_file(&[0x23, 0xff, 0xfe]).is_err());
+}
+
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
     let def = create_md_editor();

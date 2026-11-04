@@ -40,6 +40,28 @@ input ReplaceSamples {
   samples: [BmpNativeSampleInput!]
 }
 
-input BmpMutation @oneOf { replaceImage: ReplaceImage  paintIndexedRegion: PaintIndexedRegion paintDirectRegion: PaintDirectRegion replaceSamples: ReplaceSamples }
+input BmpMutation @oneOf { replaceImage: ReplaceImage  paintIndexedRegion: PaintIndexedRegion paintDirectRegion: PaintDirectRegion replaceSamples: ReplaceSamples setPaletteEntry: SetPaletteEntry insertPaletteEntry: InsertPaletteEntry removePaletteEntry: RemovePaletteEntry }
 
 input ReplaceImage { image: BmpImageInput! }
+
+input SetPaletteEntry {
+  index: Int!
+  red: Int!
+  green: Int!
+  blue: Int!
+  reserved: Int!
+}
+
+input InsertPaletteEntry {
+  index: Int!
+  red: Int!
+  green: Int!
+  blue: Int!
+  reserved: Int!
+  colorsUsed: Int!
+}
+
+input RemovePaletteEntry {
+  index: Int!
+  colorsUsed: Int!
+}

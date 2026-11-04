@@ -17,7 +17,9 @@
       },
       "style": {},
       "activity": "loading",
-      "accessibility": {}
+      "accessibility": {
+        "label": "Title"
+      }
     }
   ],
   "layoutEpoch": 0

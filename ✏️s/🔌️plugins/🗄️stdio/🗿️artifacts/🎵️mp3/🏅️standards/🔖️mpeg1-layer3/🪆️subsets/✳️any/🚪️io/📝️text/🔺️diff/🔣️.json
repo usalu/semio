@@ -2,19 +2,16 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/mp3/mpeg1-layer3/any/diff/text.json",
   "title": "Mp3DiffText",
-  "description": "🚧 scaffolded by W1b — generic facet mirror.",
+  "description": "The text facet of the mp3 diff.",
   "type": "object",
   "properties": {
-    "schema": {
+    "line": {
       "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "entries": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "object"
-      }
+      "description": "The one-line diff as one UTF-8 string."
     }
-  }
+  },
+  "required": [
+    "line"
+  ],
+  "additionalProperties": false
 }

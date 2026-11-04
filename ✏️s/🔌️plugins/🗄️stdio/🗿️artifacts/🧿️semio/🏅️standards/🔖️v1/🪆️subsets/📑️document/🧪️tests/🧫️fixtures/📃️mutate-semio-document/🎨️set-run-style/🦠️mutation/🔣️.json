@@ -18,7 +18,7 @@
     }
   },
   "before": {
-    "schema": "s.stdio.semio.document",
+    "schema": "stdio.semio.document",
     "styles": [
       {
         "id": "heading1",
@@ -175,7 +175,7 @@
     ]
   },
   "after": {
-    "schema": "s.stdio.semio.document",
+    "schema": "stdio.semio.document",
     "styles": [
       {
         "id": "heading1",

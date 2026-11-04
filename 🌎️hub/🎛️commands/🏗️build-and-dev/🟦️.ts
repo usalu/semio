@@ -282,7 +282,7 @@ export class DevScript extends BundleScript {
         const envelope = await issueLocalCredential(run, "developer", "react-relay", 4);
         relay = startLocalBrowserRelay(`http://127.0.0.1:${run.port}`, uiOrigin, envelope);
         const uiScript = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
-        ui = startToolV1(runtimeCommandNameV1(), [uiScript, "serve", "s", "react", "dev"], {
+        ui = startToolV1(runtimeCommandNameV1(), [uiScript, "serve", "s", "react", "prototype"], {
           cwd: join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
           env: { ...process.env, S_OS_PORT: String(uiPort), S_HUB_URL: `http://127.0.0.1:${run.port}`, S_LOCAL_RELAY_URL: relay.url, S_LOCAL_RELAY_SECRET: relay.secret.toString("hex"), SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react" },
           shell: false,

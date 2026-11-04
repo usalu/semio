@@ -20,14 +20,14 @@ export async function registerHandleAndOutputTests(vitest: NonNullable<ImportMet
     });
 
     it("returns the SAME handle for the same path across repeated calls", () => {
-      const dbPath = join(root, "a", "documents.db");
+      const dbPath = join(root, "a", "canonical-bootstrap.db");
       mkdirSync(dirname(dbPath), { recursive: true });
       expect(handleCache(dbPath, dbPath).same).toEqual([true]);
     });
 
     it("returns DISTINCT handles for distinct paths", () => {
-      const dbPathA = join(root, "a", "documents.db");
-      const dbPathB = join(root, "b", "documents.db");
+      const dbPathA = join(root, "a", "canonical-bootstrap.db");
+      const dbPathB = join(root, "b", "canonical-bootstrap.db");
       mkdirSync(dirname(dbPathA), { recursive: true });
       mkdirSync(dirname(dbPathB), { recursive: true });
       expect(handleCache(dbPathA, dbPathB).same).toEqual([false]);

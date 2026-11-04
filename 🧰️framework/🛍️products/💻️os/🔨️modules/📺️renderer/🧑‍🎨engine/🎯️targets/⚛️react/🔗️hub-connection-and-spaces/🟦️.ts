@@ -7,6 +7,7 @@ import { HubSignInPane, hubSignInFormOfferedV1, hubSignInSubmittableV1, type Hub
 import { SpaceBrowser, spaceBrowserPresencePeersV1, type SpaceBrowserProps } from "@semio-tech/framework-os/modules/renderer/engine/elements/SpaceBrowser";
 import { AgentDelegations, agentDelegationInstantV1, type AgentDelegationsProps } from "@semio-tech/framework-os/modules/renderer/engine/elements/AgentDelegations";
 import { HubFirstRun, hubFirstRunStageAtIndex, type HubFirstRunProps } from "@semio-tech/framework-os/modules/renderer/engine/elements/HubFirstRun";
+import { localizedLabelTextV1 } from "../../../🧱️elements/🏛️ShellHost/📣️replay-refusal/🟦️.ts";
 
 //#region 🔖️HubConnection
 /** 🔗️ ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice AU2 — the browser-facing hub
@@ -63,7 +64,7 @@ export type SpacesUiLabelKey =
   | "ui.sync.status.remote.detached"
   | "ui.sync.browse";
 
-const SPACES_UI_LABELS: Readonly<Record<SpacesUiLabelKey, { readonly en: string; readonly de: string }>> = {
+export const SPACES_UI_LABELS: Readonly<Record<SpacesUiLabelKey, { readonly en: string; readonly de: string }>> = {
   "ui.home.title": { en: "Spaces", de: "Spaces" },
   "ui.home.createSpace": { en: "Create Space", de: "Space erstellen" },
   "ui.home.emptyState": { en: "No spaces yet", de: "Noch keine Spaces" },
@@ -92,10 +93,8 @@ const SPACES_UI_LABELS: Readonly<Record<SpacesUiLabelKey, { readonly en: string;
 };
 
 /** 📇️ Resolves one of {@link SpacesUiLabelKey}'s frozen bilingual pairs — `locale` accepts any
- * string (a live `UiLocale`/`ShellLocale` value) and falls back to English for anything but `"de"`,
- * matching `ShellHelpers.frozenLabelText`'s own fallback rule. */
+ * string (a live `UiLocale`/`ShellLocale` value); an unknown locale renders every language joined by ` | `. */
 export function spacesUiLabel(key: SpacesUiLabelKey, locale: string = "en"): string {
-  const pair = SPACES_UI_LABELS[key];
-  return locale === "de" ? pair.de : pair.en;
+  return localizedLabelTextV1(SPACES_UI_LABELS[key], locale);
 }
 //#endregion 🔖️SpacesI18n

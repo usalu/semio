@@ -47,8 +47,10 @@ impl protocol::OpText for Pdf14AEditorCommand {
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
         let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
+        match variants.iter().find(|(k, _)| k == &keyword) {
+            Some((_, spec_fn)) => semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline),
+            None => keyword.to_string(),
+        }
     }
 }
 
@@ -105,6 +107,22 @@ impl ArtifactEditor for Pdf14AEditor {
 
     const DIALECT: Dialect = PDF14A_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF_DOCUMENT_SCHEMA;
+
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.pdf@1.4/a", extension: ".pdf", media_type: "application/pdf", binary: true })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_pdf_graph_projection::standards::v1_4::subsets::base::io::encode_pdf(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload(semio_framework_plugin::NATURAL_FILE_PORT.into(), error))
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_pdf_graph_projection::standards::v1_4::subsets::base::io::decode_pdf_lossless(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload(semio_framework_plugin::NATURAL_FILE_PORT.into(), error))
+    }
+
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
+    }
 
     semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🦀️.rs",

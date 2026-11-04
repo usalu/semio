@@ -25,7 +25,7 @@ pub struct ShootingDiff {
     pub active_shot_id: Option<String>,
     #[state(artifact)]
     pub active_asset_id: Option<String>,
-    /// 🕸️ Composed `s.stdio.semio.image` child slot: the outer `Option` says the slot was assigned, the inner whether it is now present.
+    /// 🕸️ Composed `stdio.semio.image` child slot: the outer `Option` says the slot was assigned, the inner whether it is now present.
     #[state(artifact)]
     pub emblem: Option<ShootingAssigned<Option<ShootingEmblemChild>>>,
 }

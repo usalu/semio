@@ -1,6 +1,6 @@
 {
   "schema": "semio.os.shell-replay-refusal/v1",
-  "description": "Every way a shell refuses a guest's replayShellCommand — a durable gesture the user made — with the notice text each reason shows (en, de; any other locale reads en) and the fault code a probe, a law and the console name it by (codePrefix + reason). One reason per gate, so a notice names what the user can act on. Read by React's ShellHost (📣️replay-refusal/🟦️.ts) and by the wgpu shell (🐚️Shell/🎯️targets/🧊️wgpu); vectors are answered by both implementations' laws.",
+  "description": "Every way a shell refuses a guest's replayShellCommand — a durable gesture the user made — with the notice text each reason shows (en, de; any other locale renders every language joined with \" | \") and the fault code a probe, a law and the console name it by (codePrefix + reason). One reason per gate, so a notice names what the user can act on. Read by React's ShellHost (📣️replay-refusal/🟦️.ts) and by the wgpu shell (🐚️Shell/🎯️targets/🧊️wgpu); vectors are answered by both implementations' laws.",
   "codePrefix": "shell.replayShellCommand.",
   "reasons": {
     "sign-in-required": {
@@ -68,7 +68,7 @@
     {
       "reason": "unrouted-command",
       "locale": "fr",
-      "text": "This shell has no route for that command.",
+      "text": "This shell has no route for that command. | Diese Shell kennt keinen Weg für diesen Befehl.",
       "code": "shell.replayShellCommand.unrouted-command"
     },
     {

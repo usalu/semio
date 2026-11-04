@@ -386,6 +386,20 @@ impl StepSnapshot {
         let (header, entities) = step_snapshot_from_part21(doc);
         Self { schema: STDIO_STEP_DOCUMENT_SCHEMA.into(), header, entities }
     }
+    /// 🧊️ Every `CARTESIAN_POINT` of two or three finite coordinates (a missing third coordinate is zero), in entity order — what the 3D windows draw.
+    pub fn scene_points(&self) -> Vec<[f64; 3]> {
+        self.entities
+            .iter()
+            .filter(|entity| entity.name == "CARTESIAN_POINT")
+            .filter_map(|entity| match entity.args.get(1) {
+                Some(StepValue::Aggregate(items)) if (2..=3).contains(&items.len()) => {
+                    let values: Option<Vec<f64>> = items.iter().map(|item| match item { StepValue::Real(real) => Some(*real), StepValue::Integer(integer) => Some(*integer as f64), _ => None }).collect();
+                    values.filter(|values| values.iter().all(|value| value.is_finite())).map(|values| [values[0], values[1], values.get(2).copied().unwrap_or(0.0)])
+                }
+                _ => None,
+            })
+            .collect()
+    }
 }
 //#endregion 🔖️Part21Conversion
 

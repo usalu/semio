@@ -1,5 +1,9 @@
-module Semio_wav_snapshot;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=18;
+module Stdio_wav_snapshot;
+
+# Shared `.semio` binary envelope around the artifact pack of stdio.wav; the pack's records are declared by the sibling 📡️.protocol.semio.
+public type Document = unit {
+    magic: bytes &size=8;
+    token_len: uint32 &byte-order=spicy::ByteOrder::Little;
+    token: bytes &size=self.token_len;
+    payload: bytes &eod;
 };

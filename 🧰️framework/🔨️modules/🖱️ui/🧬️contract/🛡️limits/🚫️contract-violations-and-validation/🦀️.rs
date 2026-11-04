@@ -82,6 +82,11 @@ pub enum UiContractViolation {
     InvalidNumberRange {
         node: crate::UiNodeId,
     },
+    /// ♿️ An interactive control (input, select, slider, stepper, icon select, ring, or a toggle without text) has no
+    /// accessible name: its `accessibility.label` is absent or blank and it is not the control of a labelled `Field` container.
+    UnnamedControl {
+        node: crate::UiNodeId,
+    },
 }
 
 /// 🌲️ Validates `snapshot` against `limits`, collecting every [`UiContractViolation`] found rather
@@ -179,6 +184,9 @@ fn validate_core<'a>(
                         }
                         let Some(record) = get(id) else { continue };
 
+                        if depth == 0 && control_is_unnamed(record, None) && violations.try_push(UiContractViolation::UnnamedControl { node: id }).is_err() {
+                            return violations;
+                        }
                         let in_section = parent_in_section || is_section(&record.component);
                         if parent_in_section && is_section(&record.component) {
                             if violations.try_push(UiContractViolation::SectionNested { node: id }).is_err() {
@@ -243,6 +251,9 @@ fn validate_core<'a>(
                                     }
                                 }
                                 Some(child) => {
+                                    if control_is_unnamed(child, Some(record)) && violations.try_push(UiContractViolation::UnnamedControl { node: child_id }).is_err() {
+                                        return violations;
+                                    }
                                     if seen_keys.iter().any(|key| key.as_str() == child.key.as_str()) {
                                         if violations.try_push(UiContractViolation::DuplicateSiblingKey { parent: id, key: child.key.clone() }).is_err() {
                                             return violations;
@@ -276,5 +287,26 @@ fn validate_core<'a>(
         }
     }
     violations
+}
+
+/// ♿️ Whether a component is an interactive control that must carry an accessible name.
+pub fn component_needs_accessible_name(component: &crate::Component) -> bool {
+    match component {
+        crate::Component::Input(_) | crate::Component::Select(_) | crate::Component::Slider(_) | crate::Component::NumberStepper(_) | crate::Component::IconSelect(_) | crate::Component::Ring(_) => true,
+        crate::Component::Toggle(props) => props.text.as_ref().is_none_or(|text| text.0.as_str().trim().is_empty()),
+        _ => false,
+    }
+}
+
+/// ♿️ Whether `record` is named: a non-blank `accessibility.label`, or it is the control of a `Field` container whose label is non-blank.
+pub fn control_is_named(record: &crate::UiNodeRecord, parent: Option<&crate::UiNodeRecord>) -> bool {
+    let labelled = |label: &Option<crate::Label>| label.as_ref().is_some_and(|label| !label.0.as_str().trim().is_empty());
+    labelled(&record.accessibility.label)
+        || parent.is_some_and(|parent| matches!(&parent.component, crate::Component::Container(props) if props.role == crate::ContainerRole::Field && labelled(&props.label)))
+}
+
+/// ♿️ Whether `record` is an interactive control with no accessible name under `parent`.
+pub fn control_is_unnamed(record: &crate::UiNodeRecord, parent: Option<&crate::UiNodeRecord>) -> bool {
+    component_needs_accessible_name(&record.component) && !control_is_named(record, parent)
 }
 //#endregion 🔖️Validate

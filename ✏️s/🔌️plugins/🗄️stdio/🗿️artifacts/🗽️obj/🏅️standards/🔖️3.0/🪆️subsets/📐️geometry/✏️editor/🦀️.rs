@@ -182,6 +182,23 @@ impl ArtifactEditor for ObjAnyEditor {
     const DIALECT: Dialect = OBJ_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = OBJ_ANY_DOCUMENT_SCHEMA;
 
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.obj@3.0", extension: ".obj", media_type: "model/obj", binary: false })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        Ok(crate::engine::encode_obj(snapshot).into_bytes())
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
+        crate::engine::decode_obj(text).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+    }
+
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
+    }
+
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<ObjAnyEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/✏️editor/🦀️.rs",
@@ -261,7 +278,20 @@ impl editing::SnapshotEditingEditor for ObjAnyEditor {
         &crate::editor::obj::edit_rules::EDIT_RULES
     }
     fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
-        use crate::standards::v3_0::subsets::any::schema::mutations::{remove_group, remove_object, set_group, set_object};
+        use crate::standards::v3_0::subsets::any::schema::mutations::{remove_group, remove_object, set_group, set_normal, set_object, set_vertex};
+        use crate::standards::v3_0::subsets::any::schema::snapshot::{ObjNormal, ObjVertex};
+        if let Some(transform) = editing::Transform::from_event(event) {
+            let transform = transform?;
+            let vertices = snapshot.vertices.iter().enumerate().map(|(index, vertex)| {
+                let [x, y, z] = transform.point([vertex.x, vertex.y, vertex.z]);
+                ObjMutation::SetVertex(set_vertex::SetVertex { index, vertex: ObjVertex { x, y, z, w: vertex.w } })
+            });
+            let normals = snapshot.normals.iter().enumerate().map(|(index, normal)| {
+                let [x, y, z] = transform.direction([normal.x, normal.y, normal.z]);
+                ObjMutation::SetNormal(set_normal::SetNormal { index, normal: ObjNormal { x, y, z } })
+            });
+            return Ok(Some(vertices.chain(normals).collect()));
+        }
         let editing::SnapshotEditEvent::SetValue { path, value: semio_framework_value::DslValue::String(name) } = event else { return Ok(None) };
         let segments: Vec<&str> = path.split('/').skip(1).collect();
         let fail = |message: String| Fault::from(message);
@@ -284,7 +314,7 @@ impl editing::SnapshotEditingEditor for ObjAnyEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_obj_any_editor() -> semio_framework_plugin::AppDefinition {
-    let builder = Editor::builder(OBJ_ANY_DIALECT).document(["stdio", "obj"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::OBJ_ANY_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
+    let builder = Editor::builder(OBJ_ANY_DIALECT).document(["stdio", "obj"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::OBJ_ANY_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Main")).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())

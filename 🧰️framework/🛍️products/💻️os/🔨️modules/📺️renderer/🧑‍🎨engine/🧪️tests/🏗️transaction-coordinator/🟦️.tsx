@@ -307,6 +307,9 @@ export async function registerTransactionCoordinatorTests(vitest: PluginRuntimeV
           setMergePolicy: async () => {},
           resolveConflict: async () => ({ mergeReport: null, conflicts: null }),
           readConflicts: async () => [],
+          openArtifact: async () => {},
+          setDefaultApp: async () => {},
+          clearDefaultApp: async () => {},
           dispose: async () => {},
         };
         const plugins = new Map<string, PluginWasmHandle>([

@@ -198,3 +198,55 @@ async fn the_folder_archive_presence_corpus_matches_the_native_actor() {
     }
     assert_eq!(staged, 7, "every case that never empties a held folder is staged");
 }
+
+/// 💾️ The folder write acknowledgment corpus (`native` section) through the native actor: an acknowledged write reports persisted; a refused
+/// write, an unreadable or corrupt folder and a folder that changed under unsaved edits keep the document unsaved with a typed failure,
+/// are retried or reported, never overwrite the folder and never roll the edits back. The TypeScript worker runs the `worker` section.
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn the_folder_write_acknowledgment_corpus_matches_the_native_actor() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/💾️folder-write-acknowledgment/🔣️.json")).expect("the corpus parses");
+    let (document, schema) = ("acknowledgment-1", "s.test.root/1/*");
+    let archive_of = |pack: &[u8], spr: Vec<u8>| semio_framework_os_spr::encode_document_archive_bytes(&semio_framework_os_spr::DocumentArchivePack { parent_pack: pack.to_vec(), parent_spr: spr, members: Vec::new() }).expect("encode the archive");
+    let spr = semio_framework_os_store_text_io::text_format::empty_document_spr(document, schema).await;
+    let bytes = archive_of(b"a", spr.clone());
+    let external = archive_of(b"external", spr);
+    for case in corpus["native"].as_array().expect("native cases") {
+        let name = case["name"].as_str().expect("a case name");
+        let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+        let path = match case["binding"].as_str().expect("a binding") {
+            "eventLog" => dir.path().to_path_buf(),
+            "unregisteredPackCodec" => dir.path().join(format!("{document}.unregistered")),
+            "corruptPackArchive" => { std::fs::write(dir.path().join(format!("{document}.unregistered.archive.semio")), b"not an archive").expect("a corrupt archive"); dir.path().join(format!("{document}.unregistered")) }
+            "unreadableFolder" => { let blocker = dir.path().join("blocker"); std::fs::write(&blocker, b"not a folder").expect("a file where the folder should be"); blocker }
+            other => panic!("{name}: unknown binding {other}"),
+        };
+        let (_, remote) = ChannelBackbone::pair(name).await;
+        let (_, receiver) = artifact_mailbox_pair();
+        let (events, mut observed) = broadcast::channel(64);
+        let mut actor = native_actor::ArtifactActor::new(test_pool(), ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: document.into(), schema: schema.into(), bindings: vec![PersistenceBinding::Folder { path }], watch_external: false, actor: "local".into() }, remote, receiver, events, Arc::new(std::sync::RwLock::new(None)), Arc::new(std::sync::RwLock::new(None)), None, semio_framework_async::CancelToken::root_now(),).await;
+        actor.setup_test().await;
+        actor.handle_test_document_archive(bytes.clone()).await;
+        for step in case["steps"].as_array().expect("steps") {
+            match step.as_str().expect("a step") {
+                "retry" => actor.retry_folder_write_test().await,
+                "externalChanged" => actor.handle_test_cmd(ArtifactActorMsg::ExternalChanged).await,
+                "externalArchive" => FolderTextStorage::new(dir.path().to_path_buf()).await.write_archive(document, "unregistered", &external, &ArtifactPackFiles { pack: b"external".to_vec(), spr: Vec::new(), ops: String::new() }, "dsl").await.expect("another writer's archive"),
+                other => panic!("{name}: unknown step {other}"),
+            }
+        }
+        let expected = &case["expected"];
+        assert_eq!(actor.folder_write_acknowledgment_test(), (expected["persisted"].as_bool().expect("persisted"), expected["failures"].as_u64().expect("failures") as u32, expected["retryScheduled"].as_bool().expect("retry")), "{name}");
+        let (mut statuses, mut conflicts, mut replaced) = (Vec::new(), Vec::new(), false);
+        while let Ok(event) = observed.try_recv() {
+            match event { ArtifactEvent::Status(status) => statuses.push(status.persisted), ArtifactEvent::Conflict(message) => conflicts.push(message.code.0), ArtifactEvent::DocumentArchiveReplaced { .. } => replaced = true, _ => {} }
+        }
+        assert_eq!(statuses.last().copied().unwrap_or(false), expected["persisted"].as_bool().expect("persisted"), "{name}: the last status event carries the acknowledgment");
+        if let Some(code) = expected["conflict"].as_str() {
+            assert!(conflicts.iter().any(|conflict| conflict == code), "{name}: the typed conflict {code} is reported: {conflicts:?}");
+        }
+        if expected["replaced"].as_bool() == Some(false) {
+            assert!(!replaced, "{name}: unsaved edits are never rolled back by the folder");
+        }
+    }
+}

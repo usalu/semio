@@ -1,6 +1,6 @@
 //! 🧰 Shared attribute diff construction for direct SVG mutations.
 use crate::schema::diff::{diff_at_path, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
-use crate::schema::snapshot::{node_at, NodePath, SvgAttr, SvgAttributeValue, SvgNode};
+use crate::schema::snapshot::{node_at, NodePath, SvgAttr, SvgAttributeValue, SvgNode, TransformOp, ViewBox};
 use crate::SvgSnapshot;
 use semio_framework_value::FromValue;
 use semio_s_artifact_stdio_contract::editing::{SnapshotEditError, SnapshotEditEvent};
@@ -72,6 +72,18 @@ pub trait TreeEditKit {
     fn set_element_name(_path: NodePath, _name: String) -> Option<Self::Mutation> {
         None
     }
+    /// 🔄 Sets (`Some`) or clears (`None`) the typed `transform` of the element at `path`; `None` when the subset has no such kind.
+    fn set_transform(_path: NodePath, _transform: Option<Vec<TransformOp>>, _index: Option<usize>) -> Option<Self::Mutation> {
+        None
+    }
+    /// 🖼️ Sets (`Some`) or clears (`None`) the typed `viewBox` of the element at `path`; `None` when the subset has no such kind.
+    fn set_view_box(_path: NodePath, _view_box: Option<ViewBox>, _index: Option<usize>) -> Option<Self::Mutation> {
+        None
+    }
+    /// 🔤️ The rows that rename the element at `path`; a subset without a rename kind may compose it from its own gated kinds.
+    fn rename_element(_base: &SvgSnapshot, path: NodePath, name: String) -> Option<Vec<Self::Mutation>> {
+        Self::set_element_name(path, name).map(|mutation| vec![mutation])
+    }
     /// 📣️ Sets the XML declaration; `None` when the subset has no such kind.
     fn set_declaration(_declaration: Option<semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration>) -> Option<Self::Mutation> {
         None
@@ -80,6 +92,18 @@ pub trait TreeEditKit {
     fn set_doctype(_doctype: Option<semio_s_artifact_stdio_xml::schema::snapshot::XmlDoctype>) -> Option<Self::Mutation> {
         None
     }
+}
+
+/// 🏷️ One attribute row: the typed `transform` and `viewBox` values raise their own typed kinds where the subset has them.
+fn attribute_row<K: TreeEditKit>(path: NodePath, name: String, value: Option<SvgAttributeValue>, index: Option<usize>) -> K::Mutation {
+    let typed = match (name.as_str(), &value) {
+        ("transform", Some(SvgAttributeValue::Transform(operations))) => K::set_transform(path.clone(), Some(operations.clone()), index),
+        ("transform", None) => K::set_transform(path.clone(), None, None),
+        ("viewBox", Some(SvgAttributeValue::ViewBox(view_box))) => K::set_view_box(path.clone(), Some(view_box.clone()), index),
+        ("viewBox", None) => K::set_view_box(path.clone(), None, None),
+        _ => None,
+    };
+    typed.unwrap_or_else(|| K::set_attribute(path, name, value, index))
 }
 
 fn tree_refusal(path: &str, message: impl Into<String>) -> SnapshotEditError {
@@ -138,7 +162,7 @@ fn moved_attribute<K: TreeEditKit>(base: &SvgSnapshot, from: &str, path: &str) -
                 return Ok(Some(Vec::new()));
             }
             let moved = &attrs[origin];
-            Ok(Some(vec![K::set_attribute(node.clone(), moved.name.clone(), None, None), K::set_attribute(node, moved.name.clone(), Some(moved.value.clone()), Some(destination))]))
+            Ok(Some(vec![attribute_row::<K>(node.clone(), moved.name.clone(), None, None), attribute_row::<K>(node, moved.name.clone(), Some(moved.value.clone()), Some(destination))]))
         }
         "children" => {
             let (_, children) = element_parts(base, &node, from)?;
@@ -170,7 +194,7 @@ pub fn tree_edit<K: TreeEditKit>(event: &SnapshotEditEvent, base: &SvgSnapshot) 
     let inserting = matches!(event, SnapshotEditEvent::InsertValue { .. });
     let attrs = element_parts(base, &node, path).map_or(&[][..], |(attrs, _)| attrs);
     Ok(match (rest, value) {
-        (["name"], Some(value)) if setting => K::set_element_name(node, decode(value, path)?).map(|mutation| vec![mutation]),
+        (["name"], Some(value)) if setting => K::rename_element(base, node, decode(value, path)?),
         (["text"], Some(value)) if setting => Some(vec![K::set_text(node, decode(value, path)?)]),
         (["children", row], _) => {
             let (_, children) = element_parts(base, &node, path)?;
@@ -187,7 +211,7 @@ pub fn tree_edit<K: TreeEditKit>(event: &SnapshotEditEvent, base: &SvgSnapshot) 
         (["attrs", row], _) => match value {
             Some(value) if inserting => {
                 let attribute: SvgAttr = decode(value, path)?;
-                Some(vec![K::set_attribute(node, attribute.name, Some(attribute.value), Some(position(row, attrs.len(), path, true)?))])
+                Some(vec![attribute_row::<K>(node, attribute.name, Some(attribute.value), Some(position(row, attrs.len(), path, true)?))])
             }
             Some(value) => {
                 let at = position(row, attrs.len(), path, false)?;
@@ -196,12 +220,12 @@ pub fn tree_edit<K: TreeEditKit>(event: &SnapshotEditEvent, base: &SvgSnapshot) 
                 Some(if *current == attribute {
                     Vec::new()
                 } else if current.name == attribute.name {
-                    vec![K::set_attribute(node, attribute.name, Some(attribute.value), None)]
+                    vec![attribute_row::<K>(node, attribute.name, Some(attribute.value), None)]
                 } else {
-                    vec![K::set_attribute(node.clone(), current.name.clone(), None, None), K::set_attribute(node, attribute.name, Some(attribute.value), Some(at))]
+                    vec![attribute_row::<K>(node.clone(), current.name.clone(), None, None), attribute_row::<K>(node, attribute.name, Some(attribute.value), Some(at))]
                 })
             }
-            None => Some(vec![K::set_attribute(node, attrs[position(row, attrs.len(), path, false)?].name.clone(), None, None)]),
+            None => Some(vec![attribute_row::<K>(node, attrs[position(row, attrs.len(), path, false)?].name.clone(), None, None)]),
         },
         (["attrs", row, field @ ("name" | "value")], Some(value)) if setting => {
             let at = position(row, attrs.len(), path, false)?;
@@ -209,11 +233,11 @@ pub fn tree_edit<K: TreeEditKit>(event: &SnapshotEditEvent, base: &SvgSnapshot) 
             Some(match *field {
                 "value" => {
                     let next: SvgAttributeValue = decode(value, path)?;
-                    if current.value == next { Vec::new() } else { vec![K::set_attribute(node, current.name.clone(), Some(next), None)] }
+                    if current.value == next { Vec::new() } else { vec![attribute_row::<K>(node, current.name.clone(), Some(next), None)] }
                 }
                 _ => {
                     let name: String = decode(value, path)?;
-                    if current.name == name { Vec::new() } else { vec![K::set_attribute(node.clone(), current.name.clone(), None, None), K::set_attribute(node, name, Some(current.value.clone()), Some(at))] }
+                    if current.name == name { Vec::new() } else { vec![attribute_row::<K>(node.clone(), current.name.clone(), None, None), attribute_row::<K>(node, name, Some(current.value.clone()), Some(at))] }
                 }
             })
         }

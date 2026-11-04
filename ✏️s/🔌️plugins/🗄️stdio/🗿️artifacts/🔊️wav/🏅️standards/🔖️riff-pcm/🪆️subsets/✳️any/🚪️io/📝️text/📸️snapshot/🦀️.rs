@@ -1,5 +1,4 @@
-//! 🚧 scaffolded by W1b — text representation marker for `stdio.wav.snapshot`. Full grammar-backed
-//! parse/print lands in W2/W3.
+//! 🧬️ The `stdio.wav.snapshot` text facet.
 pub const TEXT_MARKER: &str = "stdio.wav.snapshot";
 
 #[allow(unused_imports)]

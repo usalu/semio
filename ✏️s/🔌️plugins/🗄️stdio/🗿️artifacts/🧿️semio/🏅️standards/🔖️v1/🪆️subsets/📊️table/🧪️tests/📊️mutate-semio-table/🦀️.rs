@@ -58,7 +58,7 @@ mod subject {
 
     //#region 🔖️Input
     /// 📃️ The three-row demo sheet, in both encodings the domain commits for it — small, but the
-    /// only `s.stdio.semio.table` bytes in this artifact a codec other than the Python one wrote.
+    /// only `stdio.semio.table` bytes in this artifact a codec other than the Python one wrote.
     const SHEET_DSL: &str = "asset://📃️sheet/🗣️.dsl.semio";
     const SHEET_PACK: &str = "asset://📃️sheet/🎒️.pack.semio";
     /// 📊️ The real 50×12 survey table and its binary twin, derived once from the committed CSV

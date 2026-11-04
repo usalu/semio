@@ -41,7 +41,7 @@ use crate::schema::mutations::ungroup_node;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = SemioDrawingSnapshot, diff = SemioDrawingDiff, schema = "s.stdio.semio.drawing", reference = SemioDrawingSnapshot, reference_diff = SemioDrawingDiff)]
+#[mutations(snapshot = SemioDrawingSnapshot, diff = SemioDrawingDiff, schema = "stdio.semio.drawing", reference = SemioDrawingSnapshot, reference_diff = SemioDrawingDiff)]
 pub enum SemioDrawingMutation {
     CreateLayer(create_layer::CreateLayer),
     DeleteLayer(delete_layer::DeleteLayer),

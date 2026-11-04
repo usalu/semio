@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌈️set-palette-entry",
+  "semanticKind": "set-palette-entry",
+  "displayName": "Set palette entry",
+  "emoji": "🌈️",
+  "aggregateVariant": "SetPaletteEntry",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-palette-entry",
+  "binaryTag": 14,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

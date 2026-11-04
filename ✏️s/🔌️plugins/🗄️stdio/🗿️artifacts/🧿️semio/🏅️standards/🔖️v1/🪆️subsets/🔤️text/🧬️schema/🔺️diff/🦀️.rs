@@ -64,7 +64,7 @@ impl IndexedRow<SemioTextRun> for SemioTextRunDiff {
 //#region 🔖️Diff
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.text.diff")]
+#[artifact_schema(id = "stdio.semio.text.diff")]
 pub struct SemioTextDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]

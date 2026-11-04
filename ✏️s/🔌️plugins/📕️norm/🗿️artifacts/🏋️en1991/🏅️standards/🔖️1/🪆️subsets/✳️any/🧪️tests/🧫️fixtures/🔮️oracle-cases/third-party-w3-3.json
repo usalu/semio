@@ -1,0 +1,336 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1991",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1991.mechanics.w3-3-lm1-tandem-span-10_0-fine-step",
+      "check": "mechanics.lm1-tandem",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.3.2 Load Model 1 tandem system TS (two axles of Q_1k at 1.2 m)"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 300000.0,
+        "s": 1.2,
+        "step": 0.1,
+        "span": 10.0
+      },
+      "expected": {
+        "M_max": {
+          "value": 1325400.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "R_max": {
+          "value": 564000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.mechanics.w3-3-lm1-tandem-span-17_5-fine-step",
+      "check": "mechanics.lm1-tandem",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.3.2 Load Model 1 tandem system TS (two axles of Q_1k at 1.2 m)"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 300000.0,
+        "s": 1.2,
+        "step": 0.1,
+        "span": 17.5
+      },
+      "expected": {
+        "M_max": {
+          "value": 2448000.0000000005,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "R_max": {
+          "value": 579428.5714285715,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.mechanics.w3-3-tandem-section-span-20_0-x-10_0-fine-step",
+      "check": "mechanics.tandem-section-envelope",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.3.2 Load Model 1 tandem system TS (two axles of Q_1k at 1.2 m) sweeping a simply supported span; largest moment and extreme shear forces at one section"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 300000.0,
+        "s": 1.2,
+        "step": 0.05,
+        "span": 20.0,
+        "x": 10.0
+      },
+      "expected": {
+        "M_env": {
+          "value": 2820000.000000001,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "V_max": {
+          "value": 282000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "V_min": {
+          "value": -282000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.mechanics.w3-3-tandem-section-span-15_0-x-7_5-fine-step",
+      "check": "mechanics.tandem-section-envelope",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.3.2 Load Model 1 tandem system TS (two axles of Q_1k at 1.2 m) sweeping a simply supported span; largest moment and extreme shear forces at one section"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 300000.0,
+        "s": 1.2,
+        "step": 0.05,
+        "span": 15.0,
+        "x": 7.5
+      },
+      "expected": {
+        "M_env": {
+          "value": 2070000.0000000007,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "V_max": {
+          "value": 276000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "V_min": {
+          "value": -276000.0000000001,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.mechanics.w3-3-tandem-section-span-21_0-x-10_5-fine-step",
+      "check": "mechanics.tandem-section-envelope",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.3.2 Load Model 1 tandem system TS (two axles of Q_1k at 1.2 m) sweeping a simply supported span; largest moment and extreme shear forces at one section"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 300000.0,
+        "s": 1.2,
+        "step": 0.05,
+        "span": 21.0,
+        "x": 10.5
+      },
+      "expected": {
+        "M_env": {
+          "value": 2970000.000000001,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "V_max": {
+          "value": 282857.1428571427,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "V_min": {
+          "value": -282857.14285714284,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.mechanics.w3-3-rail-lm71-span-10_0-fine-step",
+      "check": "mechanics.rail-lm71-mid-moment",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 6.3.2 Load Model 71 (four axles of Q_vk at 1.6 m, q_vk outside the group; values unverified against the standard text)"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 250000.0,
+        "q": 80000.0,
+        "n": 4,
+        "s": 1.6,
+        "lead": 0.8,
+        "step": 0.1,
+        "span": 10.0
+      },
+      "expected": {
+        "M_mid": {
+          "value": 1829600.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.mechanics.w3-3-rail-lm71-span-14_0-fine-step",
+      "check": "mechanics.rail-lm71-mid-moment",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 6.3.2 Load Model 71 (four axles of Q_vk at 1.6 m, q_vk outside the group; values unverified against the standard text)"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 250000.0,
+        "q": 80000.0,
+        "n": 4,
+        "s": 1.6,
+        "lead": 0.8,
+        "step": 0.1,
+        "span": 14.0
+      },
+      "expected": {
+        "M_mid": {
+          "value": 3277600.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

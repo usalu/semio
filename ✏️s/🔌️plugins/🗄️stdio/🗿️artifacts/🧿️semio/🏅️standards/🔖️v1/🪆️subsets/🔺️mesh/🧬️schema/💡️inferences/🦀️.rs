@@ -27,7 +27,7 @@ use super::aabb::SemioAabb;
 /// return type, ordered/deterministic by key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.semio.mesh.inference")]
+#[artifact_schema(id = "stdio.semio.mesh.inference")]
 pub struct SemioMeshInference {
     #[derived]
     pub aabb: BTreeMap<String, SemioAabb>,
@@ -44,19 +44,19 @@ impl protocol::Inference<SemioMeshSnapshot> for SemioMeshInference {
 
 impl protocol::InferenceSpec<SemioMeshSnapshot> for SemioMeshInference {
     fn inference_schema_id() -> &'static str {
-        "s.stdio.semio.mesh.inference"
+        "stdio.semio.mesh.inference"
     }
     fn schema_version() -> u32 {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.semio.mesh.inference.aabb", reads: &["meshes"] }]
+        &[protocol::InferenceFieldSpec { id: "stdio.semio.mesh.inference.aabb", reads: &["meshes"] }]
     }
 }
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.stdio.semio.mesh.inference`'s facet leaves into the OS-wide inference catalog.
+/// 💡️ Registers `stdio.semio.mesh.inference`'s facet leaves into the OS-wide inference catalog.
 /// The `register_artifact_inferences()` call site itself lives in the SHARED
 /// `🏅️standards/🔖️v1/⚙️engine/🦀️.rs` (aggregates all 14 `s.stdio.semio.*` subsets'
 /// `register()` calls) — out of this ticket's `🔺️mesh/`-only edit scope, same boundary brep's own
@@ -64,7 +64,7 @@ impl protocol::InferenceSpec<SemioMeshSnapshot> for SemioMeshInference {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_mesh_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
     semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.stdio.semio.mesh.inference",
+        id: "stdio.semio.mesh.inference",
         inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }

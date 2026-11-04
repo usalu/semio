@@ -212,3 +212,17 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
     artifact_app_laws::close_registered_fixture_app(&mut reopened, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
+
+#[semio_framework_async_macros::async_test]
+async fn cut_range_plans_one_removal_run_at_a_stable_index_and_refuses_everything_else() {
+    use crate::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation;
+    let snapshot = crate::standards::isobmff::subsets::any::io::decode_mp4(include_bytes!("../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("real MP4 fixture decodes");
+    let samples = snapshot.tracks[0].samples.len();
+    let planned = cut_range_mutations(&snapshot, " 3 - 8 ").expect("an in-range cut plans");
+    assert_eq!(planned.len(), 5);
+    assert!(planned.iter().all(|mutation| matches!(mutation, Mp4Mutation::RemoveSample(removal) if removal.track_index == 0 && removal.index == 3)));
+    for refused in ["5-5", "9-3", "x", "+1-4", "4", &format!("0-{}", samples + 1)] {
+        assert_eq!(cut_range_mutations(&snapshot, refused).expect_err("an invalid range is refused").code.0, "stdio.mp4.cut-range", "{refused}");
+    }
+    assert_eq!(cut_frames_action().id, CUT_FRAMES_ACTION_ID);
+}

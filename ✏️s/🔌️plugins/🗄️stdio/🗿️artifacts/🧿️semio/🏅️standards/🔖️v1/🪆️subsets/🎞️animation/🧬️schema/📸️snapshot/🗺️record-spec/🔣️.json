@@ -1,6 +1,6 @@
 {
  "schema": "semio.pack.record-spec/v1",
- "envelope": "s.stdio.semio.animation",
+ "envelope": "stdio.semio.animation",
  "schemaHash": "acf99067b5e01e6008e22e7fa5a57391d07db5f7634f5f60801524d4de10ea50",
  "graph": [
   [

@@ -73,9 +73,10 @@ pub mod part_1 {
         phi_deg: f64, c_pa: f64, v_n: f64, a: f64, p: &AnnexParams,
         embedment: f64, length: f64, gamma_pa_m: f64, permanent_embedment: bool,
     ) -> f64 {
+        let phi_d = (phi_deg.to_radians().tan() / p.gamma_phi).atan().to_degrees();
         let base = c_pa / p.gamma_c * a + v_n * phi_deg.to_radians().tan() / p.gamma_phi;
         let passive = if permanent_embedment && embedment > 0.0 {
-            0.5 * passive_earth_force_n(phi_deg, gamma_pa_m, embedment, length, 0.0) / p.gamma_r_e
+            0.5 * passive_earth_force_n(phi_d, gamma_pa_m, embedment, length, 0.0) / p.gamma_r_e
         } else {
             0.0
         };

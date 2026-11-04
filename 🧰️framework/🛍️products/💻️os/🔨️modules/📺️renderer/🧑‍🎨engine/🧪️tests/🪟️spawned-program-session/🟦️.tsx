@@ -479,7 +479,10 @@ describe("🚫️ a program the shell cannot open is refused on screen, never dr
       expect(de).not.toBe(en);
       expect(spawnProgramRefusalCodeV1(reason)).toBe(`shell.spawnProgram.${reason}`);
     }
-    expect(spawnProgramRefusalNoticeTextV1("open-failed", "raster", "fr")).toBe(spawnProgramRefusalNoticeTextV1("open-failed", "raster", "en"));
+    for (const reason of Object.keys(SPAWN_PROGRAM_REFUSAL_LABELS_V1) as (keyof typeof SPAWN_PROGRAM_REFUSAL_LABELS_V1)[]) {
+      const label = SPAWN_PROGRAM_REFUSAL_LABELS_V1[reason];
+      expect(spawnProgramRefusalNoticeTextV1(reason, "raster", "fr")).toBe(`${label.en.replace("{program}", "raster")} | ${label.de.replace("{program}", "raster")}`);
+    }
   });
 
   it("REGRESSION: spawnProgram catches a failed guest instantiation and has no silent return", () => {

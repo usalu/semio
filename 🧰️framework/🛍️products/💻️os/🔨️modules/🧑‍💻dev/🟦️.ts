@@ -14,7 +14,7 @@ import { resolveBootQueryAppRole, resolveBootQueryExampleId } from "./🔗️boo
 import { createFrameworkOsHostPortsV1 } from "./🪝️host-ports/🟦️.ts";
 
 /** 🚀️ Boots the selected playground with its owner's browser contributions. */
-export async function bootFrameworkOsDev(options: { readonly catalogRows: PluginCatalogRowsV1; readonly variant: string; readonly admission: PluginCatalogAdmissionV1; readonly backboneWorkerFactory?: import("@semio-tech/framework-renderer-react").FrameworkOsBootExecution["backboneWorkerFactory"]; readonly documentServices?: import("@semio-tech/framework-renderer-react").FrameworkOsBootExecution["documentServices"]; readonly brands: readonly import("@semio-tech/framework").ShellBrand[]; readonly surfaceSessionFactories?: import("@semio-tech/framework-renderer-react").FrameworkOsBootOptions["surfaceSessionFactories"] }) {
+export async function bootFrameworkOsDev(options: { readonly catalogRows: PluginCatalogRowsV1; readonly variant: string; readonly admission: PluginCatalogAdmissionV1; readonly backboneWorkerFactory?: import("@semio-tech/framework-renderer-react").FrameworkOsBootExecution["backboneWorkerFactory"]; readonly documentServices?: import("@semio-tech/framework-renderer-react").FrameworkOsBootExecution["documentServices"]; readonly brands: readonly import("@semio-tech/framework").ShellBrand[]; readonly formatCatalog?: import("@semio-tech/framework-renderer-react").ShellHostPortsV1["formatCatalog"]; readonly surfaceSessionFactories?: import("@semio-tech/framework-renderer-react").FrameworkOsBootOptions["surfaceSessionFactories"] }) {
 const renderer = import.meta.env.VITE_SEMIO_RENDERER ?? import.meta.env.SEMIO_RENDERER ?? "react";
 const rows = admitPluginCatalogV1(options.catalogRows, options.admission), catalog = pluginCatalogV1(rows);
 const variant = options.variant;
@@ -60,7 +60,7 @@ if (typeof document !== "undefined" && document.getElementById("root") != null )
   const plugins = boot.plugins;
   if (renderer !== "wgpu") {
     const { bootFrameworkOs } = await import("@semio-tech/framework-renderer-react");
-    return bootFrameworkOs({ catalog: rows, plugin: pluginFilter, plugins, surfaceSessionFactories: options.surfaceSessionFactories, appId, appRole, locks, defaults, brand }, { backboneWorkerFactory: options.backboneWorkerFactory, documentServices: options.documentServices, hostPorts: createFrameworkOsHostPortsV1() }).catch((error) => {
+    return bootFrameworkOs({ catalog: rows, plugin: pluginFilter, plugins, surfaceSessionFactories: options.surfaceSessionFactories, appId, appRole, locks, defaults, brand }, { backboneWorkerFactory: options.backboneWorkerFactory, documentServices: options.documentServices, hostPorts: createFrameworkOsHostPortsV1(options.formatCatalog === undefined ? {} : { formatCatalog: options.formatCatalog }) }).catch((error) => {
       console.error("[TRACE] os-dev react boot failed", error);
       throw error;
     });

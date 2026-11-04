@@ -21,6 +21,8 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod io {
+                    #[path = "../../../../🚪️io/📄️natural/🦀️.rs"]
+                    pub mod natural;
                     #[path = "."]
                     pub mod binary {
                         #[path = "../../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]

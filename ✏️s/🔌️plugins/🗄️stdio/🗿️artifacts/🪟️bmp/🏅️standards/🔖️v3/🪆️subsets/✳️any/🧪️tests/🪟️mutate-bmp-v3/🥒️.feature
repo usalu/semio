@@ -47,6 +47,9 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id | params |
+      | set-palette-entry | {"index":2,"red":9,"green":8,"blue":7,"reserved":0} |
+      | insert-palette-entry | {"index":2,"red":200,"green":150,"blue":100,"reserved":0,"colorsUsed":8} |
+      | remove-palette-entry | {"index":5,"colorsUsed":6} |
 
   @id-mutate
   @level-exhaustive
@@ -92,6 +95,9 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
     And that projection matches the untouched original document
     Examples:
       | id | params |
+      | set-palette-entry | {"index":2,"red":9,"green":8,"blue":7,"reserved":0} |
+      | insert-palette-entry | {"index":2,"red":200,"green":150,"blue":100,"reserved":0,"colorsUsed":8} |
+      | remove-palette-entry | {"index":5,"colorsUsed":6} |
 
   @id-inverse
   @level-exhaustive

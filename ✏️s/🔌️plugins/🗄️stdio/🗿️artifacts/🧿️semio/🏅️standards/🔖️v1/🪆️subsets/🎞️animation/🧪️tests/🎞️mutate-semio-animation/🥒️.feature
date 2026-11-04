@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 @mutations-semio-v1-animation
 Feature: Apply every typed semio ANIMATION mutation to the real committed walk cycle, against an independent Python implementation
-  `s.stdio.semio.animation` is a semio-NATIVE format: no third party in any ecosystem reads or
+  `stdio.semio.animation` is a semio-NATIVE format: no third party in any ecosystem reads or
   writes `.dsl.semio`, so the second producer a differential comparison needs is a second
   IMPLEMENTATION. `🐍️component.py` beside this file is that implementation — the envelope, the DSL
   grammar and all thirteen verbs together with their inverses, written in Python from the committed
@@ -26,7 +26,7 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
   exercise every leaf this subset has — a two-keyframe linearly interpolated `translation` channel
   holding `vec3` values, a cubic-spline `rotation` channel holding a `quat`, a stepped `weights`
   channel holding a three-entry weight vector, and a linear channel on the `custom` property
-  `opacity` holding a `scalar`. It is the richest `s.stdio.semio.animation` document committed
+  `opacity` holding a `scalar`. It is the richest `stdio.semio.animation` document committed
   anywhere in this artifact; `asset://` resolves against the artifact root, so no other plugin's
   larger `.dsl.semio` is reachable from here, and that limit is stated rather than papered over.
 

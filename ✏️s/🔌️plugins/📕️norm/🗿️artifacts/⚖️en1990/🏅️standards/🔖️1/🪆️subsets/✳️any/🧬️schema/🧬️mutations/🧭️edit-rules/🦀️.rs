@@ -113,6 +113,7 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
         SetFieldRule { path: "factorOverrides[].justification", kind: "change-factor-override-justif", selectors: &[SelectorKey::Id("id")], value: "newJustification" },
         SetFieldRule { path: "trafficGroups[].group", kind: "change-traffic-group-group", selectors: &[SelectorKey::Id("id")], value: "newGroup" },
         SetFieldRule { path: "trafficGroups[].variableId", kind: "change-traffic-group-variable-id", selectors: &[SelectorKey::Id("id")], value: "newVariableId" },
+        SetFieldRule { path: "reliabilityAnalyses[].memberId", kind: "change-reliability-member-id", selectors: &[SelectorKey::Id("id")], value: "newMemberId" },
     ],
     insert_item: &[
         InsertItemRule { path: "permanents", kind: "insert-permanent", selectors: &[], index: "index", item: "item" },

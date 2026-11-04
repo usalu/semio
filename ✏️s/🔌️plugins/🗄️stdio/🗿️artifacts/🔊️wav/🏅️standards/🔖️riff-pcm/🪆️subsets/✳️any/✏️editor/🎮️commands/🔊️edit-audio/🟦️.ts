@@ -13,7 +13,8 @@ export type WavAudioEdit =
   | Readonly<{ kind: "appendChannel"; revision: string }>
   | Readonly<{ kind: "insertChannel"; channel: number; revision: string }>
   | Readonly<{ kind: "removeChannel"; channel: number; revision: string }>
-  | Readonly<{ kind: "setSampleRate"; revision: string; value: string }>;
+  | Readonly<{ kind: "setSampleRate"; revision: string; value: string }>
+  | Readonly<{ kind: "cutFrames"; revision: string; value: string }>;
 
 export class WavAudioEditRefusal extends Error {
   constructor(readonly code: string, message: string) {
@@ -92,6 +93,15 @@ export function wavAudioEditMutations(command: WavAudioEdit, snapshot: WavSnapsh
       const count = Math.min(maximumSamples, channels - offset);
       if (command.kind === "removeFrame") mutations.push({ mutation: "patchData", index: frame * channels, removeCount: count, data: empty(snapshot.data) });
       else mutations.push({ mutation: "patchData", index: frame * channels + offset, removeCount: 0, data: samples(snapshot.data, Array.from({ length: count }, () => zero(snapshot.data))) });
+    }
+  } else if (command.kind === "cutFrames") {
+    const match = /^\s*(\d+)\s*-\s*(\d+)\s*$/u.exec(command.value);
+    if (!match) return refuse("stdio.wav.frame-range", "Frame range must be written start-end with whole frame numbers");
+    const start = Number(match[1]);
+    const end = Number(match[2]);
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start >= end || end > frames) refuse("stdio.wav.frame-range", `Frame range ${start}-${end} must satisfy 0 <= start < end <= ${frames}`);
+    for (let offset = 0; offset < (end - start) * channels; offset += maximumSamples) {
+      mutations.push({ mutation: "patchData", index: start * channels, removeCount: Math.min(maximumSamples, (end - start) * channels - offset), data: empty(snapshot.data) });
     }
   } else if (command.kind === "setSampleRate") {
     mutations.push({ mutation: "setFmt", fmt: format(snapshot.fmt, channels, bytes, Number(command.value)) });

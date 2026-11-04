@@ -1,5 +1,5 @@
 module Semio_mp3_diff;
-# 🚧 scaffolded by W1b — full field layout lands in W2/W3.
-type Document = unit {
-    magic: bytes &size=14;
+# The binary Mp3Diff is the one-line text diff verbatim as UTF-8; the clause grammar is ../../📝️text/🔺️diff/📖️.grammar.semio.
+public type Document = unit {
+    line: bytes &eod;
 };

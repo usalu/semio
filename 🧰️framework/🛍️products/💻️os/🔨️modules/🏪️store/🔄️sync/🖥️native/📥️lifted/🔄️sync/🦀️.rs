@@ -85,17 +85,48 @@ impl<'a> FolderEventReader<'a> {
     }
 }
 
+/// 🔒️ The one in-process writer lock of a folder, shared by every storage over it.
+#[cfg(not(target_arch = "wasm32"))]
+fn folder_writer(folder: &std::path::Path) -> std::sync::Arc<std::sync::Mutex<()>> {
+    static WRITERS: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<std::path::PathBuf, std::sync::Weak<std::sync::Mutex<()>>>>> = std::sync::OnceLock::new();
+    let canonical_key = std::fs::canonicalize(folder).unwrap_or_else(|_| folder.to_path_buf());
+    let mut writers = WRITERS.get_or_init(Default::default).lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    writers.get(&canonical_key).and_then(std::sync::Weak::upgrade).unwrap_or_else(|| {
+        let writer = std::sync::Arc::new(std::sync::Mutex::new(()));
+        writers.insert(canonical_key, std::sync::Arc::downgrade(&writer));
+        writer
+    })
+}
+
+/// 💾️ Replaces `target` atomically: the bytes go to a uniquely named staged file beside it, are flushed to disk and renamed over the target, then the directory entry is flushed; a crash leaves the old or the new file, never a torn one, and concurrent writers never share a staged name.
+#[cfg(not(target_arch = "wasm32"))]
+fn atomic_replace(target: &std::path::Path, bytes: &[u8]) -> Result<(), semio_framework_os_vcs::VcsError> {
+    use std::io::Write;
+    static STAGED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let backbone = |error: std::io::Error| semio_framework_os_vcs::VcsError::Backbone(error.to_string());
+    let name = target.file_name().map(|name| name.to_string_lossy().into_owned()).unwrap_or_default();
+    let staged = target.with_file_name(format!(".{name}.{}.{}.stage", std::process::id(), STAGED.fetch_add(1, std::sync::atomic::Ordering::Relaxed)));
+    let published = (|| {
+        let mut file = std::fs::File::create(&staged)?;
+        file.write_all(bytes)?;
+        file.sync_all()?;
+        drop(file);
+        std::fs::rename(&staged, target)
+    })();
+    if let Err(error) = published {
+        let _ = std::fs::remove_file(&staged);
+        return Err(backbone(error));
+    }
+    match target.parent() {
+        Some(parent) => FolderEventLogStorage::sync_directory(parent),
+        None => Ok(()),
+    }
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 impl FolderEventLogStorage {
     pub fn new(folder: std::path::PathBuf) -> Self {
-        static WRITERS: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<std::path::PathBuf, std::sync::Weak<std::sync::Mutex<()>>>>> = std::sync::OnceLock::new();
-        let canonical_key = std::fs::canonicalize(&folder).unwrap_or_else(|_| folder.clone());
-        let mut writers = WRITERS.get_or_init(Default::default).lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        let writer = writers.get(&canonical_key).and_then(std::sync::Weak::upgrade).unwrap_or_else(|| {
-            let writer = std::sync::Arc::new(std::sync::Mutex::new(()));
-            writers.insert(canonical_key, std::sync::Arc::downgrade(&writer));
-            writer
-        });
+        let writer = folder_writer(&folder);
         Self { folder, writer }
     }
 
@@ -153,7 +184,7 @@ impl FolderEventLogStorage {
     }
 
     pub fn append(&self, event: &FolderEvent) -> Result<(), semio_framework_os_vcs::VcsError> {
-        use std::io::Write;
+        use std::io::{Seek, Write};
         self.refuse_repository_root()?;
         let payload = Self::encode_event(event)?;
         if payload.len() as u64 > MAX_FOLDER_EVENT_BYTES {
@@ -161,13 +192,86 @@ impl FolderEventLogStorage {
         }
         let _guard = self.writer.lock().map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
         let semio_dir = self.folder.join(".semio");
+        let created = !semio_dir.exists();
         std::fs::create_dir_all(&semio_dir).map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
-        let mut file = std::fs::OpenOptions::new().create(true).append(true).open(self.event_path()).map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
-        file.write_all(FOLDER_EVENT_MAGIC).map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
-        file.write_all(&(payload.len() as u64).to_le_bytes()).map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
-        file.write_all(&Self::checksum(&payload).to_le_bytes()).map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
-        file.write_all(&payload).map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
-        file.sync_data().map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))
+        let mut file = std::fs::OpenOptions::new().create(true).read(true).write(true).open(self.event_path()).map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
+        let (valid, torn) = Self::scan_tail(&mut file)?;
+        if torn > 0 {
+            file.set_len(valid).map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
+        }
+        file.seek(std::io::SeekFrom::Start(valid)).map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
+        let mut record = Vec::with_capacity(payload.len() + 24);
+        record.extend_from_slice(FOLDER_EVENT_MAGIC);
+        record.extend_from_slice(&(payload.len() as u64).to_le_bytes());
+        record.extend_from_slice(&Self::checksum(&payload).to_le_bytes());
+        record.extend_from_slice(&payload);
+        file.write_all(&record).map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
+        file.sync_data().map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
+        if created {
+            Self::sync_directory(&semio_dir)?;
+            Self::sync_directory(&self.folder)?;
+        }
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    pub(crate) fn sync_directory(path: &std::path::Path) -> Result<(), semio_framework_os_vcs::VcsError> {
+        std::fs::File::open(path).and_then(|directory| directory.sync_all()).map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))
+    }
+
+    #[cfg(not(unix))]
+    fn sync_directory(_path: &std::path::Path) -> Result<(), semio_framework_os_vcs::VcsError> {
+        Ok(())
+    }
+
+    /// 🩹️ Walks the record headers without reading payloads and returns `(valid_len, torn_bytes)`: the byte length of the complete records and the length of an incomplete or unverifiable final record. Only the last record's checksum is verified; corruption inside the log is an error.
+    fn scan_tail(file: &mut std::fs::File) -> Result<(u64, u64), semio_framework_os_vcs::VcsError> {
+        use std::io::{Read, Seek, SeekFrom};
+        let backbone = |error: std::io::Error| semio_framework_os_vcs::VcsError::Backbone(error.to_string());
+        let total = file.metadata().map_err(backbone)?.len();
+        let mut cursor = 0u64;
+        let mut last: Option<(u64, u64, u64)> = None;
+        while cursor < total {
+            let remaining = total - cursor;
+            file.seek(SeekFrom::Start(cursor)).map_err(backbone)?;
+            let mut header = [0u8; 24];
+            let available = usize::try_from(remaining.min(24)).unwrap_or(24);
+            file.read_exact(&mut header[..available]).map_err(backbone)?;
+            if available >= 8 && &header[..8] != FOLDER_EVENT_MAGIC {
+                return Err(semio_framework_os_vcs::VcsError::Backbone("invalid folder event magic".into()));
+            }
+            if available < 24 {
+                return Ok((cursor, remaining));
+            }
+            let len = u64::from_le_bytes(header[8..16].try_into().unwrap());
+            if len > MAX_FOLDER_EVENT_BYTES {
+                return Err(semio_framework_os_vcs::VcsError::Backbone(format!("folder event length {len} exceeds the record boundary")));
+            }
+            if remaining - 24 < len {
+                return Ok((cursor, remaining));
+            }
+            last = Some((cursor, len, u64::from_le_bytes(header[16..24].try_into().unwrap())));
+            cursor += 24 + len;
+        }
+        if let Some((start, len, expected)) = last {
+            file.seek(SeekFrom::Start(start + 24)).map_err(backbone)?;
+            let mut payload = vec![0u8; usize::try_from(len).map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?];
+            file.read_exact(&mut payload).map_err(backbone)?;
+            if Self::checksum(&payload) != expected {
+                return Ok((start, total - start));
+            }
+        }
+        Ok((cursor, 0))
+    }
+
+    /// 🩹️ The byte length of an incomplete or unverifiable final record that the next append truncates; `0` for an intact log.
+    pub fn torn_tail_bytes(&self) -> Result<u64, semio_framework_os_vcs::VcsError> {
+        let _guard = self.writer.lock().map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
+        match std::fs::File::open(self.event_path()) {
+            Ok(mut file) => Self::scan_tail(&mut file).map(|(_, torn)| torn),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(0),
+            Err(error) => Err(semio_framework_os_vcs::VcsError::Backbone(error.to_string())),
+        }
     }
 
     pub fn events(&self) -> Result<Vec<FolderEvent>, semio_framework_os_vcs::VcsError> {
@@ -207,6 +311,10 @@ impl FolderEventLogStorage {
                 Err(error) => return Err(semio_framework_os_vcs::VcsError::Backbone(error.to_string())),
             }
             if Self::checksum(&payload) != expected_checksum {
+                let mut probe = [0u8; 1];
+                if file.read(&mut probe).map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))? == 0 {
+                    break;
+                }
                 return Err(semio_framework_os_vcs::VcsError::Backbone("folder event checksum mismatch".into()));
             }
             events.push(Self::decode_event(&payload)?);
@@ -259,12 +367,18 @@ impl FolderEventLogStorage {
 #[cfg(not(target_arch = "wasm32"))]
 pub struct FolderTextStorage {
     folder: std::path::PathBuf,
+    writer: std::sync::Arc<std::sync::Mutex<()>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl FolderTextStorage {
     pub async fn new(folder: std::path::PathBuf) -> Self {
-        Self { folder }
+        let writer = folder_writer(&folder);
+        Self { folder, writer }
+    }
+
+    fn lock(&self) -> Result<std::sync::MutexGuard<'_, ()>, semio_framework_os_vcs::VcsError> {
+        self.writer.lock().map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))
     }
 
     async fn dsl_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
@@ -304,19 +418,12 @@ impl FolderTextStorage {
     /// 🗃️ Publishes derived root mirrors before atomically replacing archive authority.
     pub async fn write_archive(&self, document_id: &str, envelope_id: &str, archive: &[u8], files: &ArtifactPackFiles, dsl_mirror: &str) -> Result<(), semio_framework_os_vcs::VcsError> {
         semio_framework_os_spr::decode_document_archive_bytes(archive).await.map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
+        let paths = self.pack_targets(document_id, envelope_id).await;
+        let archive_path = self.archive_path(document_id, envelope_id).await;
+        let _guard = self.lock()?;
         std::fs::create_dir_all(&self.folder).map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
-        let target = self.archive_path(document_id, envelope_id).await;
-        let staged = target.with_extension("semio.stage");
-        std::fs::write(&staged, archive).map_err(|error| semio_framework_os_vcs::VcsError::Backbone(error.to_string()))?;
-        if let Err(error) = self.write_pack(document_id, envelope_id, files, dsl_mirror).await {
-            let _ = std::fs::remove_file(&staged);
-            return Err(error);
-        }
-        if let Err(error) = std::fs::rename(&staged, &target) {
-            let _ = std::fs::remove_file(&staged);
-            return Err(semio_framework_os_vcs::VcsError::Backbone(error.to_string()));
-        }
-        Ok(())
+        Self::write_pack_files(&paths, files, dsl_mirror)?;
+        atomic_replace(&archive_path, archive)
     }
 
     /// 📖️ Reads both files for `document_id`, or `None` if the DSL file does not exist yet.
@@ -337,9 +444,11 @@ impl FolderTextStorage {
     /// ✍️ Overwrites both files wholesale — the structural-command cold path (undo/redo/
     /// checkpoint/alternative).
     pub async fn write(&self, document_id: &str, envelope_id: &str, files: &ArtifactTextFiles) -> Result<(), semio_framework_os_vcs::VcsError> {
+        let (dsl, ops) = (self.dsl_path(document_id, envelope_id).await, self.ops_path(document_id, envelope_id).await);
+        let _guard = self.lock()?;
         std::fs::create_dir_all(&self.folder).map_err(|e| semio_framework_os_vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.dsl_path(document_id, envelope_id).await, &files.dsl).map_err(|e| semio_framework_os_vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.ops_path(document_id, envelope_id).await, &files.ops).map_err(|e| semio_framework_os_vcs::VcsError::Backbone(e.to_string()))
+        atomic_replace(&dsl, files.dsl.as_bytes())?;
+        atomic_replace(&ops, files.ops.as_bytes())
     }
 
     /// 📖️ pack+spr-first read: reads the AUTHORITATIVE pair for `document_id`, or `None` if
@@ -373,20 +482,41 @@ impl FolderTextStorage {
     /// `.ops` text mirror, and the always-written DSL mirror `dsl_mirror` (`print_dsl` on the
     /// initial snapshot) — the pack-aware sibling of `write`.
     pub async fn write_pack(&self, document_id: &str, envelope_id: &str, files: &ArtifactPackFiles, dsl_mirror: &str) -> Result<(), semio_framework_os_vcs::VcsError> {
+        let paths = self.pack_targets(document_id, envelope_id).await;
+        let _guard = self.lock()?;
         std::fs::create_dir_all(&self.folder).map_err(|e| semio_framework_os_vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.pack_path(document_id, envelope_id).await, &files.pack).map_err(|e| semio_framework_os_vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.spr_path(document_id, envelope_id).await, &files.spr).map_err(|e| semio_framework_os_vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.ops_path(document_id, envelope_id).await, &files.ops).map_err(|e| semio_framework_os_vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.dsl_path(document_id, envelope_id).await, dsl_mirror).map_err(|e| semio_framework_os_vcs::VcsError::Backbone(e.to_string()))
+        Self::write_pack_files(&paths, files, dsl_mirror)
+    }
+
+    async fn pack_targets(&self, document_id: &str, envelope_id: &str) -> [std::path::PathBuf; 4] {
+        [self.pack_path(document_id, envelope_id).await, self.spr_path(document_id, envelope_id).await, self.ops_path(document_id, envelope_id).await, self.dsl_path(document_id, envelope_id).await]
+    }
+
+    fn write_pack_files(paths: &[std::path::PathBuf; 4], files: &ArtifactPackFiles, dsl_mirror: &str) -> Result<(), semio_framework_os_vcs::VcsError> {
+        atomic_replace(&paths[0], &files.pack)?;
+        atomic_replace(&paths[1], &files.spr)?;
+        atomic_replace(&paths[2], files.ops.as_bytes())?;
+        atomic_replace(&paths[3], dsl_mirror.as_bytes())
     }
 
     /// ➕️ Appends already-printed op-log lines (one complete {@link print_edit_lines} unit:
     /// edit + inverse + metadata) to the `.ops` file without rewriting it — O(new edit).
     pub async fn append_ops(&self, document_id: &str, envelope_id: &str, lines: &str) -> Result<(), semio_framework_os_vcs::VcsError> {
-        use std::io::Write;
-        std::fs::create_dir_all(&self.folder).map_err(|e| semio_framework_os_vcs::VcsError::Backbone(e.to_string()))?;
-        let mut file = std::fs::OpenOptions::new().create(true).append(true).open(self.ops_path(document_id, envelope_id).await).map_err(|e| semio_framework_os_vcs::VcsError::Backbone(e.to_string()))?;
-        file.write_all(lines.as_bytes()).map_err(|e| semio_framework_os_vcs::VcsError::Backbone(e.to_string()))
+        use std::io::{Read, Seek, SeekFrom, Write};
+        let backbone = |error: std::io::Error| semio_framework_os_vcs::VcsError::Backbone(error.to_string());
+        let ops = self.ops_path(document_id, envelope_id).await;
+        let _guard = self.lock()?;
+        std::fs::create_dir_all(&self.folder).map_err(backbone)?;
+        let mut file = std::fs::OpenOptions::new().create(true).read(true).write(true).open(ops).map_err(backbone)?;
+        let mut existing = Vec::new();
+        file.read_to_end(&mut existing).map_err(backbone)?;
+        let complete = existing.iter().rposition(|byte| *byte == b'\n').map_or(0, |index| index + 1);
+        if complete < existing.len() {
+            file.set_len(complete as u64).map_err(backbone)?;
+        }
+        file.seek(SeekFrom::Start(complete as u64)).map_err(backbone)?;
+        file.write_all(lines.as_bytes()).map_err(backbone)?;
+        file.sync_data().map_err(backbone)
     }
 
     /// 📇️ Lists every stored document id (by DSL `.semio` file stem) for a given envelope id.

@@ -1,3 +1,11 @@
-; 🚧 scaffolded by W1b — full field layout lands in W2/W3
-document = marker
-marker = "stdio.mp3.diff"
+; The binary Mp3Diff is the text diff line verbatim as UTF-8 (../../📝️text/🔺️diff/🔤️.ebnf).
+diff = [ clause *( SP clause ) ]
+clause = "id3v2=" meta / "frames=" frame-list / "splices=" splice *( ";" splice ) / "id3v1=" meta
+meta = "[0]" / "[1,[" hex "]]"
+frame-list = "[" [ frame *( ";" frame ) ] "]"
+frame = "[" header "," hex "]"
+header = "[" number 2( "," number ) "," bit 2( "," number ) 2( "," bit ) 2( "," number ) 2( "," bit ) "," number "]"
+splice = number "," number "," frame-list
+bit = "0" / "1"
+number = 1*DIGIT
+hex = *( 2( DIGIT / %x61-66 ) )

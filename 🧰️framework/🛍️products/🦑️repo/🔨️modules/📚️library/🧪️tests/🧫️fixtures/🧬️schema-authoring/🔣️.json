@@ -21,7 +21,7 @@
         "target": {
           "artifactId": "mesh-1",
           "dialect": {
-            "artifactKind": "s.stdio.semio.mesh",
+            "artifactKind": "stdio.semio.mesh",
             "standard": "1",
             "subset": "any"
           }
@@ -40,7 +40,7 @@
         "target": {
           "artifactId": "mesh-1",
           "dialect": {
-            "artifactKind": "s.stdio.semio.mesh",
+            "artifactKind": "stdio.semio.mesh",
             "standard": "1",
             "subset": "any"
           }
@@ -67,7 +67,7 @@
         "target": {
           "artifactId": "mesh-1",
           "dialect": {
-            "artifactKind": "s.stdio.semio.mesh",
+            "artifactKind": "stdio.semio.mesh",
             "standard": "1",
             "subset": "any"
           }
@@ -86,7 +86,7 @@
         "target": {
           "artifactId": "mesh-1",
           "dialect": {
-            "artifactKind": "s.stdio.semio.mesh",
+            "artifactKind": "stdio.semio.mesh",
             "standard": "1",
             "subset": "any"
           }
@@ -105,7 +105,7 @@
         "target": {
           "artifactId": "mesh-1",
           "dialect": {
-            "artifactKind": "s.stdio.semio.mesh",
+            "artifactKind": "stdio.semio.mesh",
             "standard": "1",
             "subset": "any"
           }
@@ -133,7 +133,7 @@
         "target": {
           "artifactId": "mesh-1",
           "dialect": {
-            "artifactKind": "s.stdio.semio.mesh",
+            "artifactKind": "stdio.semio.mesh",
             "standard": "1",
             "subset": "any"
           }
@@ -151,7 +151,7 @@
         "target": {
           "artifactId": "mesh-1",
           "dialect": {
-            "artifactKind": "s.stdio.semio.mesh",
+            "artifactKind": "stdio.semio.mesh",
             "standard": "1",
             "subset": "any"
           }

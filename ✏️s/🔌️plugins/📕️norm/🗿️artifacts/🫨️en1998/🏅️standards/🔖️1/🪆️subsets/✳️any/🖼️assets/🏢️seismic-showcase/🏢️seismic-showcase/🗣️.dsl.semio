@@ -11,10 +11,10 @@ buildings [id:TEXT name:TEXT plan-width-m:QTY plan-length-m:QTY systems:TABLE st
 bridges [id:TEXT period-ratio:NUM fundamental-period-s:QTY v-rd-n:QTY bearing-d-rd-m:QTY permanent-gk-n:QTY correlated-occupancy:BOOL variables:TABLE pier-height-m:NUM pier-moment-rd-nm:NUM pier-shear-rd-n:NUM deck-length-m:NUM deck-ei-nm2:NUM importance-class:NUM vertical-period-s:NUM pier-cracked-inertia-ratio:NUM] {
   br-1 2 1.2s 2000000N 0.4m 8000000N true [ {id=br-q1 category=f qk-n=1500000N} ] 0 0 0 60 500000000000 2 0.3 0.5
 }
-assessments [id:TEXT knowledge-level:ENUM limit-state:ENUM supported-building-id:TEXT r-k-n:QTY gamma-el:NUM chord-rotation-demand-rad:NUM chord-rotation-yield-rad:NUM chord-rotation-ultimate-rad:NUM section-depth-m:NUM section-width-m:NUM effective-depth-m:NUM shear-span-m:NUM axial-force-n:NUM tension-steel-area-m2:NUM compression-steel-area-m2:NUM bar-diameter-mm:NUM steel-yield-mpa:NUM concrete-strength-mpa:NUM stirrup-leg-area-m2:NUM stirrup-spacing-m:NUM stirrup-yield-mpa:NUM core-width-m:NUM core-depth-m:NUM restrained-bar-count:NUM restrained-bar-spacing-m:NUM diagonal-reinforcement-ratio:NUM shear-cracking-before-yield:NUM shear-force-demand-n:NUM intermediate-steel-area-m2:QTY] {
-  as-1 kl2 sd bldg-office 500000N 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0m2
-  as-2 kl3 nc bldg-office 500000N 1 0.02 0.005 0.035 0.5 0.3 0.46 1.75 300000 0.0012 0.0008 20 500 30 0.0001 0.1 500 0.22 0.42 6 0.15 0 0 100000 0m2
-  as-3 kl1 dl bldg-setback 500000N 1 0.004 0.005 0.035 0.5 0.3 0.46 1.75 300000 0.0012 0.0008 20 500 30 0.0001 0.1 500 0.22 0.42 6 0.15 0 0 80000 0m2
+assessments [id:TEXT knowledge-level:ENUM limit-state:ENUM supported-building-id:TEXT r-k-n:QTY gamma-el:NUM chord-rotation-demand-rad:NUM chord-rotation-yield-rad:NUM chord-rotation-ultimate-rad:NUM section-depth-m:NUM section-width-m:NUM effective-depth-m:NUM shear-span-m:NUM axial-force-n:NUM tension-steel-area-m2:NUM compression-steel-area-m2:NUM bar-diameter-mm:NUM steel-yield-mpa:NUM concrete-strength-mpa:NUM stirrup-leg-area-m2:NUM stirrup-spacing-m:NUM stirrup-yield-mpa:NUM core-width-m:NUM core-depth-m:NUM restrained-bar-count:NUM restrained-bar-spacing-m:NUM diagonal-reinforcement-ratio:NUM shear-cracking-before-yield:NUM shear-force-demand-n:NUM intermediate-steel-area-m2:QTY analysis-method:TEXT] {
+  as-1 kl2 sd bldg-office 500000N 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0m2 derived
+  as-2 kl3 nc bldg-office 500000N 1 0.02 0.005 0.035 0.5 0.3 0.46 1.75 300000 0.0012 0.0008 20 500 30 0.0001 0.1 500 0.22 0.42 6 0.15 0 0 100000 0m2 derived
+  as-3 kl1 dl bldg-setback 500000N 1 0.004 0.005 0.035 0.5 0.3 0.46 1.75 300000 0.0012 0.0008 20 500 30 0.0001 0.1 500 0.22 0.42 6 0.15 0 0 80000 0m2 derived
 }
 silos [id:TEXT height-m:QTY radius-m:QTY permanent-gk-n:QTY content-qk-n:QTY content-category:ENUM filling-ratio:NUM n-rd-n:QTY v-rd-n:QTY q-nominal:NUM] {
   si-1 12m 4m 1200000N 4000000N e 0.85 2000000N 1500000N 1.2

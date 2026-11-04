@@ -53,7 +53,10 @@
       "kinds": [
         "set-id3v2",
         "set-frames",
-        "set-id3v1"
+        "set-id3v1",
+        "patch-frames",
+        "set-id3-frame",
+        "remove-id3-frame"
       ]
     }
   ],
@@ -115,6 +118,64 @@
             "operation": "set-id3v2",
             "bridgeVersion": 1,
             "variant": "SetId3v2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp3-mpeg1-layer3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "patch-frames",
+          "capability": "mp3-mpeg1-layer3-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "patch-frames",
+            "bridgeVersion": 1,
+            "variant": "PatchFrames"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp3-mpeg1-layer3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-id3-frame",
+          "capability": "mp3-mpeg1-layer3-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-id3-frame",
+            "bridgeVersion": 1,
+            "variant": "SetId3Frame"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp3-mpeg1-layer3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-id3-frame",
+          "capability": "mp3-mpeg1-layer3-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-id3-frame",
+            "bridgeVersion": 1,
+            "variant": "RemoveId3Frame"
           },
           "oracleRequirements": [
             {
@@ -252,6 +313,132 @@
       "reproducible": true,
       "family": "mp3-carrier",
       "notes": "SetId3v2 overwrites the ID3v2 tag's title frame (TIT2) data in place."
+    },
+    {
+      "id": "patch-frames-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp3",
+        "standard": "mpeg1-layer3",
+        "subset": "any"
+      },
+      "mutation": "patch-frames",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧪️tests/🧫️fixtures/🩹️patch-frames/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f33f28988365a3c4f5027698303161419987fde501367e870d0270c4d9e9f416",
+          "bytes": 1437
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧪️tests/🧫️fixtures/🩹️patch-frames/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:720722d4c2b499970037acda8909c76dff78cdc863ed294460633bbfe88e11bb",
+          "bytes": 1006
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp3-carrier",
+      "notes": "PatchFrames{index:0,removeCount:1,frames:[]} cuts the first whole MPEG frame at its frame boundary, leaving the 1-frame lane the set-frames fixture started from."
+    },
+    {
+      "id": "set-id3-frame-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp3",
+        "standard": "mpeg1-layer3",
+        "subset": "any"
+      },
+      "mutation": "set-id3-frame",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-id3-frame/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f33f28988365a3c4f5027698303161419987fde501367e870d0270c4d9e9f416",
+          "bytes": 1437
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧪️tests/🧫️fixtures/🏷️set-id3-frame/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:9c8249d5d02844eb3e712cc44ee9f97671f42b2ff5c0a9eb5354e99f8bf4147a",
+          "bytes": 1453
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp3-carrier",
+      "notes": "SetId3Frame replaces the TIT2 frame in place and leaves every other frame, the audio and the ID3v1 trailer untouched."
+    },
+    {
+      "id": "remove-id3-frame-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp3",
+        "standard": "mpeg1-layer3",
+        "subset": "any"
+      },
+      "mutation": "remove-id3-frame",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-id3-frame/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:f33f28988365a3c4f5027698303161419987fde501367e870d0270c4d9e9f416",
+          "bytes": 1437
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧪️tests/🧫️fixtures/🗑️remove-id3-frame/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ec74e216d9895ba4a771bd08a37a02b8f4cc53c00fc6b9f298cd26c0095ba3b2",
+          "bytes": 1287
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp3-carrier",
+      "notes": "RemoveId3Frame removes the TIT2 frame and keeps the order of the others."
     }
   ],
   "oracleHostPackages": []

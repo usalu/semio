@@ -1,10 +1,12 @@
 import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
+import { DocumentCloseDialog, UnsavedMarkerContext } from "./🚪️close-guard/🟦️.tsx";
+import { TransientNotice } from "./🍞️transient-notice/🟦️.tsx";
 import { isTerminalDocumentCheckInPhaseV1 } from "@semio-tech/framework/document/check-in";
 import { SessionAuthorityNotice } from "./🔖️session-notice/🟦️.tsx";
 import * as React from "../⚛️react-port/🟦️.ts";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "../⚛️react-port/🟦️.ts";
 import { localeRequestToApply } from "./🌐️locale-request/🟦️.ts";
-import { type Anchor, ANCHORS, CanvasSkeleton, cn, ContextMenuController, createShellScope, detectShellLocale, disposeShellI18nInstance, Footer, Layout, LevelProvider, Navbar, PanelDockProvider, type ShellScope, ShellScopeProvider, TextSelectionContextMenuHost, TutorialBar, UIIntroduction, UiKeybindingsProvider } from "@semio-tech/ui-react";
+import { type Anchor, ANCHORS, CanvasSkeleton, cn, ContextMenuController, ContextMenuTriggerButton, createShellScope, detectShellLocale, disposeShellI18nInstance, Footer, Layout, LevelProvider, Navbar, PanelDockProvider, type ShellScope, ShellScopeProvider, TextSelectionContextMenuHost, TutorialBar, UIIntroduction, UiKeybindingsProvider } from "@semio-tech/ui-react";
 import { commitUiPreferencesConfigMutation, readUiPreferences } from "../🎚️UiPreferences/🟦️.ts";
 import { setLocale } from "@semio-tech/framework/config/mutations";
 import type { ShellLocale } from "@semio-tech/framework";
@@ -185,12 +187,14 @@ function FrameworkOsShellMounted(props: FrameworkOsShellProps & { readonly initi
   );
 }
 function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
-  const { boardSessionFactory, setWindowTitle, setWindowIcon, keysByActionId, appCatalogue, controlKeybindings, timeTravelPeers, rowActionRefusals, requestContextMenu, buildShellContextMenuItems, session, initialExampleReady, error, agentBridgeInstances, historyDomRef, hubEnv, hubSessionCapability, verifiedSessionAuthority, identityOffline, uiLocale, cancelSessionAuthorityBootstrap, bootstrapUiByDocument, closeDocument, executionTargetUiByDocument, spaceArtifactCreationUi, spaceArtifactCreationCatalogUi, cancelSpaceArtifactCreation, openReadySpaceArtifactCreation, inferencePortRuntimeKey, inferencePort, documentServices, dispatchInferencePortIntent, directoryBootstrapUi, cancelDirectoryBootstrap, hubWorkspaceOpen, hubConnectionPort, openSpaceId, hubOnlineUserIds, navigateShellUri, setHubWorkspaceOpen, hostMode, navigateHistory, sessionRouteRef, spaceAdministration, dispatchSpaceAdministrationIntent, routeAdmissionNotice, routeAdmission, openHubWorkspace, transientNotice, dispatch, installingPluginIds, pluginInstallProgress, cancelPluginInstalls, commandStalls, loadedPlugins, panel, uiTerminology, commandStallClockMs, dock, handleTabDockDrop, handleTreeUnitDockDrop, mobile, mobilePanel, navbarItems, onCommand, activeTutorial, tutorialPlaying, tutorialRate, tutorialMuted, tutorialCaptionsOn, tutorialRecording, tutorialRecorderAvailable, tutorialChapterMarkers, tutorialClock, playPauseTutorial, stopTutorial, seekTutorial, toggleTutorialRecording, addTutorialChapter, footerItems, focusedTimeTravel, focusedReprojection, currentCheckIn, folderReconnectOffer, folderReconnectBusy, reconnectLocalFolder, forgetLocalFolder, focusedApp, onActionStable, currentDocumentRuntimeKey, dismissHubCheckIn, cancelHubCheckIn, buildPanelProps, shellPluginCanvasStatus, canvas, searchItems, searchOpen, findOpen, shellContextMenuTitleLabel, shellContextMenu, setShellContextMenu, activeIntroduction, introductionStepIndex, brand, appLabelsOverlay, introductionCompletedInteractions, dismissIntroduction, overlayDialog, isCurrentDialogOrigin, localPrograms, selectedSpaceArtifactKinds, selectedSpaceArtifactCreationCatalog, localInteraction, closeOwnedDialog, onAction } = useCoreState({ props });
+  const { boardSessionFactory, setWindowTitle, setWindowIcon, keysByActionId, appCatalogue, controlKeybindings, timeTravelPeers, rowActionRefusals, requestContextMenu, buildShellContextMenuItems, session, initialExampleReady, error, agentBridgeInstances, historyDomRef, hubEnv, hubSessionCapability, verifiedSessionAuthority, identityOffline, uiLocale, cancelSessionAuthorityBootstrap, bootstrapUiByDocument, closeDocument, closePrompt, currentSavedState, executionTargetUiByDocument, spaceArtifactCreationUi, spaceArtifactCreationCatalogUi, cancelSpaceArtifactCreation, openReadySpaceArtifactCreation, inferencePortRuntimeKey, inferencePort, documentServices, dispatchInferencePortIntent, directoryBootstrapUi, cancelDirectoryBootstrap, hubWorkspaceOpen, hubConnectionPort, openSpaceId, hubOnlineUserIds, navigateShellUri, setHubWorkspaceOpen, hostMode, navigateHistory, sessionRouteRef, spaceAdministration, dispatchSpaceAdministrationIntent, routeAdmissionNotice, routeAdmission, openHubWorkspace, transientNotice, dispatch, installingPluginIds, pluginInstallProgress, cancelPluginInstalls, commandStalls, loadedPlugins, panel, uiTerminology, commandStallClockMs, dock, handleTabDockDrop, handleTreeUnitDockDrop, mobile, mobilePanel, navbarItems, onCommand, activeTutorial, tutorialPlaying, tutorialRate, tutorialMuted, tutorialCaptionsOn, tutorialRecording, tutorialRecorderAvailable, tutorialChapterMarkers, tutorialClock, playPauseTutorial, stopTutorial, seekTutorial, toggleTutorialRecording, addTutorialChapter, footerItems, focusedTimeTravel, focusedReprojection, currentCheckIn, folderReconnectOffer, folderReconnectBusy, reconnectLocalFolder, forgetLocalFolder, focusedApp, onActionStable, currentDocumentRuntimeKey, dismissHubCheckIn, cancelHubCheckIn, buildPanelProps, shellPluginCanvasStatus, canvas, searchItems, searchOpen, findOpen, shellContextMenuTitleLabel, shellContextMenu, setShellContextMenu, activeIntroduction, introductionStepIndex, brand, appLabelsOverlay, introductionCompletedInteractions, dismissIntroduction, overlayDialog, isCurrentDialogOrigin, localPrograms, selectedSpaceArtifactKinds, selectedSpaceArtifactCreationCatalog, localInteraction, closeOwnedDialog, onAction } = useCoreState({ props });
+  const unsavedMarkerValue = React.useMemo(() => ({ saved: currentSavedState, locale: uiLocale }), [currentSavedState, uiLocale]);
   return (
     <BoardSessionFactoryContext.Provider value={boardSessionFactory}>
     <SetWindowTitleContext.Provider value={setWindowTitle}>
     <SetWindowIconContext.Provider value={setWindowIcon}>
     <AppKeybindingsContext.Provider value={keysByActionId}>
+    <UnsavedMarkerContext.Provider value={unsavedMarkerValue}>
     <AppCatalogueContext.Provider value={appCatalogue}>
     <UiKeybindingsProvider bindings={controlKeybindings}>
     <UiPresenceOverlayContext.Provider value={timeTravelPeers.overlay}>
@@ -279,20 +283,8 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
               )}
             </div>
           )}
-          {transientNotice ? (
-            <div
-              role="status"
-              aria-live="polite"
-              data-semio-transient-notice=""
-              data-notice-code={transientNotice.code}
-              className={cn("pointer-events-auto absolute top-workbench left-1/2 z-50 -translate-x-1/2 rounded-sm border px-double py-single text-sm shadow-sm", TRANSIENT_NOTICE_TONE_CLASS[transientNotice.kind])}
-            >
-              {transientNotice.message}
-              <button type="button" className="ml-single underline" onClick={() => dispatch({ type: "SET_TRANSIENT_NOTICE", value: null })}>
-                {shellLabel("ui.common.close")}
-              </button>
-            </div>
-          ) : null}
+          {closePrompt === null ? null : <DocumentCloseDialog name={closePrompt.name} locale={uiLocale} failure={closePrompt.failure} saving={closePrompt.phase === "saving"} onKeep={closePrompt.onKeep} onDiscard={closePrompt.onDiscard} />}
+          {transientNotice ? <TransientNotice notice={transientNotice} closeLabel={shellLabel("ui.common.close")} onClose={() => dispatch({ type: "SET_TRANSIENT_NOTICE", value: null })} /> : null}
           {installingPluginIds.length > 0 ? (
             <div
               role="status"
@@ -418,6 +410,15 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
         </div>
         <UISearch items={searchItems} open={searchOpen} onOpenChange={(value) => dispatch({ type: "SET_SEARCH_OPEN", value })} />
         <UIFind open={findOpen} onOpenChange={(value) => dispatch({ type: "SET_FIND_OPEN", value })} />
+        {session ? (
+          <ContextMenuTriggerButton
+            className="fixed bottom-2 right-2 z-50 border bg-background/80"
+            resolveTarget={(button) => {
+              const selection = typeof window === "undefined" ? null : window.getSelection();
+              return selection !== null && selection.toString() !== "" ? (selection.anchorNode?.parentElement ?? button) : button;
+            }}
+          />
+        ) : null}
         <TextSelectionContextMenuHost />
         <ContextMenuController
           title={shellContextMenuTitleLabel}
@@ -476,6 +477,7 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
     </UiPresenceOverlayContext.Provider>
     </UiKeybindingsProvider>
     </AppCatalogueContext.Provider>
+    </UnsavedMarkerContext.Provider>
     </AppKeybindingsContext.Provider>
     </SetWindowIconContext.Provider>
     </SetWindowTitleContext.Provider>

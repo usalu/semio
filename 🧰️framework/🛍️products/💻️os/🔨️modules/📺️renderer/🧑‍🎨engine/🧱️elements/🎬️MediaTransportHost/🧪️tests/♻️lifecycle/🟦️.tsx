@@ -48,7 +48,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       generation: fixture.identity.generation,
     },
     capability: { status: "ready", reason: null },
-    hostContentHeight: 240,
+    hostContentHeight: 240, trim: null,
   });
   /** 🎞️ The browser oracle admits only the two media kinds the transport host renders. */
   /** 🎞️ The browser oracle selects one closed millisecond interval. */
@@ -157,6 +157,65 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       releasePoll!(status("running", 1n));
       await waitFor(() => expect(port.cancelMediaExport).toHaveBeenCalledWith(fixture.identity.instanceId, handle));
       expect(port.cancelMediaExport).toHaveBeenCalledTimes(1);
+    });
+
+    it("shows localized mm:ss.mmm with spoken value text and raises transport keys only inside the media window", async () => {
+      vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+      vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(() => {});
+      vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:media-keys");
+      const play = vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+      const view = mount(makePort(), { ...props(), locale: "de", labels: mediaTransportLabels("de"), durationMs: 200_000, positionMs: 65_007 });
+      await waitFor(() => expect(view.container.querySelector('[data-media-state="ready"]')).not.toBeNull());
+      const window = view.container.querySelector('[data-media-state="ready"]') as HTMLElement;
+      const position = view.container.querySelector("output")!;
+      expect(position.textContent).toBe("1:05,007");
+      expect(position.getAttribute("aria-valuetext")).toBe("1 Minute 5,007 Sekunden");
+      expect(window.getAttribute("aria-keyshortcuts")).toContain("ArrowRight");
+      fireEvent.keyDown(window, { key: " " });
+      expect(play).toHaveBeenCalledTimes(1);
+      const media = view.container.querySelector("audio")!;
+      media.currentTime = 1;
+      fireEvent.keyDown(window, { key: "ArrowRight" });
+      expect(media.currentTime).toBeCloseTo(6, 3);
+      fireEvent.keyDown(view.getByRole("button", { name: /Wiedergabe|Pause/ }), { key: " " });
+      expect(play).toHaveBeenCalledTimes(1);
+    });
+
+    it("dispatches the declared range cut through the owner's action path and nothing else", async () => {
+      vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+      vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(() => {});
+      vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:media-cut");
+      const apply = vi.fn();
+      const trim = { actionId: "cut-frames", revision: "ab".repeat(32), unit: "frame", unitsPerSecondNumerator: 1000, unitsPerSecondDenominator: 1, totalUnits: 1_000_000 };
+      const [start, end] = fixture.media.selection as [number, number];
+      const view = render(createElement(MediaTransportOwnerScope, { owner: { instanceId: fixture.identity.instanceId, controllerId: fixture.identity.controllerId, windowId: fixture.identity.windowId, port: makePort(), apply } },
+        createElement(MediaTransportHost, { value: { ...props(), trim }, nodeId: 7, nodeKey: "media.transport" })));
+      await waitFor(() => expect(view.container.querySelector('[data-media-state="ready"]')).not.toBeNull());
+      fireEvent.click(view.getByRole("button", { name: "Cut selection" }));
+      expect(apply).toHaveBeenCalledTimes(1);
+      expect(apply).toHaveBeenCalledWith("cut-frames", { revision: trim.revision, value: `${start}-${end}` });
+    });
+
+    it("offers no cut without a declared trim or without an owner action path", async () => {
+      vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+      vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(() => {});
+      vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:media-nocut");
+      const view = mount(makePort());
+      await waitFor(() => expect(view.container.querySelector('[data-media-state="ready"]')).not.toBeNull());
+      expect(view.container.querySelector('button[aria-label="Cut selection"]')).toBeNull();
+    });
+
+    it("leaves the loading state for an explicit cancelled state after the user cancels", async () => {
+      vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+      vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(() => {});
+      const port = makePort();
+      port.pollMediaExport.mockImplementation(async () => status("running", 1n));
+      const view = mount(port);
+      await waitFor(() => expect(view.getByRole("button", { name: "Cancel" })).not.toBeNull());
+      fireEvent.click(view.getByRole("button", { name: "Cancel" }));
+      await waitFor(() => expect(view.container.querySelector('[data-media-state="cancelled"]')).not.toBeNull());
+      expect(view.container.querySelector('[data-media-state="loading"]')).toBeNull();
+      expect(view.container.querySelector("progress")).toBeNull();
     });
 
     it("refuses a stale app/controller owner before any export bytes are requested", async () => {

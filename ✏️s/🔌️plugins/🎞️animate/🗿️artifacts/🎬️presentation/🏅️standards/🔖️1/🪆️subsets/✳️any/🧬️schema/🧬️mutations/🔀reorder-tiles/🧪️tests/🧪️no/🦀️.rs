@@ -3,7 +3,7 @@
 //! Source of truth is the committed JSON beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The derived encodings come from `fixtures generate`.
 //!
-//! ⚠️ `PresentationSnapshot` keeps its `(source, tiles)` in the composed `s.stdio.semio.presentation`
+//! ⚠️ `PresentationSnapshot` keeps its `(source, tiles)` in the composed `stdio.semio.presentation`
 //! CHILD, and every content-changing diff mints a fresh `DefaultHasher`-digest handle no fixture can
 //! hand-author — this tree pins the guard branches, which mint nothing.
 //!

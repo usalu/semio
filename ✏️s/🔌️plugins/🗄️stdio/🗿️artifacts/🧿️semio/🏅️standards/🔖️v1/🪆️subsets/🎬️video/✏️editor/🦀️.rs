@@ -155,6 +155,8 @@ impl ArtifactOwnedToolJobFactory for SemioVideoEditorExampleFactory {
     type Owner = EditorApp<SemioVideoEditor>;
     const TOOL_IDS: &'static [&'static str] = SEMIO_VIDEO_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_VIDEO_DOCUMENT_SCHEMA;
+
+    semio_s_artifact_stdio_semio_base::semio_natural_file!(SemioVideoSnapshot, "stdio.semio.video");
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_VIDEO_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 #[path = "🧭️edit-rules/🦀️.rs"]

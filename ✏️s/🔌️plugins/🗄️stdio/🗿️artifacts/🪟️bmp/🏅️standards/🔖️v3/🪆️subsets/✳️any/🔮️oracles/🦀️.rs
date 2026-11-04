@@ -259,12 +259,41 @@ mod oracles {
         Ok(())
     }
 
+    /// 🌈️ Independent palette edits: a set recolors one entry; an insert or a remove shifts every sample index so each sample keeps its color, and removal refuses an entry a sample still uses. `colorsUsed` is the resulting header value.
+    pub fn palette_edit(doc: &mut OracleDoc, kind: &str, params: &Json) -> Result<(), String> {
+        let Content::Indexed { indices, palette } = &mut doc.content else { return Err("palette edits need an indexed image".into()) };
+        let index = scalar(params, "index")? as usize;
+        let color = || -> Result<[u8; 4], String> {
+            let lanes = ["red", "green", "blue", "reserved"].map(|key| numeric(member(params, key)?, 0.0, 255.0).map(|n| n as u8)).into_iter().collect::<Result<Vec<_>, String>>()?;
+            Ok([lanes[0], lanes[1], lanes[2], lanes[3]])
+        };
+        match kind {
+            "set-palette-entry" => *palette.get_mut(index).ok_or("palette entry is absent")? = color()?,
+            "insert-palette-entry" => {
+                if index > palette.len() { return Err("palette position is beyond the palette end".into()); }
+                palette.insert(index, color()?);
+                for sample in indices.iter_mut() { if usize::from(*sample) >= index { *sample += 1; } }
+                doc.colors_used = scalar(params, "colorsUsed")?;
+            }
+            "remove-palette-entry" => {
+                if index >= palette.len() { return Err("palette entry is absent".into()); }
+                if indices.iter().any(|sample| usize::from(*sample) == index) { return Err("palette entry is still used by samples".into()); }
+                palette.remove(index);
+                for sample in indices.iter_mut() { if usize::from(*sample) > index { *sample -= 1; } }
+                doc.colors_used = scalar(params, "colorsUsed")?;
+            }
+            _ => return Err(format!("unknown palette edit {kind}")),
+        }
+        Ok(())
+    }
+
     pub fn apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
         let kind = spec.str("kind");
         let params = member(spec, "params")?;
         let mut doc = decode(input)?;
         match kind.as_str() {
             "paint-indexed-region" | "paint-direct-region" => { if params.str("revision") != revision(&doc) { return Err("stale owned revision".into()); } paint(&mut doc, &kind, params)?; }
+            "set-palette-entry" | "insert-palette-entry" | "remove-palette-entry" => palette_edit(&mut doc, &kind, params)?,
             _ => return Err(format!("unknown BMP mutation {kind}"))
         }
         encode(&doc)
@@ -272,7 +301,7 @@ mod oracles {
 
     pub fn undo_mutation(original: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
         decode(mutated)?;
-        match spec.str("kind").as_str() { "paint-indexed-region" | "paint-direct-region" => encode(&decode(original)?), _ => Err("unknown inverse".into()) }
+        match spec.str("kind").as_str() { "paint-indexed-region" | "paint-direct-region" | "set-palette-entry" | "insert-palette-entry" | "remove-palette-entry" => encode(&decode(original)?), _ => Err("unknown inverse".into()) }
     }
 
     pub fn project(input: &[u8]) -> Result<Json, String> {
@@ -422,6 +451,25 @@ mod canonical_byte_authority {
             let (key, expected_key) = if indexed { ("indices", "expectedIndices") } else { ("samples", "expectedSamples") };
             assert_eq!(pixels.get(key), case.get(expected_key), "{}: authored precise paint", case.str("name"));
         }
+    }
+
+    #[test]
+    fn palette_edits_keep_every_sample_color_and_are_witnessed_by_the_image_decoder() {
+        use super::oracles::{apply_mutation, decode, project};
+        let source = include_bytes!("../🧪️tests/🧫️fixtures/🎨️replace-palette-entry-applied/⬅️before.bmp");
+        let spec = |text: &str| semio_repo_test_host::parse_json(text).unwrap();
+        let visual = |bytes: &[u8]| image::load_from_memory_with_format(bytes, image::ImageFormat::Bmp).unwrap().to_rgba8().into_raw();
+        let before = visual(source);
+        let inserted = apply_mutation(source, &spec(r#"{"kind":"insert-palette-entry","params":{"index":2,"red":200,"green":150,"blue":100,"reserved":0,"colorsUsed":8}}"#)).unwrap();
+        assert_eq!(decode(&inserted).unwrap().snapshot().get("image").unwrap().get("palette").unwrap().to_string().matches("\"r\"").count(), 8);
+        assert_eq!(visual(&inserted), before, "an insert changes the table and keeps the picture");
+        let removed = apply_mutation(&inserted, &spec(r#"{"kind":"remove-palette-entry","params":{"index":2,"colorsUsed":7}}"#)).unwrap();
+        assert_eq!(project(&removed).unwrap(), project(source).unwrap(), "removing the inserted entry restores the document");
+        let recolored = apply_mutation(source, &spec(r#"{"kind":"set-palette-entry","params":{"index":2,"red":9,"green":8,"blue":7,"reserved":0}}"#)).unwrap();
+        let after = visual(&recolored);
+        assert_ne!(after, before);
+        assert_eq!(&after[..4], &before[..4], "samples that use another entry keep their color");
+        assert!(apply_mutation(source, &spec(r#"{"kind":"remove-palette-entry","params":{"index":0,"colorsUsed":6}}"#)).is_err(), "a used entry cannot be removed");
     }
 
     #[test]

@@ -1,12 +1,12 @@
 //! ✏️ `html` editor (any) — `ArtifactEditor` surface built on the frozen
 //! `TextWindowKit` window kit (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.6).
-//! Reduces the frozen `textEdit` action: the incoming text is the artifact's own DSL text envelope (`print_dsl`/`parse_dsl`), a
-//! dump of the whole snapshot rather than a source buffer, so an Apply is a document load (`Effect::LoadDocument`), never a
-//! mutation: a draft-versus-document diff is not an edit (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).
+//! Reduces the frozen `textEdit` action: an explicit Apply publishes the change set the editor made (`splices`: ranges of Unicode scalars
+//! in the document's HTML source), and the editor emits ONE `splice-source` mutation that carries them verbatim; its diff re-parses the
+//! edited source and its inverse puts the previous source back, so an Apply is undoable history, never a document load.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
 use crate::editor::html::modes::edit;
-use crate::standards::v5::subsets::any::schema::mutations::HtmlMutation;
+use crate::standards::v5::subsets::any::schema::mutations::{splice_source, HtmlMutation};
 
 use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 use crate::{HTML_DIALECT, STDIO_HTML_DOCUMENT_SCHEMA};
@@ -47,8 +47,9 @@ use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 //#region 🔖️Command
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum HtmlEditCommand {
-    LoadText {
-        text: String,
+    SpliceText {
+        revision: String,
+        splices: String,
     },
     EditSnapshot {
         event: SnapshotEditEvent,
@@ -62,7 +63,7 @@ pub enum HtmlEditCommand {
 impl protocol::OpBinary for HtmlEditCommand {
     /// 🎯️ The app-owned retained routes this command channel carries — the join key
     /// `AppActionRegistry::validate_tool_job_rows` demands an exact owner-local proof for. The `TextWindowKit`
-    /// mints `textEdit`, but only this editor can reduce it into its own document load, so it is an
+    /// mints `textEdit`, but only this editor can reduce it into its own mutation, so it is an
     /// app-owned route exactly like the example switch.
     const TOOL_JOB_IDS: &'static [&'static str] = HTML_COMMAND_TOOL_IDS;
 
@@ -97,14 +98,14 @@ const HTML_COMMAND_TOOL_IDS: &[&str] = &[
     semio_s_artifact_stdio_contract::editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID,
 ];
 const HTML_RETAINED_PAYLOAD_SCHEMA: &str = "stdio.html.tool-command.v1";
-/// 📏️ `textEdit` carries the whole buffer, so the wire bound is the largest document this route
+/// 📏️ `textEdit` carries the draft's change set, whose inserted text is bounded by the largest document this route
 /// admits — kept under the guest's 64 KiB contiguous-request ceiling.
 const HTML_RETAINED_RAW_BYTES: usize = 16 * 1_024 * 1_024;
 /// 🚦️ The example switch and `textEdit` publish into NO document lane: each hands the host one
 /// `Effect::LoadDocument`, so their only lane is `HostOnly`.
 const HTML_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: HTML_KIT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: HTML_KIT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -134,7 +135,7 @@ pub fn html_command_from_action(action: &str, args: Option<&semio_framework_valu
     }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(HtmlEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        HTML_KIT_ACTION_ID => Ok(HtmlEditCommand::LoadText { text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")? }),
+        HTML_KIT_ACTION_ID => Ok(HtmlEditCommand::SpliceText { revision: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "revision")?, splices: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "splices")? }),
         other => {
             Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.html.unhandled-action"), format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, textEdit)")))
         }
@@ -145,7 +146,7 @@ pub fn html_command_from_action(action: &str, args: Option<&semio_framework_valu
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn html_command_id(command: &HtmlEditCommand) -> &'static str {
     match command {
-        HtmlEditCommand::LoadText { .. } => HTML_KIT_ACTION_ID,
+        HtmlEditCommand::SpliceText { .. } => HTML_KIT_ACTION_ID,
         HtmlEditCommand::EditSnapshot { event } => event.action_id(),
         HtmlEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
@@ -157,14 +158,30 @@ fn html_retained_extent(_command: &HtmlEditCommand, _snapshot: &HtmlSnapshot, _i
 }
 
 /// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
-/// its document, `textEdit` (the explicit Apply of the text window's DSL envelope) hands it the parsed document the same way.
+/// its document, `textEdit` by `splices` becomes ONE `splice-source` mutation carrying the editor's ranges verbatim.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn html_emit(command: &HtmlEditCommand) -> Result<Emit<HtmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+pub fn html_emit(command: &HtmlEditCommand, snapshot: &HtmlSnapshot, canonical_revision: Option<[u8; 32]>) -> Result<Emit<HtmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+    let fault = |code: &'static str, message: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message);
     match command {
-        HtmlEditCommand::LoadText { text } => match <HtmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
-            Ok(next) => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&next, STDIO_HTML_DOCUMENT_SCHEMA)], ..Default::default() }),
-            Err(error) => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.html.invalid-text"), error.to_string())),
-        },
+        HtmlEditCommand::SpliceText { revision, splices } => {
+            let current_revision = canonical_revision.map_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(snapshot), semio_s_artifact_stdio_contract::window_kit_canonical_revision);
+            if revision != &current_revision {
+                return Err(fault("stdio.html.stale-text-edit", "the HTML document changed while this draft was open".to_string()));
+            }
+            let ranges = semio_s_artifact_stdio_contract::draft_splices_from_json(splices)?;
+            if ranges.is_empty() {
+                return Ok(Emit::default());
+            }
+            let range_fault = |_| fault("stdio.html.splice-out-of-range", "a range of the change set exceeds the supported source size".to_string());
+            let mutation = HtmlMutation::SpliceSource(splice_source::SpliceSource {
+                splices: ranges.iter().map(|range| Ok(splice_source::SourceSplice { offset: u32::try_from(range.offset)?, delete: u32::try_from(range.delete)?, insert: range.insert.clone() })).collect::<Result<Vec<_>, std::num::TryFromIntError>>().map_err(range_fault)?,
+            });
+            let outcome = <HtmlMutation as protocol::ColdMutation<HtmlSnapshot>>::diff(&mutation, snapshot);
+            if let Some(message) = outcome.messages().first() {
+                return Err(fault("stdio.html.invalid-source", message.message.to_string()));
+            }
+            Ok(if outcome.diff() == &semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::diff::HtmlDiff::default() { Emit::default() } else { Emit::mutations(vec![mutation]) })
+        }
         HtmlEditCommand::EditSnapshot { .. } => Err(Fault::from("stdio-html-snapshot-edit-routed-to-native-reducer")),
         HtmlEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&html_example_snapshot(example_id), STDIO_HTML_DOCUMENT_SCHEMA)], ..Default::default() }),
     }
@@ -174,15 +191,15 @@ pub fn html_emit(command: &HtmlEditCommand) -> Result<Emit<HtmlMutation, NoConfi
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn html_retained_reduce(
     command: &HtmlEditCommand,
-    _snapshot: &HtmlSnapshot,
+    snapshot: &HtmlSnapshot,
     _config: &NoConfig,
     _history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HtmlEditor>>>,
-    _operation: &AppOperationContext,
+    operation: &AppOperationContext,
 ) -> Result<Emit<HtmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    html_emit(command)
+    html_emit(command, snapshot, Some(operation.canonical_base_revision))
 }
 
 struct HtmlRetainedCommandJobFactory {
@@ -333,15 +350,16 @@ impl ArtifactEditor for HtmlEditor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             HtmlEditCommand::EditSnapshot { event } => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
-            _ => html_emit(command),
+            _ => html_emit(command, doc.snapshot, doc.operation_optional().map(|operation| operation.canonical_base_revision)),
         }
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             semio_s_artifact_stdio_html_inferences::editor::html::modes::edit::windows::main::BODY_KEY => {
+                let revision = doc.render_operation().map_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(doc.snapshot), |operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision));
                 let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
-                semio_s_artifact_stdio_html_inferences::editor::html::modes::edit::windows::main::render(doc.snapshot, view_state.locale, publication_revision).map(semio_framework_plugin::built_to_component_tree)
+                semio_s_artifact_stdio_html_inferences::editor::html::modes::edit::windows::main::render(doc.snapshot, view_state.locale, &revision, publication_revision).map(semio_framework_plugin::built_to_component_tree)
             }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc,
