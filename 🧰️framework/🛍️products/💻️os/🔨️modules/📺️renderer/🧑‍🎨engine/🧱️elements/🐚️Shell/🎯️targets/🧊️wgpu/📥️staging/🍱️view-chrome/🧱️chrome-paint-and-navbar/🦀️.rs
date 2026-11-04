@@ -4,6 +4,11 @@
 
 use super::*;
 
+#[path = "shared-borders.rs"]
+mod shared_borders;
+pub use shared_borders::{chrome_border_plan, ChromeBorderFrame, ChromeBorderPaint};
+use semio_framework_os_renderer_wgpu_dock::shared_borders::BorderState;
+
 pub fn chrome_text_complete_step(target: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, width: f32, size: f32, color: Rgba, cursor: &mut RetainedGlyphCursor) -> Result<bool, ()> {
     match chrome_text_step(target, atlas, text, x, y, width, size, color, cursor) {
         RetainedGlyphStep::Pending => Ok(false),
@@ -28,7 +33,25 @@ pub fn render_retained_chrome_group_item_step(
     item: &ChromeGroupItem<'_>,
     register_hit: bool,
 ) -> RetainedChromeGroupStep {
-    render_retained_chrome_group_item_step_with_trailing(group_phase, glyph, draw, atlas, icons, input, theme, rect, item, register_hit, CHROME_ICON_TINY, None)
+    render_retained_chrome_group_item_step_with_trailing(group_phase, glyph, draw, atlas, icons, input, theme, rect, item, register_hit, CHROME_ICON_TINY, None, None)
+}
+
+/// 🧷 Emits a control using pre-resolved sibling or hierarchy edges, one stroke per grant.
+#[allow(clippy::too_many_arguments, reason = "the retained chrome context and semantic border plan")]
+pub fn render_retained_chrome_group_item_step_with_borders(
+    group_phase: &mut u8,
+    glyph: &mut RetainedGlyphCursor,
+    draw: &mut DrawList,
+    atlas: &mut FontAtlas,
+    icons: &IconAtlas,
+    input: &mut InputState<ActionDescriptor>,
+    theme: &Theme,
+    rect: Rect,
+    item: &ChromeGroupItem<'_>,
+    register_hit: bool,
+    borders: Option<&[ChromeBorderPaint]>,
+) -> RetainedChromeGroupStep {
+    render_retained_chrome_group_item_step_with_trailing(group_phase, glyph, draw, atlas, icons, input, theme, rect, item, register_hit, CHROME_ICON_TINY, None, borders)
 }
 
 #[allow(clippy::too_many_arguments, reason = "the retained painter's existing render context plus one optional trailing icon")]
@@ -45,6 +68,7 @@ fn render_retained_chrome_group_item_step_with_trailing(
     register_hit: bool,
     leading_icon_size: f32,
     trailing_icon: Option<(&str, f32)>,
+    borders: Option<&[ChromeBorderPaint]>,
 ) -> RetainedChromeGroupStep {
     let hovered = !item.disabled && rect.contains(input.pointer_x, input.pointer_y);
     let color = if item.disabled { theme.text_muted } else { chrome_item_text(theme, item.active, hovered) };
@@ -85,34 +109,45 @@ fn render_retained_chrome_group_item_step_with_trailing(
             }
             *group_phase = 3;
         }
-        3 => {
-            draw.push_solid([rect.x, rect.y, rect.w, theme.stroke_hairline], theme.border_normal);
-            *group_phase = 4;
+        3..=252 => {
+            let state = if hovered { BorderState::Hover } else if item.active { BorderState::Active } else { BorderState::Normal };
+            let hair = theme.stroke_hairline;
+            let own = [
+                ChromeBorderPaint { rect: [rect.x, rect.y, rect.w, hair], state },
+                ChromeBorderPaint { rect: [rect.x, rect.y + rect.h - hair, rect.w, hair], state },
+                ChromeBorderPaint { rect: [rect.x, rect.y, hair, rect.h], state },
+                ChromeBorderPaint { rect: [rect.x + rect.w - hair, rect.y, hair, rect.h], state },
+            ];
+            let edges = borders.unwrap_or(&own);
+            if edges.len() > 249 {
+                *group_phase = 0;
+                glyph.reset();
+                return RetainedChromeGroupStep::Fault;
+            }
+            if let Some(edge) = edges.get((*group_phase - 3) as usize) {
+                let border_color = match edge.state {
+                    BorderState::Hover => theme.border_emphasized,
+                    BorderState::Active => theme.selected,
+                    _ => theme.border_normal,
+                };
+                draw.push_solid(edge.rect, border_color);
+                *group_phase += 1;
+            } else {
+                *group_phase = 253;
+            }
         }
-        4 => {
-            draw.push_solid([rect.x, rect.y + rect.h - theme.stroke_hairline, rect.w, theme.stroke_hairline], theme.border_normal);
-            *group_phase = 5;
-        }
-        5 => {
-            draw.push_solid([rect.x, rect.y, theme.stroke_hairline, rect.h], theme.border_normal);
-            *group_phase = 6;
-        }
-        6 => {
-            draw.push_solid([rect.x + rect.w - theme.stroke_hairline, rect.y, theme.stroke_hairline, rect.h], theme.border_normal);
-            *group_phase = 7;
-        }
-        7 => {
+        253 => {
             if register_hit && !item.disabled {
                 note_chrome_group_item(item);
                 input.register_hit(HitTarget { rect, event: None, control_id: Some(item.control_id.into()), kind: item.kind.clone(), drag_axis: None, drag_data: None });
             }
-            *group_phase = if trailing_icon.is_some() { 8 } else { 9 };
+            *group_phase = if trailing_icon.is_some() { 254 } else { 255 };
         }
-        8 => {
+        254 => {
             if let Some((icon_id, size)) = trailing_icon {
                 chrome_icon(draw, icons, icon_id, rect.x + rect.w - theme.padding_standard - size, rect.y + (rect.h - size) * 0.5, size, color);
             }
-            *group_phase = 9;
+            *group_phase = 255;
         }
         _ => {
             *group_phase = 0;
@@ -136,7 +171,55 @@ pub fn render_retained_panel_chrome_item_step(
     item: &ChromeGroupItem<'_>,
     register_hit: bool,
 ) -> RetainedChromeGroupStep {
-    render_retained_chrome_group_item_step_with_trailing(group_phase, glyph, draw, atlas, icons, input, theme, rect, item, register_hit, PANEL_CHROME_ICON_TINY, Some(("grip-vertical", PANEL_CHROME_GRIP_SIZE)))
+    render_retained_chrome_group_item_step_with_trailing(group_phase, glyph, draw, atlas, icons, input, theme, rect, item, register_hit, PANEL_CHROME_ICON_TINY, Some(("grip-vertical", PANEL_CHROME_GRIP_SIZE)), None)
+}
+
+/// 🧷 Paints a panel chip with a resolved row plan, retaining the original icon and grip metrics.
+#[allow(clippy::too_many_arguments, reason = "the retained chrome context and semantic border plan")]
+pub fn render_retained_panel_chrome_item_step_with_borders(
+    group_phase: &mut u8,
+    glyph: &mut RetainedGlyphCursor,
+    draw: &mut DrawList,
+    atlas: &mut FontAtlas,
+    icons: &IconAtlas,
+    input: &mut InputState<ActionDescriptor>,
+    theme: &Theme,
+    rect: Rect,
+    item: &ChromeGroupItem<'_>,
+    register_hit: bool,
+    borders: Option<&[ChromeBorderPaint]>,
+) -> RetainedChromeGroupStep {
+    render_retained_chrome_group_item_step_with_trailing(group_phase, glyph, draw, atlas, icons, input, theme, rect, item, register_hit, PANEL_CHROME_ICON_TINY, Some(("grip-vertical", PANEL_CHROME_GRIP_SIZE)), borders)
+}
+
+impl<'ctx> ChromeViewCtx<'ctx> {
+    /// 🧭 Plans only genuinely touching panel-row edges; positive gaps remain separate outlines.
+    #[allow(clippy::too_many_arguments, reason = "the row's authored bounds and flow")]
+    pub fn prepare_panel_row_borders(&self, cursor: &mut ShellChromeChildCursor, atlas: &mut FontAtlas, input: &InputState<ActionDescriptor>, theme: &Theme, anchor: PanelAnchor, left: f32, right: f32, y: f32, height: f32, reverse: bool) {
+        if cursor.item != 0 || cursor.group_phase != 0 || !cursor.shared_border_rects.is_empty() {
+            return;
+        }
+        let nodes = self.dock.dock_tabs.tabs(anchor);
+        let mut frames = Vec::new();
+        let mut x = left;
+        let mut consumed = 0.0;
+        for index in 0..nodes.len() {
+            let node = &nodes[if reverse { nodes.len() - index - 1 } else { index }];
+            let active = self.dock.anchor_open(anchor) && self.dock.anchor_state(anchor).path.first() == Some(&node.id);
+            let item = ChromeGroupItem { control_id: &node.id, icon_id: Some(&node.icon_id), label: Some(&node.label), active, disabled: false, kind: HitKind::Toggle };
+            let Some(width) = retained_panel_chrome_item_width(atlas, theme, &item) else { continue };
+            let origin = if reverse { right - consumed - width } else { x };
+            consumed += width;
+            let Some(rect) = shell_chrome_clip_horizontal(Rect::new(origin, y, width, height), ShellChromeBandSpan { left, right }) else { continue };
+            let state = if rect.contains(input.pointer_x, input.pointer_y) { BorderState::Hover } else if active { BorderState::Active } else { BorderState::Normal };
+            frames.push(ChromeBorderFrame { owner: node.id.clone(), rect: [rect.x, rect.y, rect.w, rect.h], state });
+            cursor.shared_border_rects.insert(node.id.clone(), rect);
+            x = rect.x + rect.w;
+        }
+        if let Ok(plan) = chrome_border_plan(&frames, theme.stroke_hairline) {
+            cursor.shared_border_plan = plan;
+        }
+    }
 }
 
 /// 🧭️ One anchor's floating-panel box inside the body band, the Rust twin of React's

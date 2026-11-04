@@ -60,6 +60,12 @@ function writeResizableJoinCornerSpec(element: HTMLElement, spec: ResizableJoinC
   element.dataset.joinSpec = JSON.stringify(spec);
 }
 
+/** 🎯️ Interactive controls keep pointer ownership inside an expanded resize region. */
+function resizablePointerControl(target: EventTarget | null, ownerDocument: Document): Element | null {
+  const ElementType = ownerDocument.defaultView?.Element;
+  return ElementType && target instanceof ElementType ? target.closest('button, input, select, textarea, a[href], [role="button"], [role="tab"], [role="slider"], [role="textbox"], [role="combobox"], [role="spinbutton"], [role="checkbox"], [role="radio"], [role="switch"], [contenteditable]:not([contenteditable="false" i]), [data-slot="drag-handle"]') : null;
+}
+
 //#region ↔ResizableCornerInterceptor
 
 /** 🎣️ Window capture hook so corner grabs win over react-resizable-panels and survive hot reloads. */
@@ -92,7 +98,13 @@ function installResizableCornerInterceptor(): void {
     "pointerdown",
     (event) => {
       if (event.button !== 0) return;
-      const corner = event.target instanceof Element ? event.target.closest<ResizableJoinCornerElement>('[data-slot="resizable-corner"]') : null;
+      if (!(event.target instanceof Element) || resizablePointerControl(event.target, document)) return;
+      const target = event.target;
+      const corner = target.closest<ResizableJoinCornerElement>('[data-slot="resizable-corner"]') ?? [...document.querySelectorAll<ResizableJoinCornerElement>('[data-slot="resizable-corner"]')].find((element) => {
+        if (!element.closest('[data-slot="resizable-panel-group"]')?.contains(target)) return false;
+        const rect = element.getBoundingClientRect();
+        return event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
+      });
       if (!corner) return;
       const spec = readResizableJoinCornerSpec(corner);
       if (!spec || !corner.__composeResizableJoinCornerResize) return;
@@ -172,10 +184,38 @@ function ResizableJoinCornerGrab({
     };
   }, [onResize, spec]);
 
-  return <div ref={elementRef} data-slot="resizable-corner" data-edge={edgeSide} className="absolute z-50 cursor-move touch-none" style={resizableJoinCornerPlacementStyle(orientation, edgeSide, alongFraction)} />;
+  return <div ref={elementRef} data-slot="resizable-corner" data-edge={edgeSide} className="pointer-events-none absolute touch-none" style={resizableJoinCornerPlacementStyle(orientation, edgeSide, alongFraction)} />;
 }
 
-function ResizablePanelGroup({ className, orientation = "horizontal", resizeTargetMinimumSize = RESIZABLE_HIT_TARGET_MINIMUM_SIZE, defaultLayout, ...props }: React.ComponentProps<typeof ResizablePrimitive.Group>) {
+/** 🛡️ Window capture records control ownership before the primitive's document-capture hit testing. */
+function ResizablePanelGroup({ className, orientation = "horizontal", resizeTargetMinimumSize = RESIZABLE_HIT_TARGET_MINIMUM_SIZE, defaultLayout, elementRef, ...props }: React.ComponentProps<typeof ResizablePrimitive.Group>) {
+  const groupElementRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const pointerTargetRef = reactHostPort.useRef<EventTarget | null>(null);
+  const setElementRef = reactHostPort.useCallback((element: HTMLDivElement | null) => {
+    groupElementRef.current = element;
+    if (typeof elementRef === "function") elementRef(element);
+    else if (elementRef) elementRef.current = element;
+  }, [elementRef]);
+  reactHostPort.useLayoutEffect(() => {
+    const view = groupElementRef.current?.ownerDocument.defaultView;
+    if (!view) return;
+    const rememberTarget = (event: PointerEvent) => { pointerTargetRef.current = event.target; };
+    view.addEventListener("pointerdown", rememberTarget, true);
+    view.addEventListener("pointermove", rememberTarget, true);
+    return () => {
+      view.removeEventListener("pointerdown", rememberTarget, true);
+      view.removeEventListener("pointermove", rememberTarget, true);
+    };
+  }, []);
+  const minimumSize = reactHostPort.useMemo(() => {
+    const size = (kind: "fine" | "coarse") => {
+      const group = groupElementRef.current;
+      const target = pointerTargetRef.current;
+      const control = group ? resizablePointerControl(target, group.ownerDocument) : null;
+      return control && group?.contains(control) ? 0 : resizeTargetMinimumSize[kind];
+    };
+    return { get fine() { return size("fine"); }, get coarse() { return size("coarse"); } };
+  }, [resizeTargetMinimumSize]);
   const safeDefaultLayout =
     defaultLayout == null
       ? undefined
@@ -190,7 +230,8 @@ function ResizablePanelGroup({ className, orientation = "horizontal", resizeTarg
       data-panel-group-direction={orientation}
       className={cn("flex h-full w-full", orientation === "vertical" ? "flex-col" : "flex-row", className)}
       orientation={orientation}
-      resizeTargetMinimumSize={resizeTargetMinimumSize}
+      resizeTargetMinimumSize={minimumSize}
+      elementRef={setElementRef}
       defaultLayout={safeDefaultLayout}
       {...props}
     />
@@ -224,14 +265,14 @@ function ResizableHandle({
       data-resize-orientation={orientation}
       className={cn(
         "relative flex shrink-0 items-center justify-center border-0 bg-transparent",
-        horizontal ? "h-full min-h-0 w-single cursor-ew-resize" : "w-full min-w-0 h-single cursor-ns-resize",
+        horizontal ? "h-full min-h-0 w-0 cursor-ew-resize" : "w-full min-w-0 h-0 cursor-ns-resize",
         "data-[separator=hover]:bg-accent/25 data-[separator=active]:bg-accent/25",
         "focus-visible:ring-ring focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-none",
         "after:hidden",
         className,
       )}
       style={{
-        ...(horizontal ? { width: "var(--spacing-single)" } : { height: "var(--spacing-single)" }),
+        ...(horizontal ? { width: 0 } : { height: 0 }),
         ...style,
       }}
       {...(props as any)}

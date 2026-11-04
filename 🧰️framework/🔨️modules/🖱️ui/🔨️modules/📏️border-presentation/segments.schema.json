@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Axis-Aligned Border Segments",
+  "type": "array",
+  "items": { "$ref": "#/$defs/segment" },
+  "$defs": {
+    "point": { "type": "object", "required": ["x", "y"], "additionalProperties": false, "properties": { "x": { "type": "number" }, "y": { "type": "number" } } },
+    "segment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "owner", "from", "to", "state"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "owner": { "type": "string", "minLength": 1 },
+        "from": { "$ref": "#/$defs/point" },
+        "to": { "$ref": "#/$defs/point" },
+        "state": { "enum": ["normal", "focus", "active", "waiting", "loading", "introduced", "celebrated", "hover"] }
+      }
+    }
+  }
+}

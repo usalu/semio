@@ -49,7 +49,7 @@ describe("Shell components", () => {
         expect(container.querySelector('[data-slot="window-chrome-gap"]')).toBeTruthy();
       });
 
-      it("Pane positions itself via the same anchorPositionStyle math as Panel and folds to a chip", () => {
+      it("Pane shares its host frame via zero-inset anchorPositionStyle and folds to a chip", () => {
         const { container, rerender } = render(
           <PaneHost>
             <Pane id="test-pane" anchor="top-right" icon="box" label={uiDataLabel("Test")} folded={false}>
@@ -59,8 +59,8 @@ describe("Shell components", () => {
         );
         const pane = container.querySelector('[data-slot="pane"]') as HTMLElement;
         expect(pane.getAttribute("data-anchor")).toBe("top-right");
-        expect(pane.style.right).toBe("var(--spacing-single)");
-        expect(pane.style.top).toBe("var(--spacing-single)");
+        expect(pane.style.right).toBe("0px");
+        expect(pane.style.top).toBe("0px");
         expect(screen.getByTestId("pane-content")).toBeTruthy();
         rerender(
           <PaneHost>
@@ -102,9 +102,9 @@ describe("Shell components", () => {
         const pane = () => container.querySelector('[data-slot="pane"]') as HTMLElement;
         expect(pane().className).toContain("flex-col");
         expect(pane().className).not.toContain("flex-col-reverse");
-        expect(pane().style.top).toBe("var(--spacing-single)");
-        expect(pane().style.maxWidth).toBe("min(100% - (var(--spacing-single) * 2), 300px)");
-        expect(pane().style.maxHeight).toBe("calc(100% - (var(--panel-inset) * 2))");
+        expect(pane().style.top).toBe("0px");
+        expect(pane().style.maxWidth).toBe("min(100% - 0px, 300px)");
+        expect(pane().style.maxHeight).toBe("calc(100% - (0px * 2))");
 
         rerender(
           <PaneHost>
@@ -114,7 +114,7 @@ describe("Shell components", () => {
           </PaneHost>,
         );
         expect(pane().className).toContain("flex-col-reverse");
-        expect(pane().style.bottom).toBe("var(--spacing-single)");
+        expect(pane().style.bottom).toBe("0px");
 
         rerender(
           <PaneHost>
@@ -125,7 +125,7 @@ describe("Shell components", () => {
         );
         expect(pane().className).toContain("flex-col-reverse");
         expect(pane().className).toContain("items-center");
-        expect(pane().style.bottom).toBe("var(--spacing-single)");
+        expect(pane().style.bottom).toBe("0px");
         expect(pane().style.left).toBe("50%");
         expect(pane().style.transform).toBe("translateX(-50%)");
 

@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { shellFloorPaints, shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
@@ -174,7 +175,7 @@ function NavbarBandBody({ normalItems, centeredItems, trailing }: { normalItems:
   }, [centeredItems.length, normalItems.length]);
   return (
     <>
-      <div ref={rowRef} className="p-[var(--padding-standard)] flex gap-[var(--padding-standard)] items-center min-w-0 h-full">
+      <div ref={rowRef} data-shared-border-group="" className="p-[var(--padding-standard)] flex gap-[var(--padding-standard)] items-center min-w-0 h-full">
         {normalItems.map((item, index) => (
           <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
             {item.content}
@@ -191,6 +192,7 @@ function NavbarBandBody({ normalItems, centeredItems, trailing }: { normalItems:
                 centeredRefs.current[index] = element;
               }}
               data-slot="navbar-centered"
+              data-shared-border-group=""
               className={cn("pointer-events-auto absolute h-medium flex items-center", item.className)}
               style={placement === null ? { left: "50%", transform: "translateX(-50%)" } : { left: `${placement.left}px`, maxWidth: `${placement.maxWidth}px` }}
             >
@@ -210,6 +212,7 @@ function NavbarTrailing({ beforeFullscreen, showFullscreenToggle, onFullscreenTo
 }
 
 function Navbar({ items, label, className, showFullscreenToggle = true, onFullscreenToggle, trailingBeforeFullscreen }: NavbarProps) {
+  const borderRef = useSharedBorderFrameRef<HTMLElement>();
   const parent = useSurface();
   const paints = shellFloorPaints(parent);
   const bgClass = shellFloorFillClass(parent);
@@ -223,7 +226,7 @@ function Navbar({ items, label, className, showFullscreenToggle = true, onFullsc
     />
   );
   return (
-    <nav id="ui.navbar" aria-label={label} data-slot="navbar" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-[var(--navbar-height)]", getLevelZClass("base"), bgClass, className)}>
+    <nav ref={borderRef} id="ui.navbar" aria-label={label} data-slot="navbar" data-shared-border-frame="" data-shared-border-edges="bottom" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-[var(--navbar-height)]", getLevelZClass("base"), bgClass, className)}>
       {paints ? <SurfaceScope level="base" fill="surface">{body}</SurfaceScope> : body}
     </nav>
   );

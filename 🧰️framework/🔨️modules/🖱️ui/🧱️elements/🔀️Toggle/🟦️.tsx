@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { ControlHotkeyBadge } from "../../🔨️modules/⌨️control-hotkey-presentation/🟦️.tsx";
@@ -132,6 +133,7 @@ function ToggleStandardButton({
   ref,
   ...buttonProps
 }: ToggleStandardProps) {
+  const borderRef = useSharedBorderFrameRef<HTMLDivElement>();
   const [uncontrolledPressed, setUncontrolledPressed] = reactHostPort.useState(defaultPressed);
   const isControlled = pressed !== undefined;
   const currentPressed = isControlled ? pressed : uncontrolledPressed;
@@ -179,6 +181,7 @@ function ToggleStandardButton({
       aria-pressed={currentPressed}
       title={title}
       data-slot="toggle-group-item"
+      data-shared-border-cell=""
       data-level={level}
       data-state={currentPressed ? "on" : "off"}
       className={cn(
@@ -203,7 +206,7 @@ function ToggleStandardButton({
     </button>
   );
   const toggle = (
-    <div data-slot="toggle-group" data-detail-panel-control="fit" data-state={currentPressed ? "on" : "off"} role="group" className={cn(chromeControlGroupClass, "group/toggle-group has-[_[data-slot=inline-label]]:overflow-visible", className)}>
+    <div ref={borderRef} data-slot="toggle-group" data-shared-border-frame="" data-shared-border-edges="top right bottom left" data-orientation="horizontal" data-detail-panel-control="fit" data-state={currentPressed ? "on" : "off"} role="group" className={cn(chromeControlGroupClass, "relative group/toggle-group has-[_[data-slot=inline-label]]:overflow-visible", className)}>
       {button}
     </div>
   );

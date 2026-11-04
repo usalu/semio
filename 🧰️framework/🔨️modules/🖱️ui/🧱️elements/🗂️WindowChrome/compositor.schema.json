@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object", "required": ["overlay", "effects", "clippedOwner", "markerOnly", "fractional"], "additionalProperties": false,
+  "properties": {
+    "fractional": { "type": "object", "required": ["parentWidth", "parentHeight", "childWidth", "childHeight"], "additionalProperties": { "type": "number" } },
+    "markerOnly": { "type": "object", "required": ["size", "normalSeam", "hoverSeam", "releaseOrders"], "additionalProperties": false, "properties": { "size": { "type": "number", "exclusiveMinimum": 2 }, "normalSeam": { "type": "string" }, "hoverSeam": { "type": "string" }, "releaseOrders": { "type": "array", "items": { "type": "array", "items": { "enum": ["window", "frame"] }, "minItems": 2, "maxItems": 2, "uniqueItems": true } } } },
+    "overlay": { "type": "object", "additionalProperties": { "type": "string" } },
+    "effects": { "type": "array", "items": { "type": "object", "required": ["attribute", "value", "state"], "additionalProperties": false, "properties": { "attribute": { "type": "string" }, "value": { "type": "string" }, "state": { "enum": ["introduced", "celebrated", "loading", "waiting"] } } } },
+    "clippedOwner": { "type": "object", "required": ["left", "top", "width", "height", "viewportRight", "expectedSegments"], "additionalProperties": { "type": "number" } }
+  }
+}

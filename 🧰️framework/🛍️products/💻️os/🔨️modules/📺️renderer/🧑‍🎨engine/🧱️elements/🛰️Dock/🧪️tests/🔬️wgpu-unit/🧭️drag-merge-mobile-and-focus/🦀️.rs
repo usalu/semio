@@ -144,9 +144,8 @@ fn tab_insert_index_follows_the_painted_gapless_chip_run() {
     assert_eq!(compute_dock_drop_zone(125.0, 10.0, &tab_bars, &bodies, Rect::new(0.0, 0.0, 200.0, 224.0)), Some(DockDropZone::Tab { stack_path: vec![0], corner: WindowStackCorner::TopLeft, index: 2 }));
 }
 
-/// 📐️ The shared React geometry fixture is the dock's physical axis law: themed separators consume
-/// extent before weights, nested axes use the same solver, bodies add horizontal WindowChrome
-/// padding, and resize targets stay centred on the reserved separator while clipped to the canvas.
+/// 📐️ Explicit separator arithmetic remains independently testable. Live frames abut, retain
+/// horizontal body padding, and publish centered resize targets clipped to their axis bounds.
 #[test]
 fn themed_axis_geometry_matches_the_shared_react_fixture() {
     let repo = fixture_path!("../../../../../../../../../../..");
@@ -180,8 +179,9 @@ fn themed_axis_geometry_matches_the_shared_react_fixture() {
     let mut atlas = FontAtlas::builtin();
     let labels = HashMap::new();
     let bodies = dock.stack_body_rects(canvas, &theme, &labels, &mut atlas);
+    let live_frames = dock.stack_frame_rects(canvas);
     for (_, body, id) in &bodies {
-        let frame = frames.iter().find(|(_, _, frame_id)| frame_id == id).expect("matching frame").1;
+        let frame = live_frames.iter().find(|(_, _, frame_id)| frame_id == id).expect("matching frame").1;
         assert!((body.x - frame.x - token).abs() < 0.001, "📐️ {id} begins after one horizontal body inset");
         assert!((body.w - (frame.w - token * 2.0)).abs() < 0.001, "📐️ {id} removes both horizontal body insets");
     }

@@ -426,6 +426,7 @@ const PanelTabButton: React.FC<{
     <ChromeControlHint id={tab.id} text={tab.name}>
       <button
         data-slot={`${tabSlot}-tab-button`}
+        data-shared-border-cell=""
         data-hover-scope
         data-tab-id={tab.id}
         data-tab-kind={tab.kind}
@@ -556,7 +557,7 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
   const ghostDim = true;
 
   return (
-    <div ref={setRowRef} {...(ghostDim ? { "data-dim": true } : {})} dir="ltr" data-slot={`${tabSlot}-tabs`} className={cn(barClass, fullWidth && "w-full", rowDropReady && dropZoneReadyClass)}>
+    <div ref={setRowRef} {...(ghostDim ? { "data-dim": true } : {})} dir="ltr" data-slot={`${tabSlot}-tabs`} data-shared-border-group="" data-orientation="horizontal" className={cn(barClass, fullWidth && "w-full", rowDropReady && dropZoneReadyClass)}>
       {sortedTabs.map((tab, index) => {
         const isActive = tab.id === resolvedActiveId;
         const isDragSource = Boolean(anchor && dock?.dragTabId === tab.id);

@@ -3,7 +3,7 @@ import * as ui from "@semio-tech/ui-react/source";
 import type { TestSource, Tests1Vitest, Tests1Dependencies } from "../🧰️harness/🟦️.ts";
 
 export async function registerShellComponents5Tests(vitest: Tests1Vitest, dependencies: Tests1Dependencies, testSource: TestSource): Promise<void> {
-  const { Mode, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, computeModeSplitPreviewInBody, computeTabInsertPreview, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, readResizableJoinCornerSpec, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, uiDataLabel } = dependencies;
+  const { Mode, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, computeModeSplitPreviewInBody, computeTabInsertPreview, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, reactHostPort, readResizableJoinCornerSpec, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, uiDataLabel } = dependencies;
   type ResizableJoinCornerSpec = any;
   type WindowLayoutNode = any;
   const { describe, expect, it, vi } = vitest;
@@ -12,26 +12,30 @@ export async function registerShellComponents5Tests(vitest: Tests1Vitest, depend
 describe("Shell components", () => {
 
     it("Mode tab stack clips one active payload beneath every chip while preserving the gap cutout", async () => {
-      const { container } = render(
-        <div className="h-layout-story w-layout-story-md">
-          <Mode
-            windows={[
-              { id: "shape", title: uiDataLabel("Shape"), iconId: "app-window", children: <div>Shape Body</div> },
-              { id: "energy", title: uiDataLabel("Energy"), iconId: "app-window", children: <div>Energy Body</div> },
-            ]}
-            layout={{
-              kind: "stack",
-              children: [
-                { kind: "window", id: "shape" },
-                { kind: "window", id: "energy" },
-              ],
-              activeId: "energy",
-            }}
-            activeWindowId="energy"
-            onActiveWindowChange={() => {}}
-          />
-        </div>,
-      );
+      const ControlledMode = () => {
+        const [activeWindowId, setActiveWindowId] = reactHostPort.useState<string | null>("energy");
+        return (
+          <div className="h-layout-story w-layout-story-md">
+            <Mode
+              windows={[
+                { id: "shape", title: uiDataLabel("Shape"), iconId: "app-window", children: <div>Shape Body</div> },
+                { id: "energy", title: uiDataLabel("Energy"), iconId: "app-window", children: <div>Energy Body</div> },
+              ]}
+              layout={{
+                kind: "stack",
+                children: [
+                  { kind: "window", id: "shape" },
+                  { kind: "window", id: "energy" },
+                ],
+                activeId: "energy",
+              }}
+              activeWindowId={activeWindowId}
+              onActiveWindowChange={setActiveWindowId}
+            />
+          </div>
+        );
+      };
+      const { container } = render(<ControlledMode />);
       const stack = container.querySelector('[data-slot="mode-dock-stack"]') as HTMLElement;
       const stackBody = stack.querySelector('[data-slot="mode-dock-stack-body"]') as HTMLElement;
       expect(stack.querySelectorAll('[data-slot="mode-dock-tab"]')).toHaveLength(2);
@@ -57,6 +61,10 @@ describe("Shell components", () => {
       fireEvent.keyDown(inactiveTabButton!, { key: "Enter" });
       expect(screen.getByText("Shape Body")).toBeTruthy();
       expect(screen.queryByText("Energy Body")).toBeNull();
+      expect(inactiveTabButton?.getAttribute("aria-selected")).toBe("true");
+      expect(activeTabButton?.getAttribute("aria-selected")).toBe("false");
+      expect(stack.getAttribute("data-active")).toBe("true");
+      expect(stack.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
       fireEvent.pointerDown(stackBody);
       await waitFor(() => {
         expect(stack.getAttribute("data-active")).toBe("true");

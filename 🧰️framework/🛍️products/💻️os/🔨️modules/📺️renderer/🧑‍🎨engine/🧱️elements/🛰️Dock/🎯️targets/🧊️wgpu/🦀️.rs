@@ -6,6 +6,14 @@
 //! call site elsewhere in the crate keeps resolving with zero other changes.
 //! 🪟️ Mode dock — multi-window layout tree with stack chrome and split resize.
 
+#[path = "shared-borders.rs"]
+pub mod shared_borders;
+
+#[path = "border-paint.rs"]
+mod border_paint;
+use border_paint::paint_dock_borders;
+pub use border_paint::{window_silhouette_border_edges, SilhouetteBorderEdge};
+
 use semio_framework::AppDefinition;
 use std::collections::HashMap;
 use semio_framework_ui_wgpu_layout::chrome::chrome_item_text;

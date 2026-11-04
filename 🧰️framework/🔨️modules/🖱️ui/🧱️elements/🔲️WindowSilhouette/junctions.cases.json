@@ -1,0 +1,7 @@
+{
+  "cases": [
+    { "name": "siblings", "rectangles": [[0,0,100,100,1,1],[100,0,100,100,1,1]], "point": [100,0], "expected": [100,1] },
+    { "name": "nested partial", "rectangles": [[0,0,100,100,1,1],[0,30,50,40,1,1]], "point": [0,30], "expected": [1,31] },
+    { "name": "scaled siblings", "rectangles": [[0,0,100,100,2,3],[200,0,100,100,2,3]], "point": [200,0], "expected": [200,3] }
+  ]
+}

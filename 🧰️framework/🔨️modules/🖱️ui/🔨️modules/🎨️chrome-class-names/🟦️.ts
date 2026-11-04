@@ -59,7 +59,7 @@ export const panelTabBarClass = cn(panelTabBarBaseClass, borderNormalBottomClass
 
 /** ⏹️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
 /** 🔚️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
-export const panelTabButtonDividerClass = "border-e border-solid !border-normal last:border-e-0";
+export const panelTabButtonDividerClass = "shared-border-cell";
 
 /** ❗️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
 /** 🔤️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
@@ -68,7 +68,6 @@ export const panelTabButtonClass = cn(
   panelTabButtonDividerClass,
   "cursor-pointer whitespace-nowrap text-xs leading-none text-element transition-colors",
   "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-active-base",
-  "[&[data-active=true]:not(:first-child)]:border-s [&[data-active=true]:not(:first-child)]:-ms-px",
   hoverExcludingHandleBgFillClass,
   hoverExcludingHandleTextEmphasizedClass,
 );

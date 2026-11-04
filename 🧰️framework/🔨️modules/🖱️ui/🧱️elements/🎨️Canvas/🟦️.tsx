@@ -40,7 +40,7 @@ export const Canvas: React.FC<{ children: React.ReactNode; id?: string; status?:
   const busy = status === "loading" || status === "waiting";
   return (
     <LevelProvider level="base">
-      <div id={id} data-slot="canvas" data-level="base" data-ui-status={busy ? status : undefined} className={cn("box-border h-full w-full p-[var(--padding-standard)]", bgClass, chromeStatusBorderClass(status))}>
+      <div id={id} data-slot="canvas" data-level="base" data-ui-status={busy ? status : undefined} className={cn("box-border h-full w-full p-0", bgClass, chromeStatusBorderClass(status))}>
         {busy ? <CanvasSkeleton /> : children}
       </div>
     </LevelProvider>
@@ -51,14 +51,14 @@ export const Canvas: React.FC<{ children: React.ReactNode; id?: string; status?:
  * ↔️ Layout component arranging windows horizontally.
  **/
 export const HorizontalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex flex-row h-full w-full gap-[var(--padding-standard)]">{children}</div>;
+  return <div className="flex flex-row h-full w-full gap-0">{children}</div>;
 };
 
 /**
  * ↕️ Layout component arranging windows vertically.
  **/
 export const VerticalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex flex-col h-full w-full gap-[var(--padding-standard)]">{children}</div>;
+  return <div className="flex flex-col h-full w-full gap-0">{children}</div>;
 };
 
 export interface ModeProps {
@@ -78,8 +78,8 @@ export interface ModeProps {
 
 //#region 🧭️ModeCanvasSpacing
 
-/** 📐️ Canvas inset on {@link Mode} body; inter-panel splitters use the same {@link --spacing-single} step as navbar and footer chrome. */
-export const MODE_CANVAS_INSET_CLASS = "p-[var(--panel-inset)]";
+/** 📐️ Flush docking reaches neighboring window outlines and the shell chrome. */
+export const MODE_CANVAS_INSET_CLASS = "p-0";
 
 //#endregion 🧭️ModeRender
 /** 🪟️ Golden-Layout-style docking mode shell with tab stacks, drag-dock, resize, maximize, and close. */

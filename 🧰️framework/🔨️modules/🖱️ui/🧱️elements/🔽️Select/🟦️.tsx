@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { isInsideActiveScopedDialogIsolation, useDialogLayer } from "../💬️Dialog/🟦️.tsx";
@@ -62,6 +63,7 @@ export interface SelectContentProps extends Omit<React.HTMLAttributes<HTMLDivEle
   position?: SelectPosition;
   side?: SelectSide;
   align?: SelectAlign;
+  /** 📏️ Gap in CSS pixels; omitted gaps are zero inside window chrome, four elsewhere. */
   sideOffset?: number;
   collisionPadding?: number;
   container?: Element | DocumentFragment | null;
@@ -396,6 +398,7 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(fu
   const level = useLevel();
   const resolvedDisabled = context.disabled || disabled === true;
   const ref = React.useMemo(() => composedRef(forwardedRef, context.triggerRef), [context.triggerRef, forwardedRef]);
+  const borderRef = useSharedBorderFrameRef(ref);
   const openWith = (intent: SelectOpenIntent): void => {
     context.openIntentRef.current = intent;
     markSelectActive(context.token);
@@ -404,7 +407,7 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(fu
   return (
     <button
       {...props}
-      ref={ref}
+      ref={borderRef}
       id={id ?? context.triggerId}
       type={type ?? "button"}
       role="combobox"
@@ -416,13 +419,15 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(fu
       disabled={resolvedDisabled}
       dir={context.direction}
       data-slot="select-trigger"
+      data-shared-border-frame=""
+      data-shared-border-edges="top right bottom left"
       data-detail-panel-control="fill"
       data-size={size}
       data-level={level}
       data-state={context.open ? "open" : "closed"}
       data-placeholder={context.selectedContent === undefined ? "" : undefined}
       className={cn(
-        `text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex w-fit min-w-0 items-center justify-between gap-single border bg-transparent px-tiny py-single text-sm whitespace-nowrap ${borderElementClass} ${formControlFocusBorderClass} disabled:cursor-not-allowed disabled:opacity-50 h-medium *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:flex-1 *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-single *:data-[slot=select-value]:overflow-hidden [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-foldable`,
+        `text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-fit min-w-0 items-center justify-between gap-single border bg-transparent px-tiny py-single text-sm whitespace-nowrap ${borderElementClass} ${formControlFocusBorderClass} disabled:cursor-not-allowed disabled:opacity-50 h-medium *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:flex-1 *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-single *:data-[slot=select-value]:overflow-hidden [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-foldable`,
         interactiveHoverClass,
         className,
       )}
@@ -520,7 +525,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
     position = "popper",
     side = "bottom",
     align = "start",
-    sideOffset = 4,
+    sideOffset,
     collisionPadding = 8,
     container,
     style,
@@ -549,6 +554,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
   closeAutoFocusRef.current = onCloseAutoFocus;
   const ref = React.useMemo(() => composedRef(forwardedRef, context.contentRef), [context.contentRef, forwardedRef]);
 
+  const borderRef = useSharedBorderFrameRef(ref);
   useIsomorphicLayoutEffect(() => {
     const content = context.contentRef.current;
     const trigger = context.triggerRef.current;
@@ -565,7 +571,8 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
       });
       setFramePosition(frame.position);
       const relativeTrigger = { top: triggerRect.top - frame.originTop, right: triggerRect.right - frame.originLeft, bottom: triggerRect.bottom - frame.originTop, left: triggerRect.left - frame.originLeft, width: triggerRect.width, height: triggerRect.height };
-      setPlacement(resolveSelectPlacement(relativeTrigger, content.getBoundingClientRect(), { width: frame.viewportWidth, height: frame.viewportHeight }, side, align, sideOffset, Math.max(0, collisionPadding), context.direction === "rtl"));
+      const gap = sideOffset ?? (trigger.closest("[data-window-silhouette]") ? 0 : 4);
+      setPlacement(resolveSelectPlacement(relativeTrigger, content.getBoundingClientRect(), { width: frame.viewportWidth, height: frame.viewportHeight }, side, align, gap, Math.max(0, collisionPadding), context.direction === "rtl"));
     };
     measure();
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
@@ -653,7 +660,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
   return createPortal(
     <div
       {...props}
-      ref={ref}
+      ref={borderRef}
       id={context.contentId}
       role="listbox"
       tabIndex={props.tabIndex ?? -1}
@@ -661,6 +668,8 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
       aria-labelledby={props["aria-label"] ? props["aria-labelledby"] : (props["aria-labelledby"] ?? context.labelId ?? context.triggerRef.current?.id)}
       dir={context.direction}
       data-slot="select-content"
+      data-shared-border-frame=""
+      data-shared-border-edges="top right bottom left"
       data-level="menu"
       data-state="open"
       data-side={placement?.side ?? side}
@@ -671,7 +680,6 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
       className={cn(
         "pointer-events-auto text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2 relative z-menu max-h-(--semio-select-content-available-height) min-w-32 origin-(--semio-select-content-transform-origin) overflow-hidden border outline-hidden",
         glassClass,
-        position === "popper" && "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
         className,
       )}
       style={

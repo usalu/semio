@@ -248,12 +248,12 @@ export const Pane: React.FC<PaneProps> = ({
   const positionStyle: React.CSSProperties = expanded
     ? { position: "absolute", inset: 0, zIndex: zIndex, width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%" }
     : {
-        ...anchorPositionStyle(anchor),
+        ...anchorPositionStyle(anchor, "0px"),
         order,
         ...(zIndex !== undefined ? { zIndex } : {}),
         width: !mobile && !effectiveFolded ? `${size}px` : undefined,
-        maxWidth: !mobile && !effectiveFolded ? `min(100% - (var(--spacing-single) * 2)${inlineEdgeReservePx > 0 ? ` - ${inlineEdgeReservePx}px` : ""}, ${size}px)` : undefined,
-        ...chromePanelSafeAreaStyle(anchor, { inlinePx: inlineEdgeReservePx + safeArea.inlinePx, blockPx: safeArea.blockPx }),
+        maxWidth: !mobile && !effectiveFolded ? `min(100% - ${inlineEdgeReservePx + safeArea.inlinePx}px, ${size}px)` : "100%",
+        ...chromePanelSafeAreaStyle(anchor, { inlinePx: inlineEdgeReservePx + safeArea.inlinePx, blockPx: safeArea.blockPx }, { block: "0px", inline: "0px" }),
       };
   const resizeSides: readonly ("left" | "right")[] = horizontal === "middle" ? ["left", "right"] : [horizontal === "left" ? "right" : "left"];
   const resizeDeltaFactor = horizontal === "middle" ? 2 : 1;

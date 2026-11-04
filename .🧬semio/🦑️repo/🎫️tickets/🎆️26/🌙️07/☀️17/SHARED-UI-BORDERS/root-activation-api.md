@@ -1,0 +1,3 @@
+# Marker-Only Root Activation
+
+Scoped lifecycle change in progress. Internal `WindowChrome/shared-border.ts` API: `retainSharedBorderRoot(root)` returns `{ compositor, release }` with idempotent release; windows and frames retain the same root through independent leases. `useSharedBorderFrameRef<T>(forwardedRef?)` returns a stable composed ref, retains only while its node is mounted, and preserves forwarded refs. No import-time observer or global registration. Existing shared-border.test.ts will hold lifecycle and marker-only regressions, so no config change is expected. Canonical CSS and geometry are untouched.

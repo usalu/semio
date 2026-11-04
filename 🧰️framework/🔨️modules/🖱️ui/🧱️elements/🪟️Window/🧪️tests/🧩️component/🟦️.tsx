@@ -16,7 +16,31 @@ import searchRouting from "../🧫️fixtures/🔎️search-fold-routing/🔣️
 import paneFolds from "../🧫️fixtures/🔀️pane-fold-independence/🔣️.json";
 import { createMemoryStoragePort } from "../../../../🔨️modules/🗄️storage-port/🟦️.ts";
 import { ShellScopeProvider, createShellScope } from "../../../🐚️ShellScope/🟦️.tsx";
+import paneEdges from "../🧫️fixtures/pane-edges.json";
+import { Pane } from "../../../📌️WindowPane/🟦️.tsx";
+import { type Anchor } from "../../../../🔨️modules/⚓️panel-anchor/🟦️.ts";
+import Decimal from "decimal.js";
 // #endregion 🔌️Adapters
+
+it("attaches actual Window pane chrome to its host edges in either direction and fold state", () => {
+  for (const direction of paneEdges.directions) for (const folded of paneEdges.folds) {
+    const view = render(<div dir={direction}><Window id="edge-window" fill utilityBar={<div>Tools</div>} utilityBarFolded={folded} actionPane={<div>Actions</div>} actionsFolded={folded} measures={<div>Options</div>} measuresFolded={folded} search={{ input: { placeholder: uiDataLabel("Search") } }}>
+      {paneEdges.anchors.map(row => <Pane key={row.anchor} id={`edge-${row.anchor}`} anchor={row.anchor as Anchor} icon="app-window" label="Pane" folded={folded}><div>Pane content</div></Pane>)}
+    </Window></div>);
+    try {
+      for (const row of [...paneEdges.windowPanes, ...paneEdges.anchors.map(row => ({ ...row, slot: undefined }))]) {
+        const pane = view.container.querySelector<HTMLElement>(row.slot ? `[data-slot="${row.slot}"]` : `[id="edge-${"anchor" in row ? row.anchor : ""}"]`)!;
+        for (const edge of row.edges) expect(new Decimal(Number.parseFloat(pane.style[edge as "left"])).toNumber(), `${direction}:${folded}:${row.slot}:${edge}`).toBe(paneEdges.insetPx);
+        expect(pane.style.maxHeight).toBe("calc(100% - (0px * 2))");
+        expect(pane.style.maxWidth).not.toContain("spacing-single");
+        const chrome = pane.querySelector('[data-window-silhouette]');
+        expect(chrome).not.toBeNull();
+        expect(pane.querySelector('[data-slot="window-pane-chrome-toggle"]')).not.toBeNull();
+      }
+      if (!folded) expect(view.container.querySelector('[data-slot="utility-bar-body"]')).not.toBeNull();
+    } finally { view.unmount(); }
+  }
+});
 
 it("keeps Actions and Search pane folds independent in both explicit locales", () => {
   for (const locale of searchRouting.locales) for (const entry of paneFolds.cases) {
@@ -103,8 +127,9 @@ describe("Window chrome stacking", () => {
 
 describe("Window chrome focus indicator", () => {
   const uiCss = readFileSync(join(import.meta.dirname, "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
-  it("keeps a visible focus ring on docked chips although the chip frame reset drops every other shadow", () => {
-    expect(uiCss).toMatch(/\[data-window-silhouette-chip\] > \*\s*\{[^}]*box-shadow: none;/u);
+  it("keeps a visible focus ring without erasing contained control borders", () => {
+    expect(uiCss).not.toMatch(/\[data-window-silhouette-chip\] > \*\s*\{/u);
+    expect(uiCss).toMatch(/\[data-window-silhouette-chip\]\s*\{[^}]*border-width: 0/u);
     expect(uiCss).toMatch(/\[data-window-silhouette-chip\] > :focus-visible[^{]*\{\s*box-shadow: inset 0 0 0 var\(--stroke-default\) var\(--active-base\);/u);
   });
 });

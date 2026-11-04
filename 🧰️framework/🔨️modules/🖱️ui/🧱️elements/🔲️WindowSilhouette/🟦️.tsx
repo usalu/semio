@@ -118,6 +118,7 @@ export function normalizeWindowSilhouetteMetrics(metrics: WindowSilhouetteMetric
     height,
     top: { depth: topDepth, chips: normalizeWindowSilhouetteChips(metrics.top.chips, 0, width) },
     bottom: { depth: bottomDepth, chips: normalizeWindowSilhouetteChips(metrics.bottom.chips, 0, width) },
+    ...(metrics.contextMenuFusion ? { contextMenuFusion: metrics.contextMenuFusion } : {}),
   };
 }
 

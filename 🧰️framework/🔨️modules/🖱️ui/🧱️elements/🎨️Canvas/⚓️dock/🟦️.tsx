@@ -227,7 +227,7 @@ interface ModeDockStackProps {
 export const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsById, activeWindowId, mobile = false }) => {
   const dock = reactHostPort.useContext(ModeDockContext);
   const stackRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const [surfaceActive, surfaceActiveProps] = useSurfaceActive(stackRef);
+  const [, surfaceActiveProps] = useSurfaceActive(stackRef);
   const setStackNode = reactHostPort.useCallback((element: HTMLDivElement | null) => {
     stackRef.current = element;
   }, []);
@@ -253,7 +253,7 @@ export const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, w
 
   reactHostPort.useLayoutEffect(() => {
     for (const corner of WINDOW_STACK_CORNERS) {
-      dock?.registerStackDropTargets(stackPath, corner, cornerTabBarRefs.current[corner], bodyRef.current);
+      dock?.registerStackDropTargets(stackPath, corner, cornerTabBarRefs.current[corner], stackRef.current);
     }
     return () => {
       for (const corner of WINDOW_STACK_CORNERS) {
@@ -313,7 +313,7 @@ export const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, w
     <SurfaceScope level="window">
       <WindowChrome
         ref={setStackNode}
-        active={surfaceActive}
+        active={Boolean(activeId && activeWindowId === activeId)}
         level="window"
         stackSlot="mode-dock-stack"
         capSlot="mode-dock-tabbar"
@@ -325,7 +325,7 @@ export const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, w
         stackBindProps={surfaceActiveProps}
         stackDataAttrs={{ "data-stack-path": stackPath }}
         stackClassName="pointer-events-none relative z-window h-full min-h-0 w-full min-w-0 overflow-hidden bg-transparent"
-        bodyClassName={cn("pointer-events-auto flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-[var(--padding-standard)]", windowBodyFrameClass)}
+        bodyClassName={cn("pointer-events-auto flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0", windowBodyFrameClass)}
         bodySurfaceClassName={windowBodyFrameClass}
         bodySurfaceLevel="base"
         gapProps={{ "data-slot": "mode-dock-tab-gap" } as React.HTMLAttributes<HTMLDivElement>}

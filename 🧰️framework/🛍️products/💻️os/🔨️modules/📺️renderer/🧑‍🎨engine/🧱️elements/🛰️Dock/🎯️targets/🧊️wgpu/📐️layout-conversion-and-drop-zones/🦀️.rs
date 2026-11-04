@@ -366,14 +366,14 @@ pub fn stack_tab_bar_rect(bounds: Rect, theme: &Theme) -> Rect {
 pub(super) fn collect_stack_tab_bars(node: &DockNode, bounds: Rect, path: &[usize], theme: &Theme, out: &mut Vec<(DockPath, Rect)>) {
     match node {
         DockNode::Row(children) => {
-            for slot in dock_axis_slots(children, bounds, true, theme.gap_standard) {
+            for slot in dock_axis_slots(children, bounds, true, 0.0) {
                 let mut child_path = path.to_vec();
                 child_path.push(slot.index);
                 collect_stack_tab_bars(slot.node, slot.rect, &child_path, theme, out);
             }
         }
         DockNode::Column(children) => {
-            for slot in dock_axis_slots(children, bounds, false, theme.gap_standard) {
+            for slot in dock_axis_slots(children, bounds, false, 0.0) {
                 let mut child_path = path.to_vec();
                 child_path.push(slot.index);
                 collect_stack_tab_bars(slot.node, slot.rect, &child_path, theme, out);

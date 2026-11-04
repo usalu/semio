@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-only */
+@layer shared-border-ownership, shared-border-priority;
 @import "tailwindcss";
 @import "../🎨️palette/🎨️.css";
 @plugin "@tailwindcss/typography";
@@ -6657,12 +6658,73 @@
   border-color: var(--border-normal-color);
 }
 
-[data-slot="button-group"] > [data-slot="button-group-item"]:not(:last-child),
-[data-slot="toggle-group"] > :is([data-slot="toggle-group-item"], [data-slot="toggle-group-item-shell"]):not(:last-child),
-[data-slot="action-group"] > [data-slot="action-group-item"]:not(:last-child),
-[data-slot="app-panel-toggle-group"] > :is([data-slot="toggle-group-item"], [data-slot="toggle-group-item-shell"], [data-slot="button-group-item"]):not(:last-child) {
-  box-shadow: inset calc(-1 * var(--stroke-hairline)) 0 0 0 var(--border-normal-color);
+/* Shared cells use one real divider, never a second inset-shadow separator. */
+:is(.shared-border-cell, [data-shared-border-cell]) {
+  border-inline-end: var(--stroke-hairline) solid var(--border-normal-color);
 }
+:is(.shared-border-cell, [data-shared-border-cell]):not(:has(~ :is(.shared-border-cell, [data-shared-border-cell]))) {
+  border-inline-end-width: 0;
+}
+:is(.shared-border-frame, [data-shared-border-frame]) > :is(.shared-border-cell, [data-shared-border-cell]) {
+  border-width: 0;
+  border-inline-end-width: var(--stroke-hairline);
+}
+:is(.shared-border-frame, [data-shared-border-frame]) > :is(.shared-border-cell, [data-shared-border-cell]):not(:has(~ :is(.shared-border-cell, [data-shared-border-cell]))) {
+  border-inline-end-width: 0;
+}
+:is([data-shared-border-frame], [data-shared-border-group])[data-orientation="vertical"] > :is(.shared-border-cell, [data-shared-border-cell]) {
+  border-inline-end-width: 0;
+  border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
+}
+:is([data-shared-border-frame], [data-shared-border-group])[data-orientation="vertical"] > :is(.shared-border-cell, [data-shared-border-cell]):not(:has(~ :is(.shared-border-cell, [data-shared-border-cell]))) {
+  border-block-end-width: 0;
+}
+/* First-layer important ownership/hover rules outrank active utilities and unlayered overrides. */
+@layer shared-border-priority {
+/* A seam belongs to the preceding cell but reflects either incident cell's hover. */
+:is(.shared-border-cell, [data-shared-border-cell]):hover,
+:is(.shared-border-cell, [data-shared-border-cell]):has(+ :is(.shared-border-cell, [data-shared-border-cell]):hover) {
+  border-color: var(--border-emphasized-color) !important;
+}
+:is(.shared-border-frame, [data-shared-border-frame]):hover {
+  border-color: var(--border-emphasized-color) !important;
+}
+[data-shared-border-segment][data-shared-border-state="hover"] { stroke: var(--border-emphasized-color) !important; }
+[data-slot="mode-dock-tabs"] > [data-slot="mode-dock-tab"]:is(:hover, :has(+ [data-slot="mode-dock-tab"]:hover)) {
+  border-inline-end-color: var(--border-emphasized-color) !important;
+}
+@media (forced-colors: active) {
+  :is(.shared-border-cell, [data-shared-border-cell]) { border-color: CanvasText !important; }
+  :is(.shared-border-cell, [data-shared-border-cell]):hover,
+  :is(.shared-border-cell, [data-shared-border-cell]):has(+ :is(.shared-border-cell, [data-shared-border-cell]):hover),
+  :is(.shared-border-frame, [data-shared-border-frame]):hover {
+    border-color: Highlight !important;
+  }
+  [data-slot="mode-dock-tabs"] > [data-slot="mode-dock-tab"]:is(:hover, :has(+ [data-slot="mode-dock-tab"]:hover)) {
+    border-inline-end-color: Highlight !important;
+  }
+  [data-shared-border-segment] { stroke: CanvasText !important; }
+  [data-shared-border-segment][data-shared-border-state="hover"] { stroke: Highlight !important; }
+}
+}
+/* Suppress only replaced paint, never border layout: measurement must remain stable. */
+@layer shared-border-ownership {
+[data-shared-border-attached~="top"] { border-top-color: transparent !important; }
+[data-shared-border-attached~="right"] { border-right-color: transparent !important; }
+[data-shared-border-attached~="bottom"] { border-bottom-color: transparent !important; }
+[data-shared-border-attached~="left"] { border-left-color: transparent !important; }
+[data-slot="navbar"][data-shared-border-attached~="bottom"]::after,
+[data-slot="footer"][data-shared-border-attached~="top"]::before { background-color: transparent !important; }
+[data-shared-border-attached~="top"][data-shared-border-attached~="right"][data-shared-border-attached~="bottom"][data-shared-border-attached~="left"]:is(.border-loading, .border-waiting, [data-celebrated="true"])::after {
+  content: none !important;
+}
+[data-shared-border-attached~="top"][data-shared-border-attached~="right"][data-shared-border-attached~="bottom"][data-shared-border-attached~="left"][data-introduced="true"] {
+  box-shadow: none !important;
+}
+}
+[data-shared-border-segment] { pointer-events: none; }
+[data-shared-border-segment][data-shared-border-state="normal"] { stroke: var(--border-normal-color); }
+[data-shared-border-segment]:is([data-shared-border-state="active"], [data-shared-border-state="focus"]) { stroke: var(--active-base); }
 
 @utility gap-single {
   gap: var(--spacing-single);
@@ -7271,19 +7333,14 @@
   box-shadow: none !important;
 }
 
-/* 🪟️ Docked chips: no piecewise outer borders or inset separators — the silhouette SVG owns
- * every stroke. The immediate flowing control also drops its generic control-group frame while
- * deliberate dividers nested inside multi-tab/multi-button groups remain intact. */
-[data-window-silhouette-chip],
-[data-window-silhouette-chip] > * {
-  border-width: 0 !important;
-  border-style: none !important;
-  box-shadow: none;
+/* Chip wrappers defer their outline to the silhouette. Child frames retain every edge
+ * unless attachment measurement explicitly marks that physical side as shared. */
+[data-window-silhouette-chip] {
+  border-width: 0;
+  border-style: none;
 }
 
-/* ⌨️ A docked chip still shows WHERE keyboard focus is: the frame reset above is unlayered, so it out-ranks the
- * control's own layered `focus-visible:ring` and left the `Actions` / `Utilities` / `Window Options` chips with no
- * focus indicator at all (WCAG 2.2 SC 2.4.7, measured inside `s`, ticket 26/09/23 S15). */
+/* ⌨️ Docked controls keep an explicit inset keyboard indicator inside the silhouette stroke. */
 [data-window-silhouette-chip] > :focus-visible,
 [data-window-silhouette-chip] :is(button, [role="button"], [tabindex]):focus-visible {
   box-shadow: inset 0 0 0 var(--stroke-default) var(--active-base);
@@ -7302,12 +7359,8 @@
   background-color: transparent !important;
 }
 
-[data-slot="mode-dock-tabs"] > [data-slot="mode-dock-tab"] + [data-slot="mode-dock-tab"] {
-  box-shadow: inset var(--stroke-hairline) 0 0 0 var(--border-normal-color);
-}
-
-[data-slot="panel-tabs"] > [data-slot="panel-tab-button"]:not(:last-child) {
-  box-shadow: inset calc(-1 * var(--stroke-hairline)) 0 0 0 var(--border-normal-color);
+[data-slot="mode-dock-tabs"] > [data-slot="mode-dock-tab"]:not(:last-child) {
+  border-inline-end: var(--stroke-hairline) solid var(--border-normal-color);
 }
 
 [data-slot="window-chrome-stack"],

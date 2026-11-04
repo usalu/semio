@@ -20,7 +20,7 @@ interface RibbonZoneProps extends React.ComponentProps<"div"> {
 
 function RibbonZone({ className, children, variableHeight = false, ...props }: RibbonZoneProps) {
   return (
-    <div data-slot="ribbon-zone" data-variable-height={variableHeight ? "true" : undefined} className={cn("flex shrink-0 items-center gap-single min-w-0", variableHeight ? "h-auto min-h-medium" : "h-medium", className)} {...props}>
+    <div data-slot="ribbon-zone" data-shared-border-group="" data-variable-height={variableHeight ? "true" : undefined} className={cn("flex shrink-0 items-center gap-single min-w-0", variableHeight ? "h-auto min-h-medium" : "h-medium", className)} {...props}>
       {children}
     </div>
   );
@@ -32,7 +32,7 @@ interface RibbonGroupProps extends React.ComponentProps<"div"> {
 
 function RibbonGroup({ className, children, ...props }: RibbonGroupProps) {
   return (
-    <div data-slot="ribbon-group" role="group" className={cn("flex shrink-0 items-center gap-single h-full", className)} {...props}>
+    <div data-slot="ribbon-group" data-shared-border-group="" role="group" className={cn("flex shrink-0 items-center gap-single h-full", className)} {...props}>
       {children}
     </div>
   );
@@ -80,7 +80,7 @@ export interface RibbonProps {
 function Ribbon({ id, direction, rows, className }: RibbonProps) {
   if (direction === "inline") {
     return (
-      <div role="toolbar" id={id} data-slot="ribbon" data-direction={direction} className={cn("pointer-events-auto flex w-fit max-w-full shrink-0 items-center justify-start gap-single", className)}>
+      <div role="toolbar" id={id} data-slot="ribbon" data-shared-border-group="" data-direction={direction} className={cn("pointer-events-auto flex w-fit max-w-full shrink-0 items-center justify-start gap-single", className)}>
         {rows.map((row) => (
           <RibbonZone key={row.key}>{row.content}</RibbonZone>
         ))}
@@ -88,9 +88,9 @@ function Ribbon({ id, direction, rows, className }: RibbonProps) {
     );
   }
   return (
-    <div id={id} data-slot="ribbon" data-direction={direction} className={cn("flex w-fit max-w-full shrink-0", direction === "up" ? "flex-col-reverse items-start" : "w-full flex-col items-stretch", className)}>
+    <div id={id} data-slot="ribbon" data-shared-border-group="" data-direction={direction} className={cn("flex w-fit max-w-full shrink-0", direction === "up" ? "flex-col-reverse items-start" : "w-full flex-col items-stretch", className)}>
       {rows.map((row, depth) => (
-        <div key={row.key} data-slot="ribbon-row" data-depth={depth} className="flex min-w-0 w-full shrink-0 items-stretch">
+        <div key={row.key} data-slot="ribbon-row" data-shared-border-group="" data-depth={depth} className="flex min-w-0 w-full shrink-0 items-stretch">
           {row.content}
         </div>
       ))}

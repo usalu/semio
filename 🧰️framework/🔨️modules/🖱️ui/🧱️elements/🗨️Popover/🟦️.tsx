@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { useDialogLayer } from "../💬️Dialog/🟦️.tsx";
@@ -51,6 +52,7 @@ export interface PopoverContentProps extends Omit<React.HTMLAttributes<HTMLDivEl
   "data-slot"?: string;
   side?: PopoverSide;
   align?: PopoverAlign;
+  /** 📏️ Gap in CSS pixels; omitted gaps are zero inside window chrome, four elsewhere. */
   sideOffset?: number;
   alignOffset?: number;
   avoidCollisions?: boolean;
@@ -291,7 +293,7 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
     className,
     align = "center",
     side = "bottom",
-    sideOffset = 4,
+    sideOffset,
     alignOffset = 0,
     avoidCollisions = true,
     collisionPadding = 8,
@@ -315,6 +317,7 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
   const [placement, setPlacement] = React.useState<PopoverPlacement | null>(null);
   const dismissedRef = React.useRef(false);
   const ref = React.useMemo(() => composedRef(forwardedRef, contentRef), [forwardedRef]);
+  const borderRef = useSharedBorderFrameRef(ref);
 
   React.useLayoutEffect(() => {
     const content = contentRef.current;
@@ -323,7 +326,9 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
     const measure = () => {
       const anchorRect = anchor.getBoundingClientRect();
       const contentRect = content.getBoundingClientRect();
-      setPlacement(resolvePopoverPlacement(anchorRect, contentRect, { width: window.innerWidth, height: window.innerHeight }, side, align, sideOffset, alignOffset, Math.max(0, collisionPadding), flow.inline === "rtl", avoidCollisions));
+      const gap = sideOffset ?? (anchor.closest("[data-window-silhouette]") ? 0 : 4);
+      const next = resolvePopoverPlacement(anchorRect, contentRect, { width: window.innerWidth, height: window.innerHeight }, side, align, gap, alignOffset, Math.max(0, collisionPadding), flow.inline === "rtl", avoidCollisions);
+      setPlacement((previous) => previous?.side === next.side && previous.left === next.left && previous.top === next.top ? previous : next);
     };
     measure();
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
@@ -404,7 +409,7 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
   return createPortal(
     <div
       {...props}
-      ref={ref}
+      ref={borderRef}
       id={context.contentId}
       role={props.role ?? "dialog"}
       tabIndex={props.tabIndex ?? -1}
@@ -415,6 +420,7 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
       data-side={resolvedSide}
       data-align={align}
       data-popover-boundary={context.boundary}
+      data-shared-border-frame=""
       className={cn(
         "pointer-events-auto text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-menu w-72 origin-(--radix-popover-content-transform-origin) border p-1 outline-hidden",
         glassClass,

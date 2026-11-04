@@ -96,15 +96,17 @@ export function registerRoutesSiblingEscapeFocusTests(): void {
     expect(flipped.side).toBe("top");
     expect(flipped.left).toBe(8);
 
-    let resize: (() => void) | undefined;
+    const observers = new Set<() => void>();
     const OriginalObserver = globalThis.ResizeObserver;
     globalThis.ResizeObserver = class {
+      private notify: () => void;
       constructor(callback: ResizeObserverCallback) {
-        resize = () => callback([], this as ResizeObserver);
+        this.notify = () => callback([], this as ResizeObserver);
+        observers.add(this.notify);
       }
       observe() {}
       unobserve() {}
-      disconnect() {}
+      disconnect() { observers.delete(this.notify); }
     };
     try {
       const anchorRect = { current: { top: 10, right: 30, bottom: 30, left: 10, width: 20, height: 20 } };
@@ -119,9 +121,9 @@ export function registerRoutesSiblingEscapeFocusTests(): void {
       const anchorElement = document.querySelector('[data-testid="anchor"]') as HTMLElement;
       const contentElement = document.querySelector('[role="dialog"]') as HTMLElement;
       anchorElement.getBoundingClientRect = () => anchorRect.current as DOMRect;
-      contentElement.getBoundingClientRect = () => ({ width: 40, height: 20 }) as DOMRect;
+      contentElement.getBoundingClientRect = () => ({ left: 0, top: 0, right: 40, bottom: 20, width: 40, height: 20 }) as DOMRect;
       anchorRect.current = { top: 50, right: 80, bottom: 70, left: 60, width: 20, height: 20 };
-      resize?.();
+      for (const notify of observers) notify();
       await waitFor(() => expect(contentElement.style.left).toBe("50px"));
       expect(contentElement.style.top).toBe("74px");
     } finally {

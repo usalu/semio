@@ -102,7 +102,7 @@ const SPLIT_VIS_PX: f32 = 6.0;
 const SPLIT_HIT_MIN_PX: f32 = 20.0;
 
 fn render_axis(state: &DockState, ctx: &mut DockRenderContext<'_>, children: &[(DockNode, f32)], bounds: Rect, path: &[usize], horizontal: bool, body_fill: bool, render_body: &mut dyn FnMut(Rect, &str), outer_split: Option<(DockPath, usize, bool)>) {
-    for slot in dock_axis_slots(children, bounds, horizontal, ctx.theme.gap_standard) {
+    for slot in dock_axis_slots(children, bounds, horizontal, 0.0) {
         let mut child_path = path.to_vec();
         child_path.push(slot.index);
         render_node(state, ctx, slot.node, slot.rect, &child_path, body_fill, render_body, Some((path.to_vec(), slot.index, horizontal)));
@@ -119,7 +119,7 @@ pub(super) fn walk_resize_hits(state: &DockState, ctx: &mut DockRenderContext<'_
 }
 
 fn walk_resize_axis(state: &DockState, ctx: &mut DockRenderContext<'_>, children: &[(DockNode, f32)], bounds: Rect, path: &[usize], horizontal: bool, outer_split: Option<(DockPath, usize, bool)>) {
-    for slot in dock_axis_slots(children, bounds, horizontal, ctx.theme.gap_standard) {
+    for slot in dock_axis_slots(children, bounds, horizontal, 0.0) {
         let mut child_path = path.to_vec();
         child_path.push(slot.index);
         walk_resize_hits(state, ctx, slot.node, slot.rect, &child_path, Some((path.to_vec(), slot.index, horizontal)));
@@ -293,7 +293,5 @@ pub(super) fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, p
         }
         ctx.draw.end_glass_content();
     }
-
-    push_window_silhouette_border(&mut *ctx.draw, &silhouette, theme.stroke_hairline, if globally_active { theme.selected } else { theme.border_normal });
 }
 //#endregion DockFreeFunctions

@@ -1,0 +1,37 @@
+[
+  {
+    "name": "abutting sibling frames retain one hover seam and four detached edges",
+    "stroke": 1,
+    "frames": [
+      {"owner":"active","rect":[0,0,40,20],"state":"active"},
+      {"owner":"hover","rect":[40,0,40,20],"state":"hover"},
+      {"owner":"detached","rect":[100,0,40,20],"state":"normal"}
+    ],
+    "expectedCounts": {"active":3,"hover":4,"detached":4},
+    "expectedStrokes": [{"owner":"hover","rect":[40,0,1,20],"state":"hover"}]
+  },
+  {
+    "name": "child hover splits only the coincident parent edge",
+    "stroke": 1,
+    "frames": [
+      {"owner":"parent","rect":[0,0,100,80],"state":"active"},
+      {"owner":"child","rect":[20,0,30,20],"state":"hover"}
+    ],
+    "expectedCounts": {"parent":5,"child":4},
+    "expectedStrokes": [
+      {"owner":"parent","rect":[0,0,20,1],"state":"active"},
+      {"owner":"child","rect":[20,0,30,1],"state":"hover"},
+      {"owner":"parent","rect":[50,0,50,1],"state":"active"}
+    ]
+  },
+  {
+    "name": "vertical siblings share the boundary without widening the hit geometry",
+    "stroke": 1,
+    "frames": [
+      {"owner":"upper","rect":[0,0,40,20],"state":"active"},
+      {"owner":"lower","rect":[0,20,40,30],"state":"hover"}
+    ],
+    "expectedCounts": {"upper":3,"lower":4},
+    "expectedStrokes": [{"owner":"lower","rect":[0,20,40,1],"state":"hover"}]
+  }
+]
